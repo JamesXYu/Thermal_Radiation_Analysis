@@ -490,6 +490,45 @@
             background: #007e7a;
         }
 
+        #calculate.calculating {
+            background: #e07b39;
+        }
+        #calculate.calculating:hover {
+            background: #c46930;
+        }
+
+        #calcProgressWrap {
+            margin-left: 25px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            display: none;
+            width: calc(100% - 50px);
+            box-sizing: border-box;
+        }
+        #calcProgressWrap.visible {
+            display: block;
+        }
+        #calcProgressBar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0,0,0,0.25);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #calcProgressFill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00a19b, #00c9c2);
+            border-radius: 4px;
+            transition: width 0.15s ease-out;
+        }
+        #calcProgressPct {
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            color: rgba(255,255,255,0.9);
+            margin-top: 4px;
+        }
+
         /* Distance display */
         #distanceRow {
             display: flex;
@@ -1159,6 +1198,10 @@
         <div class="section-content collapsed">
         <button id="detail">Show detail</button>
         <button id="calculate">Calculate</button>
+        <div id="calcProgressWrap" class="">
+            <div id="calcProgressBar"><div id="calcProgressFill"></div></div>
+            <div id="calcProgressPct">0%</div>
+        </div>
         <div id="distanceRow">
             <span>Distance</span>
             <input type="text" id="distanceInput" readonly value="-" />
@@ -1244,8 +1287,8 @@
 
         // Configuration
         const CONFIG = {
-            // Backend API URL - Company network deployment
-            BACKEND_URL: 'http://10.14.1.165:8080', // Company network static IP
+            // Backend API URL - use localhost when running locally
+            BACKEND_URL: 'http://localhost:8080',
             
             // API endpoints
             CALCULATE_ENDPOINT: '/calculate',
@@ -2741,6 +2784,7 @@
         document.getElementById("resetPlane").addEventListener("click", resetPlaneToDefault);
 
         // Function to make plane stand on ground (bottom edge at y=0)
+        // Uses world space so it works for both single selection and multi-selection (grouped planes).
         function standPlaneOnGround() {
             if (selectedPlanes.length === 0) {
                 alert("Please select at least one plane first");
@@ -2749,57 +2793,65 @@
 
             captureState("Before stand");
 
+            const worldPos = new THREE.Vector3();
+            const worldQuat = new THREE.Quaternion();
+
             selectedPlanes.forEach(planeData => {
-                
-                // Calculate the 4 corners of the plane in local space
-                // Use the SAME coordinate system as computeWorldCorners() and generatePointsOnPlane()
+                const mesh = planeData.mesh;
+                mesh.updateMatrixWorld(true);
+                mesh.getWorldPosition(worldPos);
+                mesh.getWorldQuaternion(worldQuat);
+
+                // Corners in local space (same as computeWorldCorners / generatePointsOnPlane)
                 const halfWidth = planeData.width / 2;
                 const halfHeight = planeData.height / 2;
-                
                 const corners = [
                     new THREE.Vector3(-halfWidth, -halfHeight, 0),
                     new THREE.Vector3(halfWidth, -halfHeight, 0),
                     new THREE.Vector3(halfWidth, halfHeight, 0),
                     new THREE.Vector3(-halfWidth, halfHeight, 0)
                 ];
-                
-                
-                // Transform corners to world space using the ACTUAL mesh transformations
+
+                // Transform corners to world space
                 const worldCorners = corners.map(corner => {
-                    const worldCorner = corner.clone();
-                    worldCorner.applyQuaternion(planeData.mesh.quaternion);
-                    worldCorner.add(planeData.mesh.position);
-                    return worldCorner;
+                    const wc = corner.clone().applyQuaternion(worldQuat).add(worldPos);
+                    return wc;
                 });
-                
-                
-                // Find the minimum Y value (lowest point)
+
                 const minY = Math.min(...worldCorners.map(c => c.y));
-                
-                // Calculate the offset needed to bring lowest point to y=0
                 const yOffset = -minY;
-                
-                // Apply the offset to the plane's position
-                planeData.mesh.position.y += yOffset;
-                planeData.y = planeData.mesh.position.y;
-                
-                // Recalculate world corners to verify
-                const finalWorldCorners = corners.map(corner => {
-                    const worldCorner = corner.clone();
-                    worldCorner.applyQuaternion(planeData.mesh.quaternion);
-                    worldCorner.add(planeData.mesh.position);
-                    return worldCorner;
-                });
-                
-                const finalMinY = Math.min(...finalWorldCorners.map(c => c.y));
-                
+                const newWorldY = worldPos.y + yOffset;
+
+                // Update plane data (world position)
+                planeData.x = worldPos.x;
+                planeData.y = newWorldY;
+                planeData.z = worldPos.z;
+
+                if (selectedPlaneGroup && mesh.parent === selectedPlaneGroup) {
+                    // Multi-selection: mesh is in group; store new world position and set local position
+                    const newWorldPos = new THREE.Vector3(worldPos.x, newWorldY, worldPos.z);
+                    if (originalPositions.has(planeData)) {
+                        originalPositions.get(planeData).worldPosition.copy(newWorldPos);
+                    }
+                    mesh.parent.worldToLocal(newWorldPos);
+                    mesh.position.copy(newWorldPos);
+                } else {
+                    // Single selection: mesh is directly in scene; position is world
+                    mesh.position.set(worldPos.x, newWorldY, worldPos.z);
+                }
             });
 
-            // Update the GUI
+            // If we have a group, recenter it so local positions stay consistent
+            if (selectedPlaneGroup && selectedPlanes.length > 1) {
+                updateGroupPosition();
+            }
+
+            if (activeCamera === cameras.top) {
+                selectedPlanes.forEach(plane => updateTopViewLine(plane));
+            }
+
             if (selectedPlanes.length > 0) {
                 updateGUI(selectedPlanes[selectedPlanes.length - 1]);
-                
-                // Update normal arrow visualization if enabled
                 if (showNormalArrow && selectedPlanes[selectedPlanes.length - 1].type === "Receiver") {
                     visualizeNormal(selectedPlanes[selectedPlanes.length - 1]);
                 }
@@ -4853,6 +4905,21 @@
         // Backend endpoint for contour generation
         const BACKEND_CONTOUR_URL = CONFIG.BACKEND_URL + CONFIG.CALCULATE_ENDPOINT;
         
+        // Calculation abort and progress (stop button + pseudo progress bar)
+        let calculationAbortController = null;
+        let calculationProgressInterval = null;
+        
+        // Approximate duration (ms) from total receiver points and resolution N. Based on test data.
+        function estimateCalculationMs(totalPoints, N) {
+            const n = Math.max(1, Math.min(10, parseInt(N, 10) || 2));
+            let msPerPoint = 20;
+            if (n <= 2) msPerPoint = 20;
+            else if (n <= 3) msPerPoint = 27;
+            else if (n <= 5) msPerPoint = 35;
+            else msPerPoint = 9;
+            return Math.max(300, Math.min(120000, totalPoints * msPerPoint));
+        }
+        
         // Color scale settings
         let colorScaleMin = 0;
         let colorScaleMax = 20;
@@ -5099,11 +5166,18 @@
         }
 
         async function Pointsinfo() {
-            // Show loading indicator
             const calculateBtn = document.getElementById('calculate');
-            const originalText = calculateBtn.textContent;
-            calculateBtn.textContent = 'Calculating...';
-            calculateBtn.disabled = true;
+            const originalText = 'Calculate';
+            
+            // If already calculating, treat click as Stop
+            if (calculationAbortController) {
+                calculationAbortController.abort();
+                return;
+            }
+            
+            calculateBtn.textContent = 'Stop';
+            calculateBtn.classList.add('calculating');
+            calculateBtn.disabled = false;
             
             try {
                 const receiver_planes = {};
@@ -5195,6 +5269,8 @@
                 
                 console.log(`=== Processing ${receiverPlanes.length} Receiver Plane(s) ===`);
                 
+                // Collect receiver plane data by name first (order doesn't matter here)
+                const receiverPlaneData = {};
                 planes.forEach(plane => {
                     if (plane.type === "Receiver") {
                         // Calculate grid dimensions based on actual plane size and user input N
@@ -5219,13 +5295,10 @@
                         console.log(`  🎯 Sample point ${points.length-1}: [${points[points.length-1].position.x.toFixed(2)}, ${points[points.length-1].position.y.toFixed(2)}, ${points[points.length-1].position.z.toFixed(2)}]`);
                         console.log(`  🎯 Total points generated: ${points.length}`);
                         
-                        // Check if name already exists (shouldn't due to earlier check, but safety)
-                        if (receiver_planes[plane.name]) {
+                        if (receiverPlaneData[plane.name]) {
                             console.error(`❌ OVERWRITING existing receiver plane data for "${plane.name}"!`);
                         }
-                        
-                        // Use the actual plane's name instead of generic plane1, plane2, etc.
-                        receiver_planes[plane.name] = {
+                        receiverPlaneData[plane.name] = {
                             width: gridWidth,
                             height: gridHeight,
                             points: points.map(pt => ({
@@ -5237,6 +5310,16 @@
                                 normal: normalArr
                             }))
                         };
+                    }
+                });
+                // Build receiver_planes in lexicographic order so backend (C++ std::map) iterates in same order as points
+                Object.keys(receiverPlaneData).sort().forEach(name => {
+                    receiver_planes[name] = receiverPlaneData[name];
+                });
+                
+                planes.forEach(plane => {
+                    if (plane.type === "Receiver") {
+                        // already handled above
                     } else if (plane.type === "Emitter") {
                         const worldCorners = computeWorldCorners(plane);
                         console.log(`Emitter "${plane.name}" - temperature: ${plane.temperature}`);
@@ -5264,19 +5347,43 @@
                 // Also log a summary
                 console.log(`JSON Summary: ${Object.keys(receiver_planes).length} receiver planes, ${polygons.length} emitter polygons, ${inert_polygons.length} inert polygons`);
 
-                // Send to backend and await contour response
-                console.log('Sending data to backend:', exportData);
+                // Pseudo progress: estimate time and animate bar
+                const totalPoints = Object.values(receiverPlaneData).reduce((s, p) => s + p.width * p.height, 0);
+                const estimatedMs = estimateCalculationMs(totalPoints, receiverGridSize);
+                const progressWrap = document.getElementById('calcProgressWrap');
+                const progressFill = document.getElementById('calcProgressFill');
+                const progressPct = document.getElementById('calcProgressPct');
+                progressWrap.classList.add('visible');
+                progressFill.style.width = '0%';
+                progressPct.textContent = '0%';
                 
+                calculationAbortController = new AbortController();
+                const startTime = Date.now();
+                calculationProgressInterval = setInterval(() => {
+                    if (!calculationAbortController) return;
+                    const elapsed = Date.now() - startTime;
+                    const pct = Math.min(95, Math.round((elapsed / estimatedMs) * 95));
+                    progressFill.style.width = pct + '%';
+                    progressPct.textContent = pct + '%';
+                }, 150);
+                
+                console.log('Sending data to backend:', exportData);
                 const resp = await fetch(BACKEND_CONTOUR_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(exportData)
+                    body: JSON.stringify(exportData),
+                    signal: calculationAbortController.signal
                 });
                 
                 if (!resp.ok) {
                     const errorText = await resp.text();
                     throw new Error(`Backend error: ${resp.status} - ${errorText}`);
                 }
+                
+                clearInterval(calculationProgressInterval);
+                calculationProgressInterval = null;
+                progressFill.style.width = '100%';
+                progressPct.textContent = '100%';
                 
                 const responseData = await resp.json();
                 
@@ -5343,11 +5450,26 @@
                     throw new Error('Invalid response format from backend');
                 }
             } catch (err) {
-                console.error('Failed to fetch contour data:', err);
-                alert(`Failed to fetch contour data from backend: ${err.message}`);
+                if (err.name === 'AbortError') {
+                    console.log('Calculation stopped by user');
+                } else {
+                    console.error('Failed to fetch contour data:', err);
+                    alert(`Failed to fetch contour data from backend: ${err.message}`);
+                }
             } finally {
-                // Restore button state
+                if (calculationProgressInterval) {
+                    clearInterval(calculationProgressInterval);
+                    calculationProgressInterval = null;
+                }
+                calculationAbortController = null;
+                const wrap = document.getElementById('calcProgressWrap');
+                const fill = document.getElementById('calcProgressFill');
+                const pctEl = document.getElementById('calcProgressPct');
+                if (wrap) wrap.classList.remove('visible');
+                if (fill) fill.style.width = '0%';
+                if (pctEl) pctEl.textContent = '0%';
                 calculateBtn.textContent = originalText;
+                calculateBtn.classList.remove('calculating');
                 calculateBtn.disabled = false;
             }
         }
