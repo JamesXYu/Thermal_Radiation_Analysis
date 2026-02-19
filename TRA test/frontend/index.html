@@ -1581,12 +1581,16 @@
         directionalLight.position.set(5, 10, 7.5);
         scene.add(directionalLight);
 
+        // Group for top-view 2D rotation (vinyl-style: scene spins, camera stays fixed)
+        const sceneContentGroup = new THREE.Group();
+        scene.add(sceneContentGroup);
+        let topViewRotationAngle = 0;
 
         // Add a grid (hidden by default) with snapping-compatible size
         const gridSize = 100;
         const gridDivisions = 100;
         const grid = new THREE.GridHelper(gridSize, gridDivisions, 0x000000, 0x000000); // Black grid
-        scene.add(grid);
+        sceneContentGroup.add(grid);
 
         // Grid snapping configuration
         const gridSnapConfig = {
@@ -1652,10 +1656,10 @@
         const zLabel = createAxisLabel('+Z', new THREE.Vector3(0, 2, 75), '#0000ff');
         const zNegLabel = createAxisLabel('-Z', new THREE.Vector3(0, 2, -75), '#0000ff');
 
-        scene.add(xLabel);
-        scene.add(xNegLabel);
-        scene.add(zLabel);
-        scene.add(zNegLabel);
+        sceneContentGroup.add(xLabel);
+        sceneContentGroup.add(xNegLabel);
+        sceneContentGroup.add(zLabel);
+        sceneContentGroup.add(zNegLabel);
 
         // Add colorful axis lines
         function createAxisLine(origin, direction, color, length = 10) {
@@ -1678,8 +1682,8 @@
         // Z-axis: Blue line from (0, 0, -50) to (0, 0, +50) - spans the grid depth  
         const zAxis = createAxisLine(new THREE.Vector3(0, -0.1, -50), new THREE.Vector3(0, 0, 1), 0x0000ff, 100);
 
-        scene.add(xAxis);
-        scene.add(zAxis);
+        sceneContentGroup.add(xAxis);
+        sceneContentGroup.add(zAxis);
 
         // Create a plane for the image (initially invisible)
         const planeGeometry = new THREE.PlaneGeometry(10, 10);
@@ -1687,7 +1691,7 @@
         const imagePlane = new THREE.Mesh(planeGeometry, planeMaterial);
         imagePlane.rotation.x = -Math.PI / 2; // Rotate to lie flat
         imagePlane.visible = false; // Hide until image loads
-        scene.add(imagePlane);
+        sceneContentGroup.add(imagePlane);
 
         // OrbitControls for interaction
         const controls = new THREE.OrbitControls(activeCamera, renderer.domElement);
@@ -1738,12 +1742,12 @@
             // Clean up existing top view lines and spheres
             planes.forEach(plane => {
                 if (plane.mesh.userData.topViewLine) {
-                    scene.remove(plane.mesh.userData.topViewLine);
+                    sceneContentGroup.remove(plane.mesh.userData.topViewLine);
                     plane.mesh.userData.topViewLine = null;
                 }
                 if (plane.mesh.userData.topViewSpheres) {
                     plane.mesh.userData.topViewSpheres.forEach(sphere => {
-                        scene.remove(sphere);
+                        sceneContentGroup.remove(sphere);
                     });
                     plane.mesh.userData.topViewSpheres = null;
                 }
@@ -1776,10 +1780,22 @@
                 controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
                 controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
                 controls.enableRotate = true;
+                controls.minPolarAngle = 0;
+                controls.maxPolarAngle = Math.PI;
+            } else if (camera === cameras.top) {
+                // Top view: right-click to rotate (2D only - like spinning a vinyl record)
+                // Camera and grid stay parallel; rotation is azimuth-only around Y axis
+                controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+                controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
+                controls.enableRotate = true;
+                controls.minPolarAngle = 0;
+                controls.maxPolarAngle = 0;  // Lock polar angle - camera always looks straight down
             } else {
                 controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
                 controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
                 controls.enableRotate = false;
+                controls.minPolarAngle = 0;
+                controls.maxPolarAngle = Math.PI;
             }
             controls.update();
             
@@ -1792,12 +1808,12 @@
         function removeAllTopViewElements() {
             planes.forEach(plane => {
                 if (plane.mesh.userData.topViewLine) {
-                    scene.remove(plane.mesh.userData.topViewLine);
+                    sceneContentGroup.remove(plane.mesh.userData.topViewLine);
                     plane.mesh.userData.topViewLine = null;
                 }
                 if (plane.mesh.userData.topViewSpheres) {
                     plane.mesh.userData.topViewSpheres.forEach(sphere => {
-                        scene.remove(sphere);
+                        sceneContentGroup.remove(sphere);
                     });
                     plane.mesh.userData.topViewSpheres = null;
                 }
@@ -1854,14 +1870,14 @@
         function createTopViewLine(plane) {
             // Remove existing top view line if it exists
             if (plane.mesh.userData.topViewLine) {
-                scene.remove(plane.mesh.userData.topViewLine);
+                sceneContentGroup.remove(plane.mesh.userData.topViewLine);
                 plane.mesh.userData.topViewLine = null;
             }
             
             // Remove existing spheres if they exist
             if (plane.mesh.userData.topViewSpheres) {
                 plane.mesh.userData.topViewSpheres.forEach(sphere => {
-                    scene.remove(sphere);
+                    sceneContentGroup.remove(sphere);
                 });
                 plane.mesh.userData.topViewSpheres = null;
             }
@@ -1970,10 +1986,10 @@
             sphere1.material.depthTest = false;
             sphere2.material.depthTest = false;
             
-            // Add to scene
-            scene.add(line);
-            scene.add(sphere1);
-            scene.add(sphere2);
+            // Add to scene (in content group for top-view rotation)
+            sceneContentGroup.add(line);
+            sceneContentGroup.add(sphere1);
+            sceneContentGroup.add(sphere2);
             
             // Ensure spheres are always selectable (double-check)
             sphere1.userData.isSelectable = true;
@@ -2051,10 +2067,10 @@
             // Only recreate if width changed significantly (rotation/position updates are handled above)
             if (line.userData.lastWidth && Math.abs(line.userData.lastWidth - currentWidth) > 0.01) {
                 // Width changed, recreate everything for clean geometry
-                    scene.remove(line);
+                    sceneContentGroup.remove(line);
                     if (plane.mesh.userData.topViewSpheres) {
                         plane.mesh.userData.topViewSpheres.forEach(sphere => {
-                            scene.remove(sphere);
+                            sceneContentGroup.remove(sphere);
                         });
                     }
                     createTopViewLine(plane);
@@ -2141,13 +2157,13 @@
             normalArrow.line.material.linewidth = 6;
             
             // Add to scene
-            scene.add(normalArrow);
+            sceneContentGroup.add(normalArrow);
         }
         
         // Function to remove the normal arrow
         function removeNormalArrow() {
             if (normalArrow) {
-                scene.remove(normalArrow);
+                sceneContentGroup.remove(normalArrow);
                 // ArrowHelper doesn't have dispose(), but we should clean up its children
                 if (normalArrow.line) {
                     normalArrow.line.geometry.dispose();
@@ -2247,7 +2263,7 @@
                 const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
                 const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
                 sphere.position.copy(point);
-                scene.add(sphere);
+                sceneContentGroup.add(sphere);
                 tempSpheres.push(sphere);
                 
                 if (measurePoints.length === 2) {
@@ -2263,7 +2279,7 @@
         function cleanupMeasurement() {
             // Remove temporary spheres
             tempSpheres.forEach(sphere => {
-                scene.remove(sphere);
+                if (sphere.parent) sphere.parent.remove(sphere);
                 sphere.geometry.dispose();
                 sphere.material.dispose();
             });
@@ -2317,7 +2333,7 @@
             
             // Clear any existing temporary spheres
             tempSpheres.forEach(sphere => {
-                scene.remove(sphere);
+                if (sphere.parent) sphere.parent.remove(sphere);
                 sphere.geometry.dispose();
                 sphere.material.dispose();
             });
@@ -2713,7 +2729,7 @@
             };
 
             planes.push(planeData);
-            scene.add(plane);
+            sceneContentGroup.add(plane);
 
             // Make plane selectable
             plane.userData = planeData;
@@ -2895,14 +2911,14 @@
 
                 // Remove top view line if it exists
                 if (planeData.mesh.userData.topViewLine) {
-                    scene.remove(planeData.mesh.userData.topViewLine);
+                    sceneContentGroup.remove(planeData.mesh.userData.topViewLine);
                     planeData.mesh.userData.topViewLine = null;
                 }
 
                 // Remove top view spheres if they exist
                 if (planeData.mesh.userData.topViewSpheres) {
                     planeData.mesh.userData.topViewSpheres.forEach(sphere => {
-                        scene.remove(sphere);
+                        sceneContentGroup.remove(sphere);
                     });
                     planeData.mesh.userData.topViewSpheres = null;
                 }
@@ -2918,7 +2934,7 @@
 
             // Clear group if it exists
             if (selectedPlaneGroup) {
-                scene.remove(selectedPlaneGroup);
+                sceneContentGroup.remove(selectedPlaneGroup);
                 selectedPlaneGroup = null;
                 originalPositions.clear();
             }
@@ -3510,7 +3526,7 @@
             // If no group exists, create one
             if (!selectedPlaneGroup) {
                 selectedPlaneGroup = new THREE.Group();
-                scene.add(selectedPlaneGroup);
+                sceneContentGroup.add(selectedPlaneGroup);
 
                 // Store original positions and parents
                 originalPositions = new Map();
@@ -3589,7 +3605,7 @@
             });
 
             // Clean up the group
-            scene.remove(selectedPlaneGroup);
+            sceneContentGroup.remove(selectedPlaneGroup);
             selectedPlaneGroup = null;
             originalPositions.clear();
 
@@ -3907,6 +3923,18 @@
                     break;
                 case 't': // Top view
                     setView(cameras.top);
+                    break;
+                case ',': // Rotate top view left (when in top view)
+                    if (activeCamera === cameras.top) {
+                        topViewRotationAngle += 0.1;
+                        sceneContentGroup.rotation.y = topViewRotationAngle;
+                    }
+                    break;
+                case '.': // Rotate top view right (when in top view)
+                    if (activeCamera === cameras.top) {
+                        topViewRotationAngle -= 0.1;
+                        sceneContentGroup.rotation.y = topViewRotationAngle;
+                    }
                     break;
                 case 'y': // Perspective view
                     setView(cameras.perspective);
@@ -4239,10 +4267,46 @@
             }
         });
         
-        // Prevent context menu on right-click during plane mode
-        renderer.domElement.addEventListener('contextmenu', (event) => {
-            if (planeMode) {
+        // Custom right-click 2D rotation for top view
+        let isTopViewRotating = false;
+        let topViewRotateStartX = 0;
+        const renderbodyEl = document.getElementById('renderbody');
+
+        function isClickOnCanvas(target) {
+            return renderbodyEl && (target === renderer.domElement || renderbodyEl.contains(target));
+        }
+
+        document.addEventListener('mousedown', (event) => {
+            if (event.button === 2 && isClickOnCanvas(event.target) && activeCamera === cameras.top && !planeMode) {
+                isTopViewRotating = true;
+                topViewRotateStartX = event.clientX;
+                controls.enabled = false;
                 event.preventDefault();
+                event.stopPropagation();
+            }
+        }, { capture: true });
+
+        document.addEventListener('contextmenu', (event) => {
+            if (isClickOnCanvas(event.target) && (activeCamera === cameras.top || planeMode)) {
+                event.preventDefault();
+            }
+        }, { capture: true });
+
+        document.addEventListener('mousemove', (event) => {
+            if (isTopViewRotating && activeCamera === cameras.top) {
+                event.preventDefault();
+                const deltaX = event.clientX - topViewRotateStartX;
+                topViewRotateStartX = event.clientX;
+                const sensitivity = 0.005;
+                topViewRotationAngle += deltaX * sensitivity;
+                sceneContentGroup.rotation.y = topViewRotationAngle;
+            }
+        });
+
+        document.addEventListener('mouseup', (event) => {
+            if (event.button === 2 && isTopViewRotating) {
+                isTopViewRotating = false;
+                controls.enabled = true;
             }
         });
 
@@ -4408,17 +4472,17 @@
                 
                 // Remove from scene
                 if (planeData.mesh) {
-                    scene.remove(planeData.mesh);
+                    sceneContentGroup.remove(planeData.mesh);
                     
                     // Remove top view line if exists
                     if (planeData.mesh.userData.topViewLine) {
-                        scene.remove(planeData.mesh.userData.topViewLine);
+                        sceneContentGroup.remove(planeData.mesh.userData.topViewLine);
                     }
                     
                     // Remove top view spheres if exist
                     if (planeData.mesh.userData.topViewSpheres) {
                         planeData.mesh.userData.topViewSpheres.forEach(sphere => {
-                            scene.remove(sphere);
+                            sceneContentGroup.remove(sphere);
                         });
                     }
                     
@@ -4438,7 +4502,7 @@
             // Clear selections
             selectedPlanes = [];
             if (selectedPlaneGroup) {
-                scene.remove(selectedPlaneGroup);
+                sceneContentGroup.remove(selectedPlaneGroup);
                 selectedPlaneGroup = null;
             }
             
@@ -6412,8 +6476,8 @@
                 }
 
                 // Ensure the plane is in the scene
-                if (!scene.children.includes(plane.mesh)) {
-                    scene.add(plane.mesh);
+                if (!sceneContentGroup.children.includes(plane.mesh) && (!selectedPlaneGroup || !selectedPlaneGroup.children.includes(plane.mesh))) {
+                    sceneContentGroup.add(plane.mesh);
                 }
 
                 // For paste operations, ensure we're restoring to the exact state
@@ -6474,20 +6538,20 @@
                 
                 // Remove top view line if it exists
                 if (plane.mesh.userData.topViewLine) {
-                    scene.remove(plane.mesh.userData.topViewLine);
+                    sceneContentGroup.remove(plane.mesh.userData.topViewLine);
                     plane.mesh.userData.topViewLine = null;
                 }
                 
                 // Remove top view spheres if they exist
                 if (plane.mesh.userData.topViewSpheres) {
                     plane.mesh.userData.topViewSpheres.forEach(sphere => {
-                        scene.remove(sphere);
+                        sceneContentGroup.remove(sphere);
                     });
                     plane.mesh.userData.topViewSpheres = null;
                 }
                 
-                if (scene.children.includes(plane.mesh)) {
-                    scene.remove(plane.mesh);
+                if (plane.mesh.parent) {
+                    plane.mesh.parent.remove(plane.mesh);
                 }
                 plane.mesh.geometry.dispose();
                 plane.mesh.material.dispose();
@@ -6520,7 +6584,7 @@
                 // Create group without calling captureState (we'll do it manually)
                 if (!selectedPlaneGroup) {
                     selectedPlaneGroup = new THREE.Group();
-                    scene.add(selectedPlaneGroup);
+                    sceneContentGroup.add(selectedPlaneGroup);
                     originalPositions = new Map();
                 }
 
@@ -6729,7 +6793,7 @@
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
-            controls.update();
+            if (!isTopViewRotating) controls.update();
             renderer.render(scene, activeCamera);
             labelRenderer.render(scene, activeCamera);
         }
