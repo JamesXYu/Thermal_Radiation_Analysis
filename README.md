@@ -2,6 +2,7 @@
 
 ## 📚 Table of Contents
 - [Overview](#overview)
+- [Setup & Installation](#setup--installation)
 - [Interface Layout](#interface-layout)
 - [Keyboard Shortcuts](#keyboard-shortcuts)
 - [Mouse Controls](#mouse-controls)
@@ -19,6 +20,85 @@ This application allows you to create 3D thermal radiation models, calculate rad
 - **Emitters**: Surfaces that emit thermal radiation (have temperature)
 - **Receivers**: Surfaces that measure incoming radiation
 - **Inert**: Non-participating surfaces (block radiation but don't emit/receive)
+
+---
+
+## 🛠️ Setup & Installation
+
+### Prerequisites
+
+- **Python 3** (for serving the frontend)
+- **g++** with C++17 support (for compiling the backend)
+- **curl** (for downloading dependencies, optional)
+
+### Quick Start (Recommended)
+
+From the `TRA test` directory:
+
+```bash
+cd "TRA test"
+./run.sh setup    # First time: download deps, compile backend
+./run.sh start   # Start backend (port 8080) + frontend (port 3000)
+```
+
+This starts both servers and opens your browser at **http://localhost:3000**.
+
+### Manual Setup
+
+**1. Backend (port 8080)**
+
+```bash
+cd "TRA test"
+./run.sh setup   # Compiles bin/server
+./bin/server    # Run backend (keep this terminal open)
+```
+
+**2. Frontend (port 3000)**
+
+In a separate terminal:
+
+```bash
+cd "TRA test/frontend"
+python3 -m http.server 3000
+```
+
+Then open **http://localhost:3000** in your browser.
+
+### Ports
+
+| Service  | Port | URL                    |
+|----------|------|------------------------|
+| Backend  | 8080 | http://localhost:8080  |
+| Frontend | 3000 | http://localhost:3000  |
+
+### Run Script Commands
+
+| Command        | Description                              |
+|----------------|------------------------------------------|
+| `./run.sh setup`  | Download cpp-httplib, compile backend   |
+| `./run.sh start`  | Start backend + frontend                 |
+| `./run.sh stop`   | Stop both servers                        |
+| `./run.sh restart`| Restart both servers                     |
+| `./run.sh status` | Check if servers are running             |
+| `./run.sh test`   | Test backend health and status           |
+
+### Troubleshooting Setup
+
+**"Failed to fetch" or "Empty reply from server"**
+
+- Ensure the backend is running: `curl http://localhost:8080/health` should return `{"status":"ok"}`
+- Run the backend in the foreground to see errors: `./bin/server` (do not run with `; exit` — that closes the process)
+- If using Cursor/IDE terminal, run `./bin/server` in a dedicated terminal and leave it open
+
+**Backend exits immediately**
+
+- Run `./run.sh setup` to recompile
+- Check that port 8080 is not in use: `lsof -i :8080`
+
+**Frontend shows blank page**
+
+- Use `http://localhost:3000` (not `file://`)
+- Ensure you're serving from the `frontend` directory
 
 ---
 
@@ -57,6 +137,8 @@ The interface consists of:
 |----------|--------|
 | `Enter` | Confirm input (in dialogs) |
 | `Escape` | Cancel/close modal (in level name dialog) |
+
+**Note:** Keyboard shortcuts (Undo, Delete, Copy/Paste, etc.) are disabled while typing in input fields.
 
 ---
 
@@ -185,6 +267,7 @@ The interface consists of:
 **Top** - Orthographic top-down view
 - Shows wireframe lines for planes
 - Enables sphere controls for width adjustment
+- **Right-click + drag** to rotate the scene (2D rotation)
 - Best for layout and positioning
 
 **Front** - Orthographic front view
@@ -224,6 +307,22 @@ The interface consists of:
 
 ---
 
+### 📐 Resolution
+
+**Purpose**: Set grid density for receiver and emitter planes (points per unit length)
+
+**Options:**
+| Setting   | Value | Use Case                    |
+|-----------|-------|-----------------------------|
+| Low       | 2     | Fast preview, rough results |
+| Mid       | 3     | Balanced speed/accuracy     |
+| High      | 5     | Default, good detail        |
+| Detailed  | 10    | High accuracy, slower       |
+
+**Effect:** Higher resolution = more grid points = more accurate contours but longer calculation time.
+
+---
+
 ### 🎯 Precision
 
 **Translation/Rotation/Scaling Snap Settings:**
@@ -253,20 +352,21 @@ Each has:
 
 ### 🎨 Color Scale
 
-**Purpose**: Customize temperature visualization colors
+**Purpose**: Customize temperature visualization on receiver contour plots
 
-**Controls:**
-- **Min Value**: Temperature for coldest color (blue)
-- **Max Value**: Temperature for hottest color (red)
-- **Apply**: Update color scale
+**Auto Button** (cycles modes, works with or without a plane selected):
 
-**Color Gradient:**
-- Blue (cold) → Green → Yellow → Orange → Red (hot)
+| Mode       | Button Label | Behavior                                                |
+|------------|--------------|---------------------------------------------------------|
+| Manual     | Auto         | Use min/max from input fields for all planes            |
+| Per Plane  | Per Plane    | Each receiver uses its own data min/max                 |
+| Global     | Global       | All receivers use the same overall min/max from all data|
 
-**Use:**
-- Set before or after calculation
-- Affects contour visualization on receiver planes
-- Does not affect actual calculations
+**Min / Max Inputs:**
+- **No plane selected:** Changes apply to all planes (in Manual mode) or show global range
+- **Plane selected:** Changes apply only to that plane (custom override), regardless of mode
+
+**Color Gradient:** Blue (cold) → Green → Yellow → Orange → Red (hot) (Turbo colormap)
 
 ---
 
@@ -296,15 +396,24 @@ Each has:
 4. Returns temperature distribution
 5. Applies results as textures on receiver planes
 
+**Progress Bar:** Animated gradient bar shows estimated progress while the backend runs. Click **Stop** to abort.
+
+**Console Output** (F12 → Console):
+- **Interaction count:** Receiver points × emitter points (frontend estimate based on resolution and plane sizes)
+- **Calculation time:** Elapsed seconds from click to backend response
+- Full JSON request/response for debugging
+
 **Requirements:**
 - At least one Receiver plane
 - At least one Emitter plane (with temperature > 0)
-- Backend server must be running
+- Backend server must be running on port 8080
 
 **Output:**
 - Temperature contours on receiver planes
 - Values logged to console
 - Can view detailed plots with "Show detail"
+
+**Distance:** When exactly two planes are selected, the shortest distance between them is shown in this section.
 
 ---
 
@@ -312,22 +421,24 @@ Each has:
 
 **Purpose**: Manage multiple scenes/levels
 
-**Save Level**
-- Click "Save Level"
-- Enter level name in dialog
-- Click "Save Level" or press `Enter` to confirm
-- Click "Cancel" or press `Escape` to cancel
-- Warns if name already exists (can overwrite)
+**Save Level / Update Level**
+- **Save Level:** Shown when no level is selected; opens dialog to enter a new name
+- **Update Level:** Shown when a saved level is selected in the dropdown; overwrites that level without prompting for a name
+- Press `Enter` to confirm, `Escape` to cancel
 
 **Dropdown Menu**
 - Lists all saved levels
-- Select to prepare for loading
+- Select a level to load it or update it
+- Changing selection updates the Save/Update button
 
 **Load**
 - Select level from dropdown
 - Click "Load"
 - Current scene is replaced with saved level
 - Warns before overwriting unsaved changes
+
+**Import** - Load a level from a JSON file
+- Resets file input after import so the same file can be chosen again
 
 **Delete**
 - Select level from dropdown
@@ -336,7 +447,7 @@ Each has:
 - Requires confirmation
 
 **New Level**
-- Clears current scene
+- Clears current scene and resets dropdown to empty
 - Creates blank canvas
 - Warns before clearing unsaved work
 
@@ -499,9 +610,9 @@ Each has:
 - Each plane increases calculation time
 
 ✅ **Appropriate grid resolution**
-- Default N=5 is good starting point
+- Set in Resolution section (Low/Mid/High/Detailed) before calculation
+- High (5 pts/unit) is a good default
 - Increase for more detail, decrease for speed
-- Set in Precision section before calculation
 
 ✅ **Save before calculating**
 - Large calculations can take time
@@ -533,6 +644,11 @@ Each has:
 ---
 
 ### Troubleshooting
+
+❌ **"Failed to fetch" or "Empty reply from server"**
+- Backend must stay running: run `./bin/server` in a terminal and leave it open (do not run with `; exit`)
+- Verify: `curl http://localhost:8080/health` should return `{"status":"ok"}`
+- Use `http://localhost:3000` for the frontend (not `file://`)
 
 ❌ **"No receiver planes found"**
 - Add at least one plane with Type = "Receiver"
@@ -577,13 +693,13 @@ Ctrl + C/V      Copy/Paste
 
 ## 📖 Related Documentation
 
-- **README.md**: Installation and setup guide (ignore)
-- **Browser Console** (F12): Detailed calculation logs and error messages
-- **Backend**: See `backend/server.cpp` for calculation details
+- **Setup & Installation** (above): Full setup instructions
+- **Browser Console** (F12): Interaction count, calculation time, logs, and error messages
+- **Backend**: See `TRA test/backend/server.cpp` for calculation details
 
 ---
 
-**Version**: 1.0  
+**Version**: 1.1  
 **Last Updated**: 2025
 
 For technical support or bug reports, check the project repository or contact your system administrator.

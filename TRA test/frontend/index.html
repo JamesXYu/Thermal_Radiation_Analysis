@@ -5115,15 +5115,12 @@
         let calculationAbortController = null;
         let calculationProgressInterval = null;
         
-        // Approximate duration (ms) from total receiver points and resolution N. Based on test data.
-        function estimateCalculationMs(totalPoints, N) {
-            const n = Math.max(1, Math.min(10, parseInt(N, 10) || 2));
-            let msPerPoint = 20;
-            if (n <= 2) msPerPoint = 20;
-            else if (n <= 3) msPerPoint = 27;
-            else if (n <= 5) msPerPoint = 35;
-            else msPerPoint = 9;
-            return Math.max(300, Math.min(120000, totalPoints * msPerPoint));
+        // Approximate duration (ms) from total interactions. Based on test data:
+        // ~1000 iterations per second (e.g. 620k iterations ≈ 700s, 14.4k ≈ 7s)
+        function estimateCalculationMs(totalInteractions) {
+            const msPer1000Iterations = 1000; // 1000 iterations ≈ 1 second
+            const estimatedMs = (totalInteractions / 1000) * msPer1000Iterations;
+            return Math.max(1000, Math.min(900000, estimatedMs)); // 1s min, 15min max
         }
         
         // Pure frontend: count receiver-emitter point interactions based on resolution and plane sizes.
@@ -5647,9 +5644,9 @@
                 console.log(`Total interactions (receiver × emitter): ${interactionCount.totalInteractions.toLocaleString()}`);
                 console.log(`=== END INTERACTION COUNT ===\n`);
 
-                // Pseudo progress: estimate time and animate bar
-                const totalPoints = Object.values(receiverPlaneData).reduce((s, p) => s + p.width * p.height, 0);
-                const estimatedMs = estimateCalculationMs(totalPoints, receiverGridSize);
+                // Pseudo progress: estimate time from total interactions (~1000 iterations/sec)
+                const totalInteractions = interactionCount.totalInteractions;
+                const estimatedMs = estimateCalculationMs(totalInteractions);
                 const progressWrap = document.getElementById('calcProgressWrap');
                 const progressFill = document.getElementById('calcProgressFill');
                 const progressPct = document.getElementById('calcProgressPct');
