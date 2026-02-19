@@ -2948,6 +2948,39 @@
 
         document.getElementById("deleteplane").addEventListener("click", deleteplanefn);
 
+        /**
+         * Override DAT.GUI number controller display to force consistent decimal precision.
+         * Fixes known DAT.GUI 0.7.7 behavior where step(0.1) rounds values >=10 to integers in display.
+         * @param {dat.GUI.Controller} controller - The number controller to fix
+         * @param {number} decimals - Number of decimal places to always show (default: 1)
+         */
+        function forceDatGuiDecimalPrecision(controller, decimals = 1) {
+            if (!controller) return;
+            const input = controller.__input || (controller.domElement && controller.domElement.querySelector('input'));
+            if (!input) return;
+            const formatValue = () => {
+                try {
+                    if (document.activeElement === input) return;
+                    const val = controller.getValue();
+                    if (typeof val === 'number' && !isNaN(val)) {
+                        const formatted = Number(val).toFixed(decimals);
+                        if (input.value !== formatted) input.value = formatted;
+                    }
+                } catch (e) {}
+            };
+            const origUpdateDisplay = controller.updateDisplay && controller.updateDisplay.bind(controller);
+            if (typeof origUpdateDisplay === 'function') {
+                controller.updateDisplay = function() {
+                    origUpdateDisplay();
+                    formatValue();
+                };
+            }
+            formatValue();
+            input.addEventListener('blur', formatValue);
+            const pollId = setInterval(formatValue, 150);
+            setTimeout(() => clearInterval(pollId), 2000);
+        }
+
         // Function to update GUI for selected plane(s)
         function updateGUI(planeData) {
             gui.destroy();
@@ -2962,6 +2995,7 @@
                 
                 // Multi-select height control
                 const multiHeightController = gui.add({ height: 1 }, 'height').name('Height (All)').step(0.1);
+                forceDatGuiDecimalPrecision(multiHeightController, 1);
                 multiHeightController.onChange(function (newHeight) {
                     changeMultiplePlanesHeight(newHeight);
                 });
@@ -3024,6 +3058,9 @@
                 type: gui.add(planeData, "type", ["Receiver", "Emitter", "Inert"]).name("Type"),
                 positive: gui.add(planeData, "positive").name("Normal Direction -"),
             };
+
+            // Fix DAT.GUI display: force 1 decimal place for position/size (values >=10 otherwise show as integers)
+            ['width', 'height', 'x', 'y', 'z'].forEach(key => forceDatGuiDecimalPrecision(controllers[key], 1));
 
             // Track previous values
             controllers.width.__oldValue = planeData.width;
@@ -3487,13 +3524,13 @@
                 transformControlss.attach(selectedPlaneGroup);
                 updateGUI(selectedPlanes[selectedPlanes.length - 1]);
             } else {
-                // Control the last selected plane - ensure the mesh exists
+                // Control the last selected plane - ensure the mesh exists in scene (planes are in sceneContentGroup)
                 const targetMesh = selectedPlanes[selectedPlanes.length - 1].mesh;
-                if (targetMesh && scene.children.includes(targetMesh)) {
+                if (targetMesh && targetMesh.parent) {
                     transformControlss.attach(targetMesh);
                     updateGUI(selectedPlanes[selectedPlanes.length - 1]);
                 } else {
-                    // If mesh doesn't exist, detach and clear selection
+                    // If mesh doesn't exist or was removed, detach and clear selection
                     transformControlss.detach();
                     selectedPlanes = [];
                     gui.destroy();
