@@ -3567,6 +3567,10 @@
 
             // Always keep distance display up to date
             updateDistanceDisplay();
+            // Update color scale inputs to reflect selected plane
+            if (typeof updateColorScaleInputsForSelection === 'function') {
+                updateColorScaleInputsForSelection();
+            }
         }
         function createOrUpdateGroup() {
             // If no group exists, create one
@@ -4710,6 +4714,9 @@
                     newPlane.contourData = planeData.contourData;
                     console.log(`Restored contour data for receiver plane "${newPlane.name}": ${planeData.contourData.values.length} values`);
                 }
+                // Restore per-plane custom color scale override
+                if (planeData.colorScaleMin != null) newPlane.colorScaleMin = planeData.colorScaleMin;
+                if (planeData.colorScaleMax != null) newPlane.colorScaleMax = planeData.colorScaleMax;
 
                 updateGUI(newPlane);
 
@@ -4827,7 +4834,10 @@
                     angle: plane.angle,
                     incline: plane.incline,
                     // Include contour data for receiver planes
-                    contourData: plane.type === "Receiver" && plane.contourData ? plane.contourData : null
+                    contourData: plane.type === "Receiver" && plane.contourData ? plane.contourData : null,
+                    // Per-plane custom color scale override
+                    colorScaleMin: plane.colorScaleMin,
+                    colorScaleMax: plane.colorScaleMax
                 })),
                 scalingFactor: scalingdist ? {
                     measuredDistance: scalingDistance,
@@ -5089,8 +5099,11 @@
         // Color scale settings
         let colorScaleMin = 0;
         let colorScaleMax = 20;
+        // Mode: 'manual' | 'perPlane' | 'global'
+        // manual = use input values for all; perPlane = each plane's own range; global = overall range for all
+        let colorScaleMode = 'manual';
         
-        // Function to get color scale values from UI
+        // Function to get color scale values from UI inputs
         function getColorScaleValues() {
             const minInput = document.getElementById('colorScaleMin');
             const maxInput = document.getElementById('colorScaleMax');
@@ -5105,6 +5118,42 @@
             }
             
             return { min, max };
+        }
+        
+        // Get overall min/max from all receiver planes with contour data
+        function getOverallColorScaleRange() {
+            const receiverPlanes = planes.filter(p => p.type === "Receiver" && p.contourData && p.contourData.values);
+            if (receiverPlanes.length === 0) return { min: 0, max: 20 };
+            let globalMin = Infinity, globalMax = -Infinity;
+            receiverPlanes.forEach(p => {
+                const dMin = Math.min(...p.contourData.values);
+                const dMax = Math.max(...p.contourData.values);
+                if (dMin < globalMin) globalMin = dMin;
+                if (dMax > globalMax) globalMax = dMax;
+            });
+            if (globalMin === Infinity) return { min: 0, max: 20 };
+            return { min: Math.floor(globalMin), max: Math.ceil(globalMax) };
+        }
+        
+        // Get the effective color scale for a given plane (respects mode and per-plane custom override)
+        function getColorScaleForPlane(plane) {
+            if (!plane.contourData || !plane.contourData.values) return { min: 0, max: 20 };
+            // Per-plane custom override (user typed min/max for selected plane)
+            if (plane.colorScaleMin != null && plane.colorScaleMax != null &&
+                typeof plane.colorScaleMin === 'number' && typeof plane.colorScaleMax === 'number' &&
+                plane.colorScaleMax > plane.colorScaleMin) {
+                return { min: plane.colorScaleMin, max: plane.colorScaleMax };
+            }
+            if (colorScaleMode === 'perPlane') {
+                const dMin = Math.min(...plane.contourData.values);
+                const dMax = Math.max(...plane.contourData.values);
+                return { min: Math.floor(dMin), max: Math.ceil(dMax) };
+            }
+            if (colorScaleMode === 'global') {
+                return getOverallColorScaleRange();
+            }
+            // manual: use UI inputs
+            return getColorScaleValues();
         }
         
         // Function to create color legend
@@ -5677,54 +5726,90 @@
             console.log('Contour colors updated for all receiver planes with data');
         }
         
+        // Apply color scale from inputs to selected plane only (custom override)
+        function updateColorScaleForSelectedPlane() {
+            if (selectedPlanes.length === 0) return;
+            const plane = selectedPlanes[0];
+            if (plane.type !== "Receiver" || !plane.contourData) return;
+            const { min, max } = getColorScaleValues();
+            plane.colorScaleMin = min;
+            plane.colorScaleMax = max;
+            applyContourTexture(plane);
+            console.log(`Custom color scale for ${plane.name}: ${min} to ${max}`);
+        }
+        
+        // Update color scale inputs to reflect selected plane (custom values or data range)
+        function updateColorScaleInputsForSelection() {
+            const minInput = document.getElementById('colorScaleMin');
+            const maxInput = document.getElementById('colorScaleMax');
+            if (!minInput || !maxInput) return;
+            if (selectedPlanes.length === 1 && selectedPlanes[0].type === "Receiver" && selectedPlanes[0].contourData) {
+                const plane = selectedPlanes[0];
+                if (plane.colorScaleMin != null && plane.colorScaleMax != null) {
+                    minInput.value = plane.colorScaleMin;
+                    maxInput.value = plane.colorScaleMax;
+                } else {
+                    const dMin = Math.min(...plane.contourData.values);
+                    const dMax = Math.max(...plane.contourData.values);
+                    minInput.value = Math.floor(dMin);
+                    maxInput.value = Math.ceil(dMax);
+                }
+                minInput.disabled = false;
+                maxInput.disabled = false;
+            } else {
+                // No plane selected or not a receiver with contour: show global range or defaults
+                const range = getOverallColorScaleRange();
+                minInput.value = range.min;
+                maxInput.value = range.max;
+                minInput.disabled = false;
+                maxInput.disabled = false;
+            }
+        }
+        
         if (colorScaleMinEl) {
-            colorScaleMinEl.addEventListener('change', updateColorScale);
+            colorScaleMinEl.addEventListener('change', function() {
+                if (selectedPlanes.length === 1 && selectedPlanes[0].type === "Receiver" && selectedPlanes[0].contourData) {
+                    updateColorScaleForSelectedPlane();
+                } else {
+                    updateColorScale();
+                }
+            });
         }
         
         if (colorScaleMaxEl) {
-            colorScaleMaxEl.addEventListener('change', updateColorScale);
+            colorScaleMaxEl.addEventListener('change', function() {
+                if (selectedPlanes.length === 1 && selectedPlanes[0].type === "Receiver" && selectedPlanes[0].contourData) {
+                    updateColorScaleForSelectedPlane();
+                } else {
+                    updateColorScale();
+                }
+            });
         }
 
-        // Auto color scale button handler
+        // Auto color scale button handler - cycles: Auto -> Per Plane -> Global -> Per Plane -> Global -> ...
         const autoColorScaleBtn = document.getElementById('autoColorScaleBtn');
         if (autoColorScaleBtn) {
             autoColorScaleBtn.addEventListener('click', function() {
-                // Check if a plane is selected
-                if (selectedPlanes.length === 0) {
-                    alert('Please select a receiver plane first.');
-                    return;
+                // Cycle mode: manual -> perPlane -> global -> perPlane -> global -> ...
+                if (colorScaleMode === 'manual') {
+                    colorScaleMode = 'perPlane';
+                    autoColorScaleBtn.textContent = 'Per Plane';
+                } else if (colorScaleMode === 'perPlane') {
+                    colorScaleMode = 'global';
+                    autoColorScaleBtn.textContent = 'Global';
+                } else {
+                    colorScaleMode = 'perPlane';
+                    autoColorScaleBtn.textContent = 'Per Plane';
                 }
                 
-                const selectedPlane = selectedPlanes[0];
+                // Re-apply contours to all receiver planes with data
+                planes.forEach(plane => {
+                    if (plane.type === "Receiver" && plane.contourData) {
+                        applyContourTexture(plane);
+                    }
+                });
                 
-                // Check if it's a receiver plane
-                if (selectedPlane.type !== "Receiver") {
-                    alert('Please select a receiver plane. Only receiver planes have contour data.');
-                    return;
-                }
-                
-                // Check if the receiver has contour data
-                if (!selectedPlane.contourData || !selectedPlane.contourData.values) {
-                    alert(`No contour data available for "${selectedPlane.name}". Please run Calculate first.`);
-                    return;
-                }
-                
-                // Get min and max from contour data
-                const dataMin = Math.min(...selectedPlane.contourData.values);
-                const dataMax = Math.max(...selectedPlane.contourData.values);
-                
-                // Round down for min, round up for max
-                const roundedMin = Math.floor(dataMin);
-                const roundedMax = Math.ceil(dataMax);
-                
-                // Update the input fields
-                document.getElementById('colorScaleMin').value = roundedMin;
-                document.getElementById('colorScaleMax').value = roundedMax;
-                
-                // Trigger the color scale update
-                updateColorScale();
-                
-                console.log(`Auto color scale set: ${roundedMin} to ${roundedMax} (from data range ${dataMin.toFixed(2)} to ${dataMax.toFixed(2)})`);
+                console.log(`Color scale mode: ${colorScaleMode}`);
             });
         }
 
@@ -5877,9 +5962,9 @@
             const n = contourData.width;
             const m = contourData.height;
             
-            // Get user-defined color scale
-            const { min, max } = getColorScaleValues();
-            console.log(`Using color scale: ${min} to ${max}`);
+            // Get color scale for this plane (respects mode and per-plane custom override)
+            const { min, max } = getColorScaleForPlane(plane);
+            console.log(`Using color scale for ${plane.name}: ${min} to ${max}`);
             
             // Calculate SVG dimensions based on plane aspect ratio
             const planeAspectRatio = plane.width / plane.height;
@@ -5987,7 +6072,7 @@
             // Log actual data range vs color scale range
             const dataMin = Math.min(...selectedPlane.contourData.values);
             const dataMax = Math.max(...selectedPlane.contourData.values);
-            const { min: userScaleMin, max: userScaleMax } = getColorScaleValues();
+            const { min: userScaleMin, max: userScaleMax } = getColorScaleForPlane(selectedPlane);
             
             console.log(`📊 Contour Data Analysis for "${selectedPlane.name}":`);
             console.log(`   Actual data range: ${dataMin.toFixed(3)} to ${dataMax.toFixed(3)}`);
@@ -6052,8 +6137,8 @@
             const path = d3.geoPath().projection(projection);
             const contours = d3.contours().size([n, m]);
             
-            // Get user-defined color scale
-            const { min: colorMin, max: colorMax } = getColorScaleValues();
+            // Get color scale for this plane (respects mode and per-plane custom override)
+            const { min: colorMin, max: colorMax } = getColorScaleForPlane(selectedPlane);
             const color = d3.scaleSequential(d3.interpolateTurbo).domain([colorMin, colorMax]);
 
             svg.append("g")
@@ -6498,7 +6583,10 @@
                     textureData: plane.mesh.material.map ? {
                         isContourTexture: plane.mesh.material.map.isContourTexture || false,
                         contourData: plane.mesh.material.map.contourData || null
-                    } : null
+                    } : null,
+                    // Per-plane custom color scale override
+                    colorScaleMin: plane.colorScaleMin,
+                    colorScaleMax: plane.colorScaleMax
                 })),
                 groups: selectedPlaneGroup ? {
                     planeIds: selectedPlanes.map(p => p.id),
@@ -6623,6 +6711,10 @@
                         restoreContourTexture(plane, planeState.textureData.contourData);
                     }
                 }
+
+                // Restore per-plane custom color scale override
+                if (planeState.colorScaleMin != null) plane.colorScaleMin = planeState.colorScaleMin;
+                if (planeState.colorScaleMax != null) plane.colorScaleMax = planeState.colorScaleMax;
 
                 if (planeState.selected) {
                     selectedPlanes.push(plane);
@@ -6836,8 +6928,10 @@
                 const path = d3.geoPath().projection(projection);
                 const contours = d3.contours().size([n, m]);
                 
-                // Get user-defined color scale
-                const { min, max } = getColorScaleValues();
+                // Ensure plane has contourData for getColorScaleForPlane
+                plane.contourData = { width: gridWidth, height: gridHeight, values };
+                // Get color scale for this plane (respects mode and per-plane custom override)
+                const { min, max } = getColorScaleForPlane(plane);
                 const color = d3.scaleSequential(d3.interpolateTurbo).domain([min, max]);
 
                 svg.append("g")
