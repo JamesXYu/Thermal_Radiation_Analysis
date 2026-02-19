@@ -307,7 +307,7 @@
         }
 
         #autoColorScaleBtn {
-            padding: 6px 12px;
+            padding: 3px 6px;
             font-size: 14px;
             font-family: 'Poppins', sans-serif;
             font-weight: 600;
@@ -5125,42 +5125,43 @@
             else msPerPoint = 9;
             return Math.max(300, Math.min(120000, totalPoints * msPerPoint));
         }
-
-        /**
-         * Count receiver-emitter point iterations.
-         * Total = (sum of receiver points) × (sum of emitter points).
-         * Example: 1 receiver 1×1 (x points), 2 emitters 1×1 each (y points each) → x × 2y.
-         * @param {Object} receiverPlaneData - { name: { width, height, points } }
-         * @param {Array} emitterPlanes - planes with type "Emitter", each has width, height
-         * @param {number} N - points per unit (grid resolution)
-         * @returns {{ receiverPoints: number, emitterPoints: number, totalIterations: number, breakdown: Object }}
-         */
-        function countReceiverEmitterIterations(receiverPlaneData, emitterPlanes, N) {
-            const n = Math.max(1, Math.min(10, parseInt(N, 10) || 2));
-            let receiverPoints = 0;
-            const receiverBreakdown = {};
-            Object.keys(receiverPlaneData).forEach(name => {
-                const p = receiverPlaneData[name];
-                const pts = (p.width || 0) * (p.height || 0);
-                receiverBreakdown[name] = pts;
-                receiverPoints += pts;
-            });
-
-            let emitterPoints = 0;
-            const emitterBreakdown = {};
-            emitterPlanes.forEach(plane => {
-                const gw = Math.max(2, Math.round((plane.width || 1) * n));
-                const gh = Math.max(2, Math.round((plane.height || 1) * n));
+        
+        // Pure frontend: count receiver-emitter point interactions based on resolution and plane sizes.
+        // Formula: totalInteractions = (sum of receiver grid points) × (sum of emitter grid points)
+        // Uses same N (points per unit) for both receivers and emitters.
+        function countReceiverEmitterInteractions() {
+            const N = Math.max(1, Math.min(10, parseInt(receiverGridSize, 10) || 2));
+            const receivers = planes.filter(p => p.type === "Receiver");
+            const emitters = planes.filter(p => p.type === "Emitter");
+            
+            let totalReceiverPoints = 0;
+            const receiverBreakdown = [];
+            receivers.forEach(plane => {
+                const gw = Math.max(2, Math.round(plane.width * N));
+                const gh = Math.max(2, Math.round(plane.height * N));
                 const pts = gw * gh;
-                emitterBreakdown[plane.name || 'Unknown'] = pts;
-                emitterPoints += pts;
+                totalReceiverPoints += pts;
+                receiverBreakdown.push({ name: plane.name, size: `${plane.width.toFixed(2)}×${plane.height.toFixed(2)}`, grid: `${gw}×${gh}`, points: pts });
             });
-
+            
+            let totalEmitterPoints = 0;
+            const emitterBreakdown = [];
+            emitters.forEach(plane => {
+                const gw = Math.max(2, Math.round(plane.width * N));
+                const gh = Math.max(2, Math.round(plane.height * N));
+                const pts = gw * gh;
+                totalEmitterPoints += pts;
+                emitterBreakdown.push({ name: plane.name, size: `${plane.width.toFixed(2)}×${plane.height.toFixed(2)}`, grid: `${gw}×${gh}`, points: pts });
+            });
+            
+            const totalInteractions = totalReceiverPoints * totalEmitterPoints;
             return {
-                receiverPoints,
-                emitterPoints,
-                totalIterations: receiverPoints * emitterPoints,
-                breakdown: { receiver: receiverBreakdown, emitter: emitterBreakdown }
+                N,
+                totalReceiverPoints,
+                totalEmitterPoints,
+                totalInteractions,
+                receiverBreakdown,
+                emitterBreakdown
             };
         }
         
@@ -5458,11 +5459,11 @@
                 return;
             }
             
-            const calcStartTime = Date.now();
             calculateBtn.textContent = 'Stop';
             calculateBtn.classList.add('calculating');
             calculateBtn.disabled = false;
             
+            const calcStartTime = Date.now();
             try {
                 const receiver_planes = {};
                 const polygons = [];
@@ -5631,12 +5632,20 @@
                 // Also log a summary
                 console.log(`JSON Summary: ${Object.keys(receiver_planes).length} receiver planes, ${polygons.length} emitter polygons, ${inert_polygons.length} inert polygons`);
 
-                // Count receiver-emitter iterations
-                const emitterPlanes = planes.filter(p => p.type === "Emitter");
-                const iterCount = countReceiverEmitterIterations(receiverPlaneData, emitterPlanes, receiverGridSize);
-                console.log(`\n📐 Iteration count: ${iterCount.receiverPoints} receiver points × ${iterCount.emitterPoints} emitter points = ${iterCount.totalIterations.toLocaleString()} total iterations`);
-                console.log('   Receiver breakdown:', iterCount.breakdown.receiver);
-                console.log('   Emitter breakdown:', iterCount.breakdown.emitter);
+                // Pure frontend: count receiver-emitter interactions (no backend)
+                const interactionCount = countReceiverEmitterInteractions();
+                console.log(`\n=== INTERACTION COUNT (frontend estimate) ===`);
+                console.log(`Resolution: ${interactionCount.N} points/unit`);
+                interactionCount.receiverBreakdown.forEach(r => {
+                    console.log(`  Receiver "${r.name}": ${r.size} → grid ${r.grid} = ${r.points} points`);
+                });
+                interactionCount.emitterBreakdown.forEach(e => {
+                    console.log(`  Emitter "${e.name}": ${e.size} → grid ${e.grid} = ${e.points} points`);
+                });
+                console.log(`Total receiver points: ${interactionCount.totalReceiverPoints}`);
+                console.log(`Total emitter points: ${interactionCount.totalEmitterPoints}`);
+                console.log(`Total interactions (receiver × emitter): ${interactionCount.totalInteractions.toLocaleString()}`);
+                console.log(`=== END INTERACTION COUNT ===\n`);
 
                 // Pseudo progress: estimate time and animate bar
                 const totalPoints = Object.values(receiverPlaneData).reduce((s, p) => s + p.width * p.height, 0);
@@ -5678,8 +5687,9 @@
                 
                 const responseData = await resp.json();
                 
+                // Log calculation duration (click Calculate → backend response received)
                 const calcElapsedMs = Date.now() - calcStartTime;
-                console.log(`\n⏱️ Calculation time: ${(calcElapsedMs / 1000).toFixed(2)}s (${calcElapsedMs}ms) — from Calculate click to backend data received`);
+                console.log(`\n⏱️ Calculation time: ${(calcElapsedMs / 1000).toFixed(2)}s (${calcElapsedMs} ms) — from click to backend response\n`);
                 
                 // Log the complete backend response
                 console.log('=== BACKEND RESPONSE RECEIVED ===');
@@ -5744,10 +5754,12 @@
                     throw new Error('Invalid response format from backend');
                 }
             } catch (err) {
+                const calcElapsedMs = Date.now() - calcStartTime;
                 if (err.name === 'AbortError') {
-                    console.log('Calculation stopped by user');
+                    console.log(`Calculation stopped by user after ${(calcElapsedMs / 1000).toFixed(2)}s`);
                 } else {
                     console.error('Failed to fetch contour data:', err);
+                    console.log(`Elapsed before error: ${(calcElapsedMs / 1000).toFixed(2)}s`);
                     alert(`Failed to fetch contour data from backend: ${err.message}`);
                 }
             } finally {
@@ -5872,13 +5884,13 @@
                 // Cycle mode: manual -> perPlane -> global -> perPlane -> global -> ...
                 if (colorScaleMode === 'manual') {
                     colorScaleMode = 'perPlane';
-                    autoColorScaleBtn.textContent = 'Per Plane';
+                    autoColorScaleBtn.textContent = 'Plane';
                 } else if (colorScaleMode === 'perPlane') {
                     colorScaleMode = 'global';
                     autoColorScaleBtn.textContent = 'Global';
                 } else {
                     colorScaleMode = 'perPlane';
-                    autoColorScaleBtn.textContent = 'Per Plane';
+                    autoColorScaleBtn.textContent = 'Plane';
                 }
                 
                 // Re-apply contours to all receiver planes with data
