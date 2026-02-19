@@ -1415,8 +1415,16 @@
             }
         }
 
+        function isTypingInInput() {
+            const el = document.activeElement;
+            if (!el) return false;
+            const tag = el.tagName?.toLowerCase();
+            return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable;
+        }
+
         // Replace the current keyboard event listener with this:
         window.addEventListener('keydown', (event) => {
+            if (isTypingInInput()) return;
             if (event.ctrlKey || event.metaKey) {
                 if (event.key === 'z' && !event.shiftKey) {
                     undo();
@@ -2220,6 +2228,7 @@
                     alert("Failed to load image. Try another file.");
                 });
                 img.src = imageUrl;
+                event.target.value = '';
             };
             reader.onerror = (error) => {
                 console.error("FileReader error:", error);
@@ -3908,6 +3917,7 @@
         }
         window.addEventListener("mousedown", restoration);
         window.addEventListener('keydown', (event) => {
+            if (isTypingInInput()) return;
             if (!transformControlss) return;
 
             switch (event.key.toLowerCase()) {
@@ -4005,6 +4015,7 @@
             }
         });
         window.addEventListener("keydown", function (event) {
+            if (isTypingInInput()) return;
             if (event.key === "Delete") {
                 deleteplanefn();
             }
@@ -4493,6 +4504,7 @@
                     console.error('Error parsing scene file:', error);
                     alert('Error loading scene file');
                 }
+                event.target.value = '';
             };
             reader.readAsText(file);
         }
@@ -4579,6 +4591,7 @@
                 
                 // Set the dropdown to the current level
                 document.getElementById('sceneDropdown').value = currentLevel;
+                updateSaveButtonState();
             }
             
             alert(`Imported ${Object.keys(importData.levels).length} levels successfully!`);
@@ -4836,7 +4849,7 @@
             const scenes = getSavedScenes();
             
             // Clear existing options except the first one
-            dropdown.innerHTML = '<option value="">Select a scene...</option>';
+            dropdown.innerHTML = '<option value="">Select a level...</option>';
             
             // Add saved scenes to dropdown
             Object.keys(scenes).sort().forEach(sceneName => {
@@ -4845,14 +4858,61 @@
                 option.textContent = sceneName;
                 dropdown.appendChild(option);
             });
+            updateSaveButtonState();
+        }
+
+        function updateSaveButtonState() {
+            const btn = document.getElementById('saveSceneBtn');
+            const dropdown = document.getElementById('sceneDropdown');
+            const sceneName = dropdown.value;
+            const scenes = getSavedScenes();
+            const isEditingSavedLevel = sceneName && scenes[sceneName];
+            btn.textContent = isEditingSavedLevel ? 'Update Level' : 'Save Level';
         }
 
         // clearScene function is defined earlier (before loadSceneData)
 
         // Save current scene button
         document.getElementById('saveSceneBtn').addEventListener('click', () => {
-            showLevelNameModal();
+            const dropdown = document.getElementById('sceneDropdown');
+            const sceneName = dropdown.value;
+            const scenes = getSavedScenes();
+            if (sceneName && scenes[sceneName]) {
+                updateCurrentLevel();
+            } else {
+                showLevelNameModal();
+            }
         });
+
+        document.getElementById('sceneDropdown').addEventListener('change', updateSaveButtonState);
+
+        function updateCurrentLevel() {
+            const dropdown = document.getElementById('sceneDropdown');
+            const sceneName = dropdown.value;
+            if (!sceneName) return;
+            
+            const wasInTopView = (activeCamera === cameras.top);
+            if (wasInTopView) {
+                removeAllTopViewElements();
+            }
+            
+            const scenes = getSavedScenes();
+            const sceneData = getCurrentSceneData();
+            scenes[sceneName] = {
+                data: sceneData,
+                timestamp: new Date().toISOString()
+            };
+            saveScenesToStorage(scenes);
+            updateSceneDropdown();
+            document.getElementById('sceneDropdown').value = sceneName;
+            
+            if (wasInTopView) {
+                planes.forEach(plane => {
+                    createTopViewLine(plane);
+                });
+            }
+            alert(`Level "${sceneName}" updated successfully!`);
+        }
 
         // Level name modal functions
         function showLevelNameModal() {
@@ -4957,6 +5017,8 @@
             // Load the scene
             try {
                 await loadSceneData(savedScene);
+                document.getElementById('sceneDropdown').value = sceneName;
+                updateSaveButtonState();
                 alert(`Scene "${sceneName}" loaded successfully!`);
             } catch (error) {
                 console.error('Error loading scene:', error);
@@ -4980,6 +5042,7 @@
             const scenes = getSavedScenes();
             delete scenes[sceneName];
             saveScenesToStorage(scenes);
+            document.getElementById('sceneDropdown').value = '';
             updateSceneDropdown();
             
             alert(`Scene "${sceneName}" deleted successfully!`);
@@ -4994,6 +5057,8 @@
             }
             
             clearScene();
+            document.getElementById('sceneDropdown').value = '';
+            updateSaveButtonState();
         });
 
         // Initialize scene dropdown on page load
@@ -5670,6 +5735,7 @@
         let isCtrlPressed = false; // Track Ctrl key state
         // Add these near your other key listeners
         window.addEventListener('keydown', (event) => {
+            if (isTypingInInput()) return;
             if (event.key === 'Control') {
                 isCtrlPressed = true;
             }
