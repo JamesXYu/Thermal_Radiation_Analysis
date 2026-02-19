@@ -518,9 +518,39 @@
         #calcProgressFill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #00a19b, #00c9c2);
+            position: relative;
+            background: linear-gradient(90deg, #0088cc, #00b4d8, #48cae4, #90e0ef);
+            background-size: 300% 100%;
             border-radius: 4px;
             transition: width 0.15s ease-out;
+            animation: calcProgressGradient 2s linear infinite;
+            box-shadow: 0 0 12px rgba(0, 180, 216, 0.4);
+        }
+        #calcProgressFill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255,255,255,0.4) 45%,
+                rgba(255,255,255,0.6) 50%,
+                rgba(255,255,255,0.4) 55%,
+                transparent 100%
+            );
+            background-size: 40% 100%;
+            animation: calcProgressShimmer 1.2s ease-in-out infinite;
+        }
+        @keyframes calcProgressGradient {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        @keyframes calcProgressShimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(350%); }
         }
         #calcProgressPct {
             font-family: 'Poppins', sans-serif;
@@ -5095,6 +5125,44 @@
             else msPerPoint = 9;
             return Math.max(300, Math.min(120000, totalPoints * msPerPoint));
         }
+
+        /**
+         * Count receiver-emitter point iterations.
+         * Total = (sum of receiver points) × (sum of emitter points).
+         * Example: 1 receiver 1×1 (x points), 2 emitters 1×1 each (y points each) → x × 2y.
+         * @param {Object} receiverPlaneData - { name: { width, height, points } }
+         * @param {Array} emitterPlanes - planes with type "Emitter", each has width, height
+         * @param {number} N - points per unit (grid resolution)
+         * @returns {{ receiverPoints: number, emitterPoints: number, totalIterations: number, breakdown: Object }}
+         */
+        function countReceiverEmitterIterations(receiverPlaneData, emitterPlanes, N) {
+            const n = Math.max(1, Math.min(10, parseInt(N, 10) || 2));
+            let receiverPoints = 0;
+            const receiverBreakdown = {};
+            Object.keys(receiverPlaneData).forEach(name => {
+                const p = receiverPlaneData[name];
+                const pts = (p.width || 0) * (p.height || 0);
+                receiverBreakdown[name] = pts;
+                receiverPoints += pts;
+            });
+
+            let emitterPoints = 0;
+            const emitterBreakdown = {};
+            emitterPlanes.forEach(plane => {
+                const gw = Math.max(2, Math.round((plane.width || 1) * n));
+                const gh = Math.max(2, Math.round((plane.height || 1) * n));
+                const pts = gw * gh;
+                emitterBreakdown[plane.name || 'Unknown'] = pts;
+                emitterPoints += pts;
+            });
+
+            return {
+                receiverPoints,
+                emitterPoints,
+                totalIterations: receiverPoints * emitterPoints,
+                breakdown: { receiver: receiverBreakdown, emitter: emitterBreakdown }
+            };
+        }
         
         // Color scale settings
         let colorScaleMin = 0;
@@ -5390,6 +5458,7 @@
                 return;
             }
             
+            const calcStartTime = Date.now();
             calculateBtn.textContent = 'Stop';
             calculateBtn.classList.add('calculating');
             calculateBtn.disabled = false;
@@ -5562,6 +5631,13 @@
                 // Also log a summary
                 console.log(`JSON Summary: ${Object.keys(receiver_planes).length} receiver planes, ${polygons.length} emitter polygons, ${inert_polygons.length} inert polygons`);
 
+                // Count receiver-emitter iterations
+                const emitterPlanes = planes.filter(p => p.type === "Emitter");
+                const iterCount = countReceiverEmitterIterations(receiverPlaneData, emitterPlanes, receiverGridSize);
+                console.log(`\n📐 Iteration count: ${iterCount.receiverPoints} receiver points × ${iterCount.emitterPoints} emitter points = ${iterCount.totalIterations.toLocaleString()} total iterations`);
+                console.log('   Receiver breakdown:', iterCount.breakdown.receiver);
+                console.log('   Emitter breakdown:', iterCount.breakdown.emitter);
+
                 // Pseudo progress: estimate time and animate bar
                 const totalPoints = Object.values(receiverPlaneData).reduce((s, p) => s + p.width * p.height, 0);
                 const estimatedMs = estimateCalculationMs(totalPoints, receiverGridSize);
@@ -5601,6 +5677,9 @@
                 progressPct.textContent = '100%';
                 
                 const responseData = await resp.json();
+                
+                const calcElapsedMs = Date.now() - calcStartTime;
+                console.log(`\n⏱️ Calculation time: ${(calcElapsedMs / 1000).toFixed(2)}s (${calcElapsedMs}ms) — from Calculate click to backend data received`);
                 
                 // Log the complete backend response
                 console.log('=== BACKEND RESPONSE RECEIVED ===');
