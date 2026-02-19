@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Manual - TRA Software</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #faf9f7;
+            --text-color: #2c2c2c;
+            --heading-color: #1a1a1a;
+            --accent-color: #00857c;
+            --accent-light: #e8f5f4;
+            --border-color: #e0ddd8;
+            --code-bg: #f4f3f1;
+            --table-stripe: #f8f7f5;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.75;
+            color: var(--text-color);
+            background: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Crimson Pro', Georgia, serif;
+            color: var(--heading-color);
+            font-weight: 600;
+            margin-top: 2.5em;
+            margin-bottom: 0.8em;
+            line-height: 1.3;
+        }
+
+        h1 {
+            font-size: 2.8em;
+            margin-top: 0;
+            padding-bottom: 0.4em;
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        h2 {
+            font-size: 2em;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h3 { font-size: 1.5em; color: var(--accent-color); }
+        h4 { font-size: 1.25em; }
+
+        p { margin: 1em 0; text-align: justify; }
+        strong { font-weight: 600; }
+        em { font-style: italic; }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        a:hover { border-bottom-color: var(--accent-color); }
+
+        ul, ol { margin: 1em 0; padding-left: 2em; }
+        li { margin: 0.5em 0; }
+        li > ul, li > ol { margin: 0.3em 0; }
+
+        code {
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            background: var(--code-bg);
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: var(--code-bg);
+            padding: 1em;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5em 0;
+            font-size: 0.95em;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border: 1px solid var(--border-color);
+        }
+
+        th {
+            background: var(--accent-light);
+            font-weight: 600;
+            color: var(--heading-color);
+        }
+
+        tr:nth-child(even) { background: var(--table-stripe); }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: var(--border-color);
+            margin: 3em 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 2em;
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--accent-color);
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.2s;
+            text-decoration: none;
+            border: none;
+        }
+
+        .nav-link:hover {
+            background: #006b64;
+            transform: translateX(-4px);
+            color: white;
+        }
+
+        .nav-link.manual { background: #5a6268; }
+        .nav-link.manual:hover { background: #495057; }
+
+        @media print {
+            body { background: white; }
+            .container { max-width: none; padding: 20px; }
+            .nav-links { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 30px 20px; }
+            h1 { font-size: 2em; }
+            h2 { font-size: 1.6em; }
+            table { font-size: 0.85em; }
+            th, td { padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">← Back to Application</a>
+        </div>
+
+        <h1>Thermal Radiation Analysis – User Manual</h1>
+
+        <h2 id="overview">Overview</h2>
+        <p>This application allows you to create 3D thermal radiation models, calculate radiation exchange between surfaces, and visualize temperature distributions on receiver planes.</p>
+        <p><strong>Key Concepts:</strong></p>
+        <ul>
+            <li><strong>Emitters</strong>: Surfaces that emit thermal radiation (have temperature)</li>
+            <li><strong>Receivers</strong>: Surfaces that measure incoming radiation</li>
+            <li><strong>Inert</strong>: Non-participating surfaces (block radiation but don't emit/receive)</li>
+        </ul>
+
+        <hr>
+
+        <h2 id="shortcuts">Keyboard Shortcuts (Quick Reference)</h2>
+        <table>
+            <thead>
+                <tr><th>Key</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="2"><strong>General</strong></td></tr>
+                <tr><td><code>Ctrl + Z</code></td><td>Undo</td></tr>
+                <tr><td><code>Ctrl + Y</code></td><td>Redo</td></tr>
+                <tr><td><code>Delete</code></td><td>Delete selected plane(s)</td></tr>
+                <tr><td><code>Ctrl + C</code></td><td>Copy</td></tr>
+                <tr><td><code>Ctrl + V</code></td><td>Paste</td></tr>
+                <tr><td><code>Shift</code> + click</td><td>Multi-select</td></tr>
+                <tr><td colspan="2"><strong>Transform</strong></td></tr>
+                <tr><td><code>Q</code></td><td>Toggle local/world</td></tr>
+                <tr><td><code>W</code></td><td>Translate (move)</td></tr>
+                <tr><td><code>E</code></td><td>Scale</td></tr>
+                <tr><td><code>R</code></td><td>Rotate</td></tr>
+                <tr><td colspan="2"><strong>Actions</strong></td></tr>
+                <tr><td><code>A</code></td><td>Add plane</td></tr>
+                <tr><td><code>M</code></td><td>Add Walls (toggle)</td></tr>
+                <tr><td><code>C</code></td><td>Calculate / Stop</td></tr>
+                <tr><td><code>D</code></td><td>Show detail</td></tr>
+                <tr><td><code>P</code></td><td>Set scale</td></tr>
+                <tr><td><code>I</code></td><td>Import scene</td></tr>
+                <tr><td><code>O</code></td><td>Export scene</td></tr>
+                <tr><td colspan="2"><strong>Views</strong></td></tr>
+                <tr><td><code>T</code></td><td>Top view</td></tr>
+                <tr><td><code>Y</code></td><td>Perspective view</td></tr>
+                <tr><td><code>,</code> / <code>.</code></td><td>Rotate top view (when in top view)</td></tr>
+                <tr><td colspan="2"><strong>Other</strong></td></tr>
+                <tr><td><code>G</code></td><td>Toggle grid snap</td></tr>
+                <tr><td><code>H</code></td><td>Toggle grid visibility</td></tr>
+                <tr><td><code>N</code></td><td>Toggle normal arrow</td></tr>
+                <tr><td><code>S</code></td><td>Stand plane on ground</td></tr>
+                <tr><td><code>Escape</code></td><td>Exit Add Walls mode</td></tr>
+                <tr><td><code>Enter</code> / <code>Escape</code></td><td>Confirm / Cancel (in dialogs)</td></tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h2 id="setup">Setup & Installation</h2>
+        <h3>Prerequisites</h3>
+        <ul>
+            <li><strong>Python 3</strong> (for serving the frontend)</li>
+            <li><strong>g++</strong> with C++17 support (for compiling the backend)</li>
+            <li><strong>curl</strong> (optional)</li>
+        </ul>
+
+        <h3>Quick Start</h3>
+        <p>From the <code>TRA test</code> directory:</p>
+        <pre>cd "TRA test"
+./run.sh setup    # First time: download deps, compile backend
+./run.sh start    # Start backend (port 8080) + frontend (port 3000)</pre>
+        <p>This starts both servers and opens your browser at <strong>http://localhost:3000</strong>.</p>
+
+        <h3>Manual Setup</h3>
+        <p><strong>Backend (port 8080):</strong></p>
+        <pre>cd "TRA test"
+./run.sh setup
+./bin/server</pre>
+        <p><strong>Frontend (port 3000):</strong> In a separate terminal:</p>
+        <pre>cd "TRA test/frontend"
+python3 -m http.server 3000</pre>
+
+        <h3>Ports</h3>
+        <table>
+            <thead><tr><th>Service</th><th>Port</th><th>URL</th></tr></thead>
+            <tbody>
+                <tr><td>Backend</td><td>8080</td><td>http://localhost:8080</td></tr>
+                <tr><td>Frontend</td><td>3000</td><td>http://localhost:3000</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Run Script Commands</h3>
+        <table>
+            <thead><tr><th>Command</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>./run.sh setup</code></td><td>Download cpp-httplib, compile backend</td></tr>
+                <tr><td><code>./run.sh start</code></td><td>Start backend + frontend</td></tr>
+                <tr><td><code>./run.sh stop</code></td><td>Stop both servers</td></tr>
+                <tr><td><code>./run.sh restart</code></td><td>Restart both servers</td></tr>
+                <tr><td><code>./run.sh status</code></td><td>Check if servers are running</td></tr>
+                <tr><td><code>./run.sh test</code></td><td>Test backend health and status</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Troubleshooting Setup</h3>
+        <p><strong>"Failed to fetch" or "Empty reply from server"</strong></p>
+        <ul>
+            <li>Backend must stay running: run <code>./bin/server</code> in a terminal and leave it open</li>
+            <li>Verify: <code>curl http://localhost:8080/health</code> should return <code>{"status":"ok"}</code></li>
+            <li>Use <code>http://localhost:3000</code> for the frontend (not <code>file://</code>)</li>
+        </ul>
+
+        <hr>
+
+        <h2 id="interface">Interface Layout</h2>
+        <ul>
+            <li><strong>3D Viewport</strong>: Main area showing your 3D model</li>
+            <li><strong>Left Sidebar</strong>: Collapsible sections with controls</li>
+            <li><strong>Grid</strong>: Reference grid (can be toggled on/off)</li>
+            <li><strong>Coordinate System</strong>: X (red), Y (green), Z (blue) axes</li>
+        </ul>
+
+        <hr>
+
+        <h2 id="mouse">Mouse Controls</h2>
+        <h3>Basic Navigation</h3>
+        <table>
+            <thead><tr><th>Action</th><th>Control</th></tr></thead>
+            <tbody>
+                <tr><td>Pan (orthographic views)</td><td>Left-click + drag</td></tr>
+                <tr><td>Rotate (perspective view)</td><td>Left-click + drag</td></tr>
+                <tr><td>Zoom</td><td>Scroll wheel</td></tr>
+                <tr><td>Pan (alternative)</td><td>Right-click + drag</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Object Selection</h3>
+        <table>
+            <thead><tr><th>Action</th><th>Control</th></tr></thead>
+            <tbody>
+                <tr><td>Select plane</td><td>Single click on plane</td></tr>
+                <tr><td>Add to selection</td><td>Hold <code>Shift</code> + click plane</td></tr>
+                <tr><td>Deselect</td><td>Click empty space</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Wall Creation Mode</h3>
+        <ul>
+            <li><strong>Add point</strong>: Single click on ground</li>
+            <li><strong>Finish walls</strong>: Double-click anywhere</li>
+        </ul>
+
+        <hr>
+
+        <h2 id="features">Features by Section</h2>
+
+        <h3>Floor Plan</h3>
+        <p>Import and scale reference images. Choose file, enter actual width/height in meters.</p>
+
+        <h3>Plane</h3>
+        <ul>
+            <li><strong>Add</strong>: Create new plane (1m × 1m, default Receiver)</li>
+            <li><strong>Delete</strong>: Remove selected plane(s)</li>
+            <li><strong>Reset</strong>: Reset to default values</li>
+            <li><strong>Stand</strong>: Rotate plane to vertical (90° incline)</li>
+            <li><strong>Add Walls</strong>: Continuous wall creation; click points, double-click to finish</li>
+        </ul>
+
+        <h3>Resolution</h3>
+        <table>
+            <thead><tr><th>Setting</th><th>Value</th><th>Use Case</th></tr></thead>
+            <tbody>
+                <tr><td>Low</td><td>2</td><td>Fast preview</td></tr>
+                <tr><td>Mid</td><td>3</td><td>Balanced</td></tr>
+                <tr><td>High</td><td>5</td><td>Default, good detail</td></tr>
+                <tr><td>Detailed</td><td>10</td><td>High accuracy, slower</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Color Scale</h3>
+        <p><strong>Auto button</strong> cycles: Manual → Per Plane → Global. Min/Max inputs apply to selected plane when one is selected.</p>
+
+        <h3>Calculation</h3>
+        <ul>
+            <li><strong>Calculate</strong>: Run thermal radiation analysis (needs 1+ receiver, 1+ emitter)</li>
+            <li><strong>Show detail</strong>: Open contour modal for selected receiver</li>
+            <li><strong>Distance</strong>: Shown when exactly two planes are selected</li>
+        </ul>
+
+        <h3>Level Manager</h3>
+        <p>Save Level / Update Level, Load, Import, Delete, New Level. Levels stored in browser localStorage.</p>
+
+        <hr>
+
+        <h2 id="workflows">Common Workflows</h2>
+
+        <h3>Creating a Simple Model</h3>
+        <ol>
+            <li>Add plane, set Type: Emitter, Temperature: e.g. 500 K</li>
+            <li>Add another plane, keep Type: Receiver</li>
+            <li>Press <code>C</code> to Calculate</li>
+        </ol>
+
+        <h3>Using Floor Plan Reference</h3>
+        <ol>
+            <li>Choose file in Floor Plan, enter dimension</li>
+            <li>Press <code>P</code> to Set scale, click two points, enter distance</li>
+            <li>Press <code>M</code> for Add Walls, click corners, double-click to finish</li>
+        </ol>
+
+        <hr>
+
+        <h2 id="tips">Tips & Best Practices</h2>
+        <ul>
+            <li>Save frequently; use Level Manager and Export</li>
+            <li>Use Top view (<code>T</code>) for layout</li>
+            <li>Check plane orientation with normal arrow (<code>N</code>)</li>
+            <li>Verify backend: <code>curl http://localhost:8080/health</code></li>
+        </ul>
+
+        <hr>
+
+        <h2 id="troubleshooting">Troubleshooting</h2>
+        <table>
+            <thead><tr><th>Issue</th><th>Solution</th></tr></thead>
+            <tbody>
+                <tr><td>Failed to fetch</td><td>Keep backend running; use http://localhost:3000</td></tr>
+                <tr><td>No receiver planes found</td><td>Add plane with Type = Receiver</td></tr>
+                <tr><td>No emitter polygons found</td><td>Add plane with Type = Emitter, Temperature &gt; 0</td></tr>
+                <tr><td>Can't see spheres</td><td>Switch to Top view</td></tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <p><strong>Version</strong>: 1.1 · <strong>Last Updated</strong>: 2025</p>
+    </div>
+</body>
+</html>

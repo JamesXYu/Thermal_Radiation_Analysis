@@ -2,6 +2,7 @@
 
 ## 📚 Table of Contents
 - [Overview](#overview)
+- [Keyboard Shortcuts (Quick Reference)](#-keyboard-shortcuts-quick-reference)
 - [Setup & Installation](#setup--installation)
 - [Interface Layout](#interface-layout)
 - [Keyboard Shortcuts](#keyboard-shortcuts)
@@ -20,6 +21,44 @@ This application allows you to create 3D thermal radiation models, calculate rad
 - **Emitters**: Surfaces that emit thermal radiation (have temperature)
 - **Receivers**: Surfaces that measure incoming radiation
 - **Inert**: Non-participating surfaces (block radiation but don't emit/receive)
+
+---
+
+## ⌨️ Keyboard Shortcuts (Quick Reference)
+
+| Key | Action |
+|-----|--------|
+| **General** | |
+| `Ctrl + Z` | Undo |
+| `Ctrl + Y` | Redo |
+| `Delete` | Delete selected plane(s) |
+| `Ctrl + C` | Copy |
+| `Ctrl + V` | Paste |
+| `Shift` + click | Multi-select |
+| **Transform** | |
+| `Q` | Toggle local/world |
+| `W` | Translate (move) |
+| `E` | Scale |
+| `R` | Rotate |
+| **Actions** | |
+| `A` | Add plane |
+| `M` | Add Walls (toggle) |
+| `C` | Calculate / Stop |
+| `D` | Show detail |
+| `P` | Set scale |
+| `I` | Import scene |
+| `O` | Export scene |
+| **Views** | |
+| `T` | Top view |
+| `Y` | Perspective view |
+| `,` / `.` | Rotate top view (when in top view) |
+| **Other** | |
+| `G` | Toggle grid snap |
+| `H` | Toggle grid visibility |
+| `N` | Toggle normal arrow |
+| `S` | Stand plane on ground |
+| `Escape` | Exit Add Walls mode |
+| `Enter` / `Escape` | Confirm / Cancel (in dialogs) |
 
 ---
 
@@ -131,6 +170,16 @@ The interface consists of:
 | `W` | Switch to translate (move) mode |
 | `E` | Switch to scale mode |
 | `R` | Switch to rotate mode |
+
+### Actions
+| Shortcut | Action |
+|----------|--------|
+| `M` | Add Walls (toggle on/off) |
+| `C` | Calculate (or Stop if running) |
+| `D` | Show detail (contour modal) |
+| `P` | Set scale |
+| `I` | Import scene |
+| `O` | Export scene |
 
 ### Modal Dialogs
 | Shortcut | Action |
@@ -679,6 +728,12 @@ Each has:
 
 **Most Common Shortcuts:**
 ```
+M               Add Walls
+C               Calculate
+D               Show detail
+P               Set scale
+I               Import
+O               Export
 Ctrl + Z        Undo
 Ctrl + Y        Redo
 Delete          Delete plane
