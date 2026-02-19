@@ -1330,7 +1330,7 @@
             MAX_RETRIES: 3
         };
         
-        console.log("Radiation 3D Application loaded with config:", CONFIG);
+        console.log("TRA app loaded");
 
         // Backend communication utilities
         async function checkBackendHealth() {
@@ -1341,7 +1341,7 @@
                 });
                 return response.ok;
             } catch (error) {
-                console.warn('Backend health check failed:', error);
+                console.warn('Backend health check failed');
                 return false;
             }
         }
@@ -1357,24 +1357,18 @@
                 }
                 return null;
             } catch (error) {
-                console.warn('Backend status check failed:', error);
+                console.warn('Backend status check failed');
                 return null;
             }
         }
 
         // Test backend connection on page load
         async function testBackendConnection() {
-            console.log('Testing backend connection...');
             const isHealthy = await checkBackendHealth();
             if (isHealthy) {
-                console.log(' Backend is healthy');
-                const status = await getBackendStatus();
-                if (status) {
-                    console.log('Backend status:', status);
-                }
+                console.log('Backend connected');
             } else {
-                console.warn('Backend is not responding. Check your configuration.');
-                console.log('Current backend URL:', CONFIG.BACKEND_URL);
+                console.warn('Backend not responding');
             }
         }
 
@@ -2254,14 +2248,14 @@
                     imagePlane.visible = true;
                     grid.visible = true; // Hide grid
                 }, undefined, (error) => {
-                    console.error("Error loading image:", error);
+                    console.error('Image load failed');
                     alert("Failed to load image. Try another file.");
                 });
                 img.src = imageUrl;
                 event.target.value = '';
             };
             reader.onerror = (error) => {
-                console.error("FileReader error:", error);
+                console.error('File read failed');
                 alert("Error reading file. Try again.");
             };
             reader.readAsDataURL(file);
@@ -2394,7 +2388,7 @@
 
         function updatemeasureplane(input) {
             if (!scalingdist || !aspect) {
-                console.error("Measurement data not available");
+                console.error('Measurement data not available');
                 return;
             }
 
@@ -2720,7 +2714,7 @@
             
             // Log if no emitters were found
             if (emitterCount === 0) {
-                console.warn('No emitter planes in selection to update temperature');
+                console.warn('No emitters in selection');
             }
         }
 
@@ -2930,7 +2924,7 @@
             });
 
             if (validSelectedPlanes.length === 0) {
-                console.warn('No valid planes to delete');
+                console.warn('No planes to delete');
                 selectedPlanes = [];
                 return;
             }
@@ -3221,7 +3215,7 @@
             // React to Normal Direction changes
             controllers.positive.onChange(function () {
                 if (planeData.type === "Receiver" && planeData.contourData) {
-                    console.warn(`⚠️ Normal direction changed after calculation. You may need to recalculate for accurate results.`);
+                    console.warn('Normal direction changed; recalculate if needed');
                 }
                 
                 // Update the normal arrow visualization
@@ -4535,7 +4529,7 @@
                         loadSceneData(importData);
                     }
                 } catch (error) {
-                    console.error('Error parsing scene file:', error);
+                    console.error('Scene parse failed');
                     alert('Error loading scene file');
                 }
                 event.target.value = '';
@@ -4641,7 +4635,7 @@
             
             // Validate that we have valid scene data
             if (!actualSceneData || (!actualSceneData.planes && !actualSceneData.imagePlane)) {
-                console.error('Invalid scene data structure');
+                console.error('Invalid scene data');
                 alert('Invalid scene file format');
                 return;
             }
@@ -4742,7 +4736,6 @@
                 // Restore contour data for receiver planes
                 if (planeData.type === "Receiver" && planeData.contourData) {
                     newPlane.contourData = planeData.contourData;
-                    console.log(`Restored contour data for receiver plane "${newPlane.name}": ${planeData.contourData.values.length} values`);
                 }
                 // Restore per-plane custom color scale override
                 if (planeData.colorScaleMin != null) newPlane.colorScaleMin = planeData.colorScaleMin;
@@ -4759,7 +4752,6 @@
                 // Apply contour texture if contour data exists
                 if (newPlane.type === "Receiver" && newPlane.contourData) {
                     applyContourTexture(newPlane);
-                    console.log(`Applied contour texture to receiver plane "${newPlane.name}"`);
                 }
 
                 });
@@ -4821,7 +4813,7 @@
                     },
                     undefined,
                     (error) => {
-                        console.error('Error loading image:', error);
+                        console.error('Image load failed');
                         reject(error);
                     }
                 );
@@ -5061,7 +5053,7 @@
                 updateSaveButtonState();
                 alert(`Scene "${sceneName}" loaded successfully!`);
             } catch (error) {
-                console.error('Error loading scene:', error);
+                console.error('Scene load failed');
                 alert('Error loading scene');
             }
         });
@@ -5468,10 +5460,6 @@
 
                 // Helpers - Fixed to use actual mesh transformations
                 function computeWorldCorners(plane) {
-                    console.log(`🔧 Computing world corners for plane "${plane.name}"`);
-                    console.log(`  Plane dimensions: ${plane.width} x ${plane.height}`);
-                    console.log(`  Plane position: [${plane.x}, ${plane.y}, ${plane.z}]`);
-                    console.log(`  Plane rotation (angle/incline): [${plane.angle}°, ${plane.incline}°]`);
                     
                     // Use the SAME coordinate system as standPlaneOnGround() and generatePointsOnPlane()
                     // THREE.js PlaneGeometry lies in the XY plane with Z as the normal
@@ -5485,7 +5473,6 @@
                         new THREE.Vector3(-halfWidth, halfHeight, 0)
                     ];
                     
-                    console.log(`  Local corners before transform:`, corners.map(c => `[${c.x}, ${c.y}, ${c.z}]`));
                     
                     // Transform corners to world space using the ACTUAL mesh transformations
                     const worldCorners = corners.map(corner => {
@@ -5504,7 +5491,6 @@
                         ];
                     });
                     
-                    console.log(`  World corners after transform:`, worldCorners.map(c => `[${c[0]}, ${c[1]}, ${c[2]}]`));
                     
                     return worldCorners;
                 }
@@ -5518,15 +5504,9 @@
                     normal.applyQuaternion(plane.mesh.quaternion);
                     normal.normalize();
                     
-                    console.log(`    Normal before positive/negative check: [${normal.x.toFixed(4)}, ${normal.y.toFixed(4)}, ${normal.z.toFixed(4)}], positive=${plane.positive}`);
-                    
                     // Apply positive/negative setting
                     if (plane.positive) {
-                        // If positive direction is desired, flip the normal
                         normal.negate();
-                        console.log(`    Normal AFTER applying positive direction: [${normal.x.toFixed(4)}, ${normal.y.toFixed(4)}, ${normal.z.toFixed(4)}]`);
-                    } else {
-                        console.log(`    Normal kept as negative direction (no flip): [${normal.x.toFixed(4)}, ${normal.y.toFixed(4)}, ${normal.z.toFixed(4)}]`);
                     }
                     
                     // Return as array with high precision
@@ -5542,14 +5522,13 @@
                 const receiverPlaneNames = new Set();
                 const receiverPlanes = planes.filter(p => p.type === "Receiver");
                 receiverPlanes.forEach(plane => {
-                    if (receiverPlaneNames.has(plane.name)) {
+                        if (receiverPlaneNames.has(plane.name)) {
                         alert(`Warning: Multiple receiver planes have the same name "${plane.name}". Please rename them to get accurate results.`);
-                        console.error(`❌ DUPLICATE NAME DETECTED: "${plane.name}"`);
+                        console.error(`Duplicate receiver name: ${plane.name}`);
                     }
                     receiverPlaneNames.add(plane.name);
                 });
                 
-                console.log(`=== Processing ${receiverPlanes.length} Receiver Plane(s) ===`);
                 
                 // Collect receiver plane data by name first (order doesn't matter here)
                 const receiverPlaneData = {};
@@ -5564,21 +5543,11 @@
                         const gridWidth = Math.max(2, Math.round(plane.width * N));
                         const gridHeight = Math.max(2, Math.round(plane.height * N));
                         
-                        console.log(`\n📊 Receiver plane "${plane.name}": size ${plane.width.toFixed(3)}x${plane.height.toFixed(3)}, grid size ${gridWidth}x${gridHeight} (${N} points/unit)`);
-                        
                         const points = generatePointsOnPlane(plane, gridHeight, gridWidth);
                         const normalArr = computePlaneNormal(plane);
                         
-                        console.log(`  🔄 Plane "${plane.name}" - angle: ${plane.angle}°, incline: ${plane.incline}°, positive: ${plane.positive}`);
-                        console.log(`  📍 Plane mesh position: [${plane.mesh.position.x.toFixed(2)}, ${plane.mesh.position.y.toFixed(2)}, ${plane.mesh.position.z.toFixed(2)}]`);
-                        console.log(`  🔄 Plane mesh rotation (euler): [${(plane.mesh.rotation.x * 180/Math.PI).toFixed(2)}°, ${(plane.mesh.rotation.y * 180/Math.PI).toFixed(2)}°, ${(plane.mesh.rotation.z * 180/Math.PI).toFixed(2)}°]`);
-                        console.log(`  ➡️  Computed normal: [${normalArr[0]}, ${normalArr[1]}, ${normalArr[2]}]`);
-                        console.log(`  🎯 Sample point 0: [${points[0].position.x.toFixed(2)}, ${points[0].position.y.toFixed(2)}, ${points[0].position.z.toFixed(2)}]`);
-                        console.log(`  🎯 Sample point ${points.length-1}: [${points[points.length-1].position.x.toFixed(2)}, ${points[points.length-1].position.y.toFixed(2)}, ${points[points.length-1].position.z.toFixed(2)}]`);
-                        console.log(`  🎯 Total points generated: ${points.length}`);
-                        
                         if (receiverPlaneData[plane.name]) {
-                            console.error(`❌ OVERWRITING existing receiver plane data for "${plane.name}"!`);
+                            console.error(`Overwriting receiver data: ${plane.name}`);
                         }
                         receiverPlaneData[plane.name] = {
                             width: gridWidth,
@@ -5604,9 +5573,6 @@
                         // already handled above
                     } else if (plane.type === "Emitter") {
                         const worldCorners = computeWorldCorners(plane);
-                        console.log(`Emitter "${plane.name}" - temperature: ${plane.temperature}`);
-                        console.log(`  Position: [${plane.x}, ${plane.y}, ${plane.z}]`);
-                        console.log(`  Corners:`, worldCorners);
                         polygons.push({ polygon: worldCorners, temperature: plane.temperature });
                     } else if (plane.type === "Inert") {
                         const worldCorners = computeWorldCorners(plane);
@@ -5621,28 +5587,9 @@
                     num_rays: 100000
                 };
 
-                // Log the complete JSON output
-                console.log("=== COMPLETE JSON OUTPUT ===");
-                console.log(JSON.stringify(exportData, null, 2));
-                console.log("=== END JSON OUTPUT ===");
-                
-                // Also log a summary
-                console.log(`JSON Summary: ${Object.keys(receiver_planes).length} receiver planes, ${polygons.length} emitter polygons, ${inert_polygons.length} inert polygons`);
-
                 // Pure frontend: count receiver-emitter interactions (no backend)
                 const interactionCount = countReceiverEmitterInteractions();
-                console.log(`\n=== INTERACTION COUNT (frontend estimate) ===`);
-                console.log(`Resolution: ${interactionCount.N} points/unit`);
-                interactionCount.receiverBreakdown.forEach(r => {
-                    console.log(`  Receiver "${r.name}": ${r.size} → grid ${r.grid} = ${r.points} points`);
-                });
-                interactionCount.emitterBreakdown.forEach(e => {
-                    console.log(`  Emitter "${e.name}": ${e.size} → grid ${e.grid} = ${e.points} points`);
-                });
-                console.log(`Total receiver points: ${interactionCount.totalReceiverPoints}`);
-                console.log(`Total emitter points: ${interactionCount.totalEmitterPoints}`);
-                console.log(`Total interactions (receiver × emitter): ${interactionCount.totalInteractions.toLocaleString()}`);
-                console.log(`=== END INTERACTION COUNT ===\n`);
+                console.log(`Interactions: ${interactionCount.totalInteractions.toLocaleString()} (est. ~${(interactionCount.totalInteractions/1000).toFixed(0)}s)`);
 
                 // Pseudo progress: estimate time from total interactions (~1000 iterations/sec)
                 const totalInteractions = interactionCount.totalInteractions;
@@ -5664,7 +5611,7 @@
                     progressPct.textContent = pct + '%';
                 }, 150);
                 
-                console.log('Sending data to backend:', exportData);
+                console.log('Calculating...');
                 const resp = await fetch(BACKEND_CONTOUR_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -5684,34 +5631,15 @@
                 
                 const responseData = await resp.json();
                 
-                // Log calculation duration (click Calculate → backend response received)
                 const calcElapsedMs = Date.now() - calcStartTime;
-                console.log(`\n⏱️ Calculation time: ${(calcElapsedMs / 1000).toFixed(2)}s (${calcElapsedMs} ms) — from click to backend response\n`);
-                
-                // Log the complete backend response
-                console.log('=== BACKEND RESPONSE RECEIVED ===');
-                console.log('Full JSON response:', JSON.stringify(responseData, null, 2));
-                console.log('Number of planes in response:', responseData.planes ? responseData.planes.length : 0);
-                if (responseData.planes) {
-                    responseData.planes.forEach((plane, idx) => {
-                        console.log(`  Plane ${idx + 1}: "${plane.name}" - ${plane.width}x${plane.height} grid, ${plane.values.length} values`);
-                        console.log(`    Temperature range: ${Math.min(...plane.values).toFixed(2)} to ${Math.max(...plane.values).toFixed(2)}`);
-                    });
-                }
-                console.log('=== END BACKEND RESPONSE ===');
+                console.log(`Done in ${(calcElapsedMs / 1000).toFixed(1)}s`);
                 
                 if (responseData.success && responseData.planes && Array.isArray(responseData.planes)) {
                     // Process multiple planes
                     let planesProcessed = 0;
                     let planesNotMatched = [];
                     
-                    console.log(`\n=== Matching Backend Response to Receiver Planes ===`);
-                    console.log(`Backend returned ${responseData.planes.length} plane(s)`);
-                    console.log(`We have ${receiverPlanes.length} receiver plane(s) in scene`);
-                    
                     responseData.planes.forEach(planeData => {
-                        console.log(`\n🔍 Looking for plane with name: "${planeData.name}"`);
-                        
                         // Find matching receiver plane by name
                         const matchingPlane = planes.find(p => 
                             p.type === "Receiver" && p.name === planeData.name
@@ -5725,22 +5653,17 @@
                                 values: planeData.values
                             };
                             
-                            console.log(`✅ MATCHED! Contour data applied to receiver plane: ${matchingPlane.name}`);
-                            console.log(`   Grid: ${planeData.width}x${planeData.height}, Values: ${planeData.values.length}`);
                             planesProcessed++;
                             
                             // Apply contour texture to the plane
                             applyContourTexture(matchingPlane);
                         } else {
-                            console.error(`❌ NO MATCH FOUND for backend plane: "${planeData.name}"`);
-                            console.log(`   Available receiver planes: ${receiverPlanes.map(p => `"${p.name}"`).join(', ')}`);
+                            console.error(`No match for plane: ${planeData.name}`);
                             planesNotMatched.push(planeData.name);
                         }
                     });
                     
-                    console.log(`\n=== Matching Complete ===`);
-                    console.log(`✅ Successfully matched: ${planesProcessed}`);
-                    console.log(`❌ Not matched: ${planesNotMatched.length}`);
+                    console.log(`Matched ${planesProcessed} plane(s)`);
                     
                     if (planesNotMatched.length > 0) {
                         alert(`Calculation complete!\n\nMatched: ${planesProcessed} plane(s)\nNot matched: ${planesNotMatched.length} plane(s) (${planesNotMatched.join(', ')})\n\nCheck console for details.`);
@@ -5753,10 +5676,9 @@
             } catch (err) {
                 const calcElapsedMs = Date.now() - calcStartTime;
                 if (err.name === 'AbortError') {
-                    console.log(`Calculation stopped by user after ${(calcElapsedMs / 1000).toFixed(2)}s`);
+                    console.log('Calculation stopped');
                 } else {
-                    console.error('Failed to fetch contour data:', err);
-                    console.log(`Elapsed before error: ${(calcElapsedMs / 1000).toFixed(2)}s`);
+                    console.error('Calculation failed:', err.message);
                     alert(`Failed to fetch contour data from backend: ${err.message}`);
                 }
             } finally {
@@ -5789,7 +5711,7 @@
                 const val = parseInt(this.value, 10);
                 if (isNaN(val)) return;
                 receiverGridSize = val;
-                console.log(`Precision changed to: ${this.options[this.selectedIndex].text} (${val})`);
+                console.log(`Resolution: ${this.options[this.selectedIndex].text}`);
             });
         }
         
@@ -5801,7 +5723,7 @@
             const { min, max } = getColorScaleValues();
             colorScaleMin = min;
             colorScaleMax = max;
-            console.log(`Color scale updated: ${min} to ${max}`);
+            console.log('Color scale updated');
             
             // Regenerate contour textures for all planes that have contour data
             planes.forEach(plane => {
@@ -5810,8 +5732,6 @@
                 }
             });
             
-            // Show notification
-            console.log('Contour colors updated for all receiver planes with data');
         }
         
         // Apply color scale from inputs to selected plane only (custom override)
@@ -5823,7 +5743,7 @@
             plane.colorScaleMin = min;
             plane.colorScaleMax = max;
             applyContourTexture(plane);
-            console.log(`Custom color scale for ${plane.name}: ${min} to ${max}`);
+            console.log('Color scale updated');
         }
         
         // Update color scale inputs to reflect selected plane (custom values or data range)
@@ -5897,7 +5817,7 @@
                     }
                 });
                 
-                console.log(`Color scale mode: ${colorScaleMode}`);
+                console.log(`Color scale: ${colorScaleMode}`);
             });
         }
 
@@ -5947,7 +5867,7 @@
                     selectedPlanes.map(plane => plane.mesh.position.clone()) :
                     null
             };
-            console.log('Copied selection to clipboard');
+            console.log('Copied');
             captureState();
         }
 
@@ -6032,7 +5952,7 @@
                 lastPlane.mesh.userData = lastPlane;
             }
 
-            console.log('Pasted from clipboard');
+            console.log('Pasted');
             captureState("After paste");
         }
 
@@ -6040,11 +5960,10 @@
         // Function to apply contour texture to a plane automatically
         function applyContourTexture(plane) {
             if (!plane.contourData || !plane.contourData.values) {
-                console.warn(`No contour data for plane: ${plane.name}`);
+                console.warn(`No contour data: ${plane.name}`);
                 return;
             }
             
-            console.log(`Applying contour texture to ${plane.name}`);
             
             const contourData = plane.contourData;
             const n = contourData.width;
@@ -6052,7 +5971,6 @@
             
             // Get color scale for this plane (respects mode and per-plane custom override)
             const { min, max } = getColorScaleForPlane(plane);
-            console.log(`Using color scale for ${plane.name}: ${min} to ${max}`);
             
             // Calculate SVG dimensions based on plane aspect ratio
             const planeAspectRatio = plane.width / plane.height;
@@ -6130,10 +6048,9 @@
                 plane.mesh.material.needsUpdate = true;
                 plane.mesh.material.color.set(0xffffff); // Set to white so texture shows correctly
                 
-                console.log(`✅ Contour texture applied to ${plane.name}`);
             };
             img.onerror = function(err) {
-                console.error(`Failed to load contour image for ${plane.name}:`, err);
+                console.error('Contour texture failed');
             };
             img.src = url;
         }
@@ -6162,14 +6079,8 @@
             const dataMax = Math.max(...selectedPlane.contourData.values);
             const { min: userScaleMin, max: userScaleMax } = getColorScaleForPlane(selectedPlane);
             
-            console.log(`📊 Contour Data Analysis for "${selectedPlane.name}":`);
-            console.log(`   Actual data range: ${dataMin.toFixed(3)} to ${dataMax.toFixed(3)}`);
-            console.log(`   Color scale range: ${userScaleMin} to ${userScaleMax}`);
-            
             if (dataMin < userScaleMin || dataMax > userScaleMax) {
-                console.warn(`⚠️ Some data values are outside the color scale range!`);
-                if (dataMin < userScaleMin) console.warn(`   ${(selectedPlane.contourData.values.filter(v => v < userScaleMin).length)} values below ${userScaleMin}`);
-                if (dataMax > userScaleMax) console.warn(`   ${(selectedPlane.contourData.values.filter(v => v > userScaleMax).length)} values above ${userScaleMax}`);
+                console.warn('Some data outside color scale range');
             }
 
             // Get modal elements
@@ -6732,7 +6643,6 @@
             if (index < 0 || index >= history.length) return;
 
             const state = history[index];
-            console.log(`Restoring state: ${state.description || 'Unknown'}`);
 
             // Clear current selection and groups
             selectedPlanes = [];
@@ -6749,9 +6659,7 @@
                     // Create new plane
                     plane = createPlane(planeState.width, planeState.height);
                     plane.id = planeState.id;
-                    console.log(`Created new plane with ID: ${planeState.id}`);
                 } else {
-                    console.log(`Found existing plane with ID: ${planeState.id}`);
                 }
 
                 // Ensure the plane is in the scene
@@ -6761,7 +6669,6 @@
 
                 // For paste operations, ensure we're restoring to the exact state
                 if (state.isPasteOperation) {
-                    console.log(`Restoring paste operation state for plane ${planeState.id}`);
                 }
 
                 // Update all plane properties including defaults
@@ -6817,7 +6724,6 @@
             // Remove planes that shouldn't exist in this state
             const planesToRemove = planes.filter(p => !state.planes.some(s => s.id === p.id));
             planesToRemove.forEach(plane => {
-                console.log(`Removing plane with ID: ${plane.id}`);
                 
                 // Remove top view line if it exists
                 if (plane.mesh.userData.topViewLine) {
@@ -6848,7 +6754,6 @@
                 const planeState = state.planes.find(p => p.id === plane.id);
                 if (planeState) {
                     plane.mesh.position.copy(planeState.position);
-                    console.log(`Set plane ${plane.id} position to: ${planeState.position}`);
                 }
             });
             
@@ -6857,7 +6762,6 @@
                 newPlanes.forEach(plane => {
                     createTopViewLine(plane);
                 });
-                console.log(`[restoreState] Recreated topViewLines and spheres for ${newPlanes.length} planes`);
             }
 
             // Restore group if needed
@@ -6889,7 +6793,6 @@
                         // Add to group (position is already set)
                         selectedPlaneGroup.add(plane.mesh);
 
-                        console.log(`Added plane ${plane.id} to group with position: ${plane.mesh.position}`);
                     }
                 });
 
@@ -6898,7 +6801,6 @@
                 selectedPlaneGroup.rotation.copy(state.groups.rotation);
                 selectedPlaneGroup.scale.copy(state.groups.scale);
 
-                console.log(`Set group position to: ${state.groups.position}`);
             }
 
             // Restore image plane state if available
@@ -6921,7 +6823,6 @@
             // Restore contour data if available
             if (state.contourData && state.contourData.values) {
                 dataarrayforcontour = state.contourData.values;
-                console.log(`Restored contour data with ${dataarrayforcontour.length} values`);
             }
 
             // Update GUI and controls
@@ -6941,19 +6842,13 @@
                 });
             }
 
-            console.log(`State restoration complete. Total planes: ${planes.length}, Selected: ${selectedPlanes.length}`);
-            console.log(`Current plane IDs: ${planes.map(p => p.id).join(', ')}`);
-            console.log(`Selected plane IDs: ${selectedPlanes.map(p => p.id).join(', ')}`);
 
             // Debug: Log final positions of all planes
             planes.forEach(plane => {
                 const worldPos = plane.mesh.getWorldPosition(new THREE.Vector3());
-                console.log(`Final plane ${plane.id}: local=${plane.mesh.position}, world=${worldPos}`);
             });
 
             if (selectedPlaneGroup) {
-                console.log(`Group position: ${selectedPlaneGroup.position}`);
-                console.log(`Group children: ${selectedPlaneGroup.children.length}`);
             }
         }
 
@@ -7065,11 +6960,10 @@
                     plane.mesh.material.needsUpdate = true;
                     plane.mesh.material.color.set(0xffffff);
 
-                    console.log(`Restored contour texture for plane ${plane.id}`);
                 };
                 img.src = url;
             } catch (error) {
-                console.error(`Error restoring contour texture for plane ${plane.id}:`, error);
+                console.error('Contour restore failed');
             }
         }
 
@@ -7103,5 +6997,4 @@
         });
     </script>
 </body>
-
 </html>
