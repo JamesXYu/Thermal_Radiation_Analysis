@@ -518,39 +518,31 @@
         #calcProgressFill {
             height: 100%;
             width: 0%;
+            min-width: 0;
             position: relative;
-            background: linear-gradient(90deg, #0088cc, #00b4d8, #48cae4, #90e0ef);
-            background-size: 300% 100%;
+            background: linear-gradient(90deg, #0088cc, #00b4d8);
             border-radius: 4px;
             transition: width 0.15s ease-out;
-            animation: calcProgressGradient 2s linear infinite;
             box-shadow: 0 0 12px rgba(0, 180, 216, 0.4);
+            overflow: hidden;
+        }
+        #calcProgressWrap.visible #calcProgressFill {
+            min-width: 4px;
         }
         #calcProgressFill::after {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(
-                90deg,
-                transparent 0%,
-                rgba(255,255,255,0.4) 45%,
-                rgba(255,255,255,0.6) 50%,
-                rgba(255,255,255,0.4) 55%,
-                transparent 100%
-            );
-            background-size: 40% 100%;
-            animation: calcProgressShimmer 1.2s ease-in-out infinite;
-        }
-        @keyframes calcProgressGradient {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 100% 50%; }
+            width: 36px;
+            height: 100%;
+            background: rgba(255,255,255,0.5);
+            border-radius: 2px;
+            animation: calcProgressShimmer 2.5s ease-in-out infinite;
         }
         @keyframes calcProgressShimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(350%); }
+            0% { left: 0; }
+            100% { left: 100%; }
         }
         #calcProgressPct {
             font-family: 'Poppins', sans-serif;
@@ -2699,6 +2691,11 @@
                 }
                 planeData.color = hex;
                 
+                // Clear contour when switching away from Receiver
+                if (newType !== "Receiver") {
+                    clearContourFromPlane(planeData);
+                }
+                
                 // Keep selection highlight
                 planeData.mesh.material.color.setHex(0x808080);
                 
@@ -3223,6 +3220,11 @@
             controllers.type.onChange(function () {
                 updateTemperatureControl();
                 updateColorByType();
+                
+                // Clear contour when switching away from Receiver
+                if (planeData.type !== "Receiver") {
+                    clearContourFromPlane(planeData);
+                }
                 
                 // Update or remove normal arrow based on type
                 if (planeData.type === "Receiver") {
@@ -5159,11 +5161,11 @@
         let calculationAbortController = null;
         let calculationProgressInterval = null;
         
-        // Approximate duration (ms) from total interactions. Based on test data:
-        // ~1000 iterations per second (e.g. 620k iterations ≈ 700s, 14.4k ≈ 7s)
-        function estimateCalculationMs(totalInteractions) {
-            const msPer1000Iterations = 1000; // 1000 iterations ≈ 1 second
-            const estimatedMs = (totalInteractions / 1000) * msPer1000Iterations;
+        // Approximate duration (ms) from total iterations. Rule: 1000 iterations = 1 second.
+        // Total iterations = receiver points × num_rays (rays cast per receiver point).
+        function estimateCalculationMs(totalReceiverPoints, numRays) {
+            const totalIterations = totalReceiverPoints * numRays;
+            const estimatedMs = (totalIterations / 1000) / 100 ; // 1000 iterations = 1s
             return Math.max(1000, Math.min(900000, estimatedMs)); // 1s min, 15min max
         }
         
@@ -5632,20 +5634,21 @@
                     }
                 });
 
+                const numRays = 100000;
                 const exportData = {
                     receiver_planes: receiver_planes,
                     polygons: polygons,
                     inert_polygons: inert_polygons,
-                    num_rays: 100000
+                    num_rays: numRays
                 };
 
                 // Pure frontend: count receiver-emitter interactions (no backend)
                 const interactionCount = countReceiverEmitterInteractions();
-                console.log(`Interactions: ${interactionCount.totalInteractions.toLocaleString()} (est. ~${(interactionCount.totalInteractions/1000).toFixed(0)}s)`);
+                const totalIterations = interactionCount.totalReceiverPoints * numRays;
+                console.log(`Iterations: ${totalIterations.toLocaleString()} (est. ~${(totalIterations / 1000).toFixed(0)}s)`);
 
-                // Pseudo progress: estimate time from total interactions (~1000 iterations/sec)
-                const totalInteractions = interactionCount.totalInteractions;
-                const estimatedMs = estimateCalculationMs(totalInteractions);
+                // Pseudo progress: estimate time from total iterations (1000 iterations = 1s)
+                const estimatedMs = estimateCalculationMs(interactionCount.totalReceiverPoints, numRays);
                 const progressWrap = document.getElementById('calcProgressWrap');
                 const progressFill = document.getElementById('calcProgressFill');
                 const progressPct = document.getElementById('calcProgressPct');
@@ -6008,6 +6011,21 @@
             captureState("After paste");
         }
 
+
+        // Clear contour texture and reset mesh when plane is no longer a Receiver
+        function clearContourFromPlane(plane) {
+            if (!plane || !plane.mesh) return;
+            const hadContour = plane.contourData || (plane.mesh.material.map && plane.mesh.material.map.isContourTexture);
+            if (!hadContour) return;
+            if (plane.mesh.material.map) {
+                plane.mesh.material.map.dispose();
+                plane.mesh.material.map = null;
+            }
+            plane.contourData = null;
+            plane.mesh.material.needsUpdate = true;
+            const colorHex = selectedPlanes.includes(plane) ? 0x808080 : plane.color;
+            plane.mesh.material.color.setHex(colorHex);
+        }
 
         // Function to apply contour texture to a plane automatically
         function applyContourTexture(plane) {

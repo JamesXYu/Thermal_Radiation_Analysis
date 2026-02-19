@@ -788,6 +788,11 @@ int main() {
 
     Server svr;
 
+    // Long timeouts for Monte Carlo calculations (can take minutes)
+    svr.set_read_timeout(300, 0);   // 5 min to receive request
+    svr.set_write_timeout(300, 0);  // 5 min to send response
+    svr.set_keep_alive_timeout(60); // 60 s keep-alive
+
     // Enable CORS for all routes
     svr.set_default_headers({
         {"Access-Control-Allow-Origin", "*"},

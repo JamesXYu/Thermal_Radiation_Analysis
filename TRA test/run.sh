@@ -4,8 +4,22 @@
 # Usage: ./run.sh [command]
 # Commands: setup, start, stop, restart, status, test
 
+# Change to script directory so paths work regardless of where it's invoked from
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 BACKEND_PORT=8080
 FRONTEND_PORT=3000
+
+# Detect Python (python3 or python)
+PYTHON_CMD=""
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON_CMD="python3"
+elif command -v python >/dev/null 2>&1; then
+    PYTHON_CMD="python"
+else
+    PYTHON_CMD="python3"  # will fail with clear error if missing
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -35,6 +49,8 @@ print_info() {
 # Setup and build
 setup() {
     print_header "Setup & Build"
+    
+    mkdir -p bin backend/include
     
     # Download cpp-httplib if not present
     if [ ! -f "backend/include/httplib.h" ]; then
@@ -98,15 +114,20 @@ start_backend() {
 
 # Start frontend
 start_frontend() {
+    if ! command -v $PYTHON_CMD >/dev/null 2>&1; then
+        print_error "Python not found. Install python3 or python."
+        return 1
+    fi
     if is_running $FRONTEND_PORT; then
         print_success "Frontend already running on port $FRONTEND_PORT"
     else
         echo "Starting frontend server..."
-        (cd frontend && python3 -m http.server $FRONTEND_PORT --bind 0.0.0.0) >/dev/null 2>&1 &
+        (cd frontend && $PYTHON_CMD -m http.server $FRONTEND_PORT --bind 0.0.0.0) >/dev/null 2>&1 &
         sleep 2
         if is_running $FRONTEND_PORT; then
             print_success "Frontend started on http://localhost:$FRONTEND_PORT"
-            echo "   Network access: http://192.168.0.218:$FRONTEND_PORT"
+            LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || (hostname -I 2>/dev/null | awk '{print $1}') || (ifconfig 2>/dev/null | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}'))
+            [ -n "$LOCAL_IP" ] && echo "   Network access: http://$LOCAL_IP:$FRONTEND_PORT"
         else
             print_error "Failed to start frontend"
             return 1
@@ -125,16 +146,17 @@ start() {
     FRONTEND_OK=$?
     
     if [ $BACKEND_OK -eq 0 ] && [ $FRONTEND_OK -eq 0 ]; then
+        LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || (hostname -I 2>/dev/null | awk '{print $1}') || (ifconfig 2>/dev/null | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}'))
         echo
         print_header "✅ System Ready!"
         echo
-        echo "🌐 Open your browser:"
-        echo "   → ${GREEN}http://localhost:$FRONTEND_PORT${NC} (local)"
-        echo "   → ${GREEN}http://192.168.0.218:$FRONTEND_PORT${NC} (network)"
+        echo -e "🌐 Open your browser:"
+        echo -e "   → ${GREEN}http://localhost:$FRONTEND_PORT${NC} (local)"
+        [ -n "$LOCAL_IP" ] && echo -e "   → ${GREEN}http://$LOCAL_IP:$FRONTEND_PORT${NC} (network)"
         echo
         echo "📡 Backend API:"
         echo "   → http://localhost:$BACKEND_PORT (local)"
-        echo "   → http://192.168.0.218:$BACKEND_PORT (network)"
+        [ -n "$LOCAL_IP" ] && echo "   → http://$LOCAL_IP:$BACKEND_PORT (network)"
         echo
         echo "To stop: ./run.sh stop"
         echo
@@ -186,7 +208,7 @@ status() {
     echo
     echo "Backend (port $BACKEND_PORT):"
     if is_running $BACKEND_PORT; then
-        BACKEND_PID=$(get_pid $BACKEND_PORT)
+        BACKEND_PID=$(get_pid $BACKEND_PORT | tr '\n' ' ' | sed 's/ *$//')
         print_success "Running (PID: $BACKEND_PID)"
         
         # Test backend
@@ -201,7 +223,7 @@ status() {
     echo
     echo "Frontend (port $FRONTEND_PORT):"
     if is_running $FRONTEND_PORT; then
-        FRONTEND_PID=$(get_pid $FRONTEND_PORT)
+        FRONTEND_PID=$(get_pid $FRONTEND_PORT | tr '\n' ' ' | sed 's/ *$//')
         print_success "Running (PID: $FRONTEND_PID)"
         echo "   URL: http://localhost:$FRONTEND_PORT"
     else
