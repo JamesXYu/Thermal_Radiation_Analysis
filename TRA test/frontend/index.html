@@ -1392,15 +1392,14 @@
         let historyIndex = -1;
         const MAX_HISTORY_STEPS = 500; // Prevent memory bloat
         function initializeHistory() {
-            // Capture initial state with all plane properties
-            const initialState = planes.map(plane => ({
+            // Capture initial state with same structure as captureState (restoreState expects { planes, groups, imagePlane, contourData })
+            const planeStates = planes.map(plane => ({
                 id: plane.id || generateId(),
                 position: plane.mesh.getWorldPosition(new THREE.Vector3()).clone(),
                 rotation: plane.mesh.rotation.clone(),
                 scale: plane.mesh.scale.clone(),
                 width: plane.width,
                 height: plane.height,
-                // Store default values
                 defaultWidth: plane.defaultWidth,
                 defaultHeight: plane.defaultHeight,
                 defaultX: plane.defaultX,
@@ -1408,7 +1407,6 @@
                 defaultZ: plane.defaultZ,
                 defaultAngle: plane.defaultAngle,
                 defaultColor: plane.defaultColor,
-                // Store derived properties
                 x: plane.x,
                 y: plane.y,
                 z: plane.z,
@@ -1418,14 +1416,33 @@
                 temperature: plane.temperature,
                 type: plane.type,
                 name: plane.name,
+                positive: plane.positive !== undefined ? plane.positive : true,
                 selected: false,
-                // Store material properties
                 hasTexture: plane.mesh.material.map !== null,
                 textureData: plane.mesh.material.map ? {
                     isContourTexture: plane.mesh.material.map.isContourTexture || false,
                     contourData: plane.mesh.material.map.contourData || null
-                } : null
+                } : null,
+                colorScaleMin: plane.colorScaleMin,
+                colorScaleMax: plane.colorScaleMax
             }));
+
+            const initialState = {
+                planes: planeStates,
+                groups: null,
+                imagePlane: {
+                    visible: imagePlane.visible,
+                    position: imagePlane.position.clone(),
+                    rotation: imagePlane.rotation.clone(),
+                    scale: imagePlane.scale.clone(),
+                    geometry: {
+                        width: imagePlane.geometry.parameters.width,
+                        height: imagePlane.geometry.parameters.height
+                    }
+                },
+                contourData: dataarrayforcontour ? { values: dataarrayforcontour } : null,
+                isPasteOperation: false
+            };
 
             history = [initialState];
             historyIndex = 0;
@@ -1435,12 +1452,12 @@
 
         function undo() {
             if (historyIndex > 0) {
+                const planesBefore = planes.length;
                 historyIndex--;
                 restoreState(historyIndex);
                 
-                // If in plane mode, also remove the last point so the next click
-                // creates a plane from the correct starting point
-                if (planeMode && planePoints.length > 1) {
+                // If in plane mode and we undid a plane creation (fewer planes now), pop last point
+                if (planeMode && planes.length < planesBefore && planePoints.length > 1) {
                     planePoints.pop();
                 }
             }
@@ -6712,7 +6729,11 @@
         function restoreState(index) {
             if (index < 0 || index >= history.length) return;
 
-            const state = history[index];
+            let state = history[index];
+            // Backward compatibility: old initializeHistory stored raw array
+            if (Array.isArray(state)) {
+                state = { planes: state, groups: null, imagePlane: null, contourData: null };
+            }
 
             // Clear current selection and groups
             selectedPlanes = [];
@@ -6726,8 +6747,8 @@
                 let plane = planes.find(p => p.id === planeState.id);
 
                 if (!plane) {
-                    // Create new plane
-                    plane = createPlane(planeState.width, planeState.height);
+                    // Create new plane (skip state capture - we're restoring, not creating)
+                    plane = createPlane(planeState.width, planeState.height, true);
                     plane.id = planeState.id;
                 } else {
                 }
@@ -6769,12 +6790,18 @@
                 plane.angle = planeState.rotation.y * (180 / Math.PI);
                 plane.incline = planeState.rotation.x * (180 / Math.PI);
 
-                // Handle texture restoration if available
+                // Handle texture: restore if saved state had one, clear if it didn't
                 if (planeState.hasTexture && planeState.textureData) {
                     if (planeState.textureData.isContourTexture && planeState.textureData.contourData) {
-                        // Restore contour texture
                         restoreContourTexture(plane, planeState.textureData.contourData);
                     }
+                } else {
+                    // Restored state had no texture - clear any existing contour
+                    if (plane.mesh.material.map) {
+                        plane.mesh.material.map.dispose();
+                        plane.mesh.material.map = null;
+                    }
+                    plane.contourData = null;
                 }
 
                 // Restore per-plane custom color scale override
