@@ -5183,11 +5183,10 @@
         let calculationProgressInterval = null;
         
         // Approximate duration (ms) from total iterations. Rule: 1000 iterations = 1 second.
-        // Total iterations = receiver points × num_rays (rays cast per receiver point).
-        function estimateCalculationMs(totalReceiverPoints, numRays) {
-            const totalIterations = totalReceiverPoints * numRays;
-            const estimatedMs = (totalIterations / 1000) / 100 ; // 1000 iterations = 1s
-            return Math.max(1000, Math.min(900000, estimatedMs)); // 1s min, 15min max
+        // 1 iteration = 1 receiver-point × 1 emitter-point pair (point-to-point). Each pair casts num_rays rays.
+        function estimateCalculationMs(totalIterations) {
+            const estimatedMs = totalIterations; // 1000 iterations = 1s, so 1 iter = 1ms
+            return Math.max(1000, Math.min(3600000, estimatedMs)); // 1s min, 60min max
         }
         
         // Pure frontend: count receiver-emitter point interactions based on resolution and plane sizes.
@@ -5663,13 +5662,13 @@
                     num_rays: numRays
                 };
 
-                // Pure frontend: count receiver-emitter interactions (no backend)
+                // Pure frontend: count receiver-emitter point-to-point iterations (no backend)
                 const interactionCount = countReceiverEmitterInteractions();
-                const totalIterations = interactionCount.totalReceiverPoints * numRays;
+                const totalIterations = interactionCount.totalInteractions; // receiver pts × emitter pts
                 console.log(`Iterations: ${totalIterations.toLocaleString()} (est. ~${(totalIterations / 1000).toFixed(0)}s)`);
 
-                // Pseudo progress: estimate time from total iterations (1000 iterations = 1s)
-                const estimatedMs = estimateCalculationMs(interactionCount.totalReceiverPoints, numRays);
+                // Pseudo progress: estimate time from iterations (1000 point-to-point pairs = 1s)
+                const estimatedMs = estimateCalculationMs(totalIterations);
                 const progressWrap = document.getElementById('calcProgressWrap');
                 const progressFill = document.getElementById('calcProgressFill');
                 const progressPct = document.getElementById('calcProgressPct');
