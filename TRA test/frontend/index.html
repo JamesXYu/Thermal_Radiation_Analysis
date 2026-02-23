@@ -1451,23 +1451,20 @@
 
 
         function undo() {
-            if (historyIndex > 0) {
-                const planesBefore = planes.length;
-                historyIndex--;
-                restoreState(historyIndex);
-                
-                // If in plane mode and we undid a plane creation (fewer planes now), pop last point
-                if (planeMode && planes.length < planesBefore && planePoints.length > 1) {
-                    planePoints.pop();
-                }
+            if (!history.length || historyIndex <= 0) return;
+            const planesBefore = planes.length;
+            historyIndex = Math.max(0, historyIndex - 1);
+            restoreState(historyIndex);
+            // If in plane mode and we undid a plane creation (fewer planes now), pop last point
+            if (planeMode && planes.length < planesBefore && planePoints.length > 1) {
+                planePoints.pop();
             }
         }
 
         function redo() {
-            if (historyIndex < history.length - 1) {
-                historyIndex++;
-                restoreState(historyIndex);
-            }
+            if (!history.length || historyIndex >= history.length - 1) return;
+            historyIndex = Math.min(history.length - 1, historyIndex + 1);
+            restoreState(historyIndex);
         }
 
         function isTypingInInput() {
@@ -4714,6 +4711,10 @@
             // Clear existing scene using the proper clearScene function
             clearScene();
 
+            // Reset history - imported/loaded model starts with no undo/redo history
+            history = [];
+            historyIndex = -1;
+
             // Load image plane
             if (actualSceneData.imagePlane && actualSceneData.imagePlane.texture) {
                 await loadImageTexture(actualSceneData.imagePlane.texture);
@@ -4731,10 +4732,10 @@
                 );
             }
 
-            // Load planes
+            // Load planes (skip state capture - we'll reset history at end)
             if (actualSceneData.planes) {
                 actualSceneData.planes.forEach(planeData => {
-                const newPlane = createPlane(planeData.width, planeData.height);
+                const newPlane = createPlane(planeData.width, planeData.height, true);
                 newPlane.name = planeData.name || `Plane ${planes.length}`;
 
                 // Update the default dimensions to match the imported dimensions
@@ -4863,6 +4864,9 @@
                     createTopViewLine(plane);
                 });
             }
+
+            // Reset history to only this loaded state - no undo/redo for pre-load actions
+            resetHistoryToCurrentState();
         }
 
         async function loadImageTexture(imageUrl) {
@@ -6632,8 +6636,15 @@
         updateDistanceDisplay();
         // ==================== END DISTANCE CALCULATION ====================
 
+        // Reset history to only the current state (used after import/load - no undo/redo history)
+        function resetHistoryToCurrentState() {
+            if (transformControlss && transformControlss.dragging) return;
+            captureState("Loaded/Imported", true);
+        }
+
         // Updated captureState function to handle all plane properties and new functionality
-        function captureState(description = "User action") {
+        // When replaceHistory=true, replaces entire history with current state (for import/load)
+        function captureState(description = "User action", replaceHistory = false) {
             // Don't capture during operations unless forced
             if (transformControlss && transformControlss.dragging) return;
 
@@ -6663,6 +6674,7 @@
                     temperature: plane.temperature,
                     type: plane.type,
                     name: plane.name,
+                    positive: plane.positive !== undefined ? plane.positive : true,
                     selected: selectedPlanes.includes(plane),
                     // Store material properties including texture information
                     hasTexture: plane.mesh.material.map !== null,
@@ -6701,7 +6713,14 @@
                 isPasteOperation: typeof description === 'string' && (description.includes("paste") || description.includes("Paste"))
             };
 
-            // Trim history if needed
+            if (replaceHistory) {
+                // Import/load: replace entire history with just current state (no undo/redo)
+                history = [state];
+                historyIndex = 0;
+                return;
+            }
+
+            // Trim history if needed (discard redo branch)
             if (historyIndex < history.length - 1) {
                 history = history.slice(0, historyIndex + 1);
             }
@@ -6728,12 +6747,15 @@
         // Updated restoreState function to handle all plane properties and new functionality
         function restoreState(index) {
             if (index < 0 || index >= history.length) return;
+            const raw = history[index];
+            if (!raw) return;
 
-            let state = history[index];
+            let state = raw;
             // Backward compatibility: old initializeHistory stored raw array
             if (Array.isArray(state)) {
                 state = { planes: state, groups: null, imagePlane: null, contourData: null };
             }
+            if (!state.planes || !Array.isArray(state.planes)) return;
 
             // Clear current selection and groups
             selectedPlanes = [];
