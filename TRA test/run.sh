@@ -122,12 +122,12 @@ start_frontend() {
         print_success "Frontend already running on port $FRONTEND_PORT"
     else
         echo "Starting frontend server..."
-        (cd frontend && $PYTHON_CMD -m http.server $FRONTEND_PORT --bind 0.0.0.0) >/dev/null 2>&1 &
+        ($PYTHON_CMD -m http.server $FRONTEND_PORT --bind 0.0.0.0) >/dev/null 2>&1 &
         sleep 2
         if is_running $FRONTEND_PORT; then
-            print_success "Frontend started on http://localhost:$FRONTEND_PORT"
+            print_success "Frontend started on http://localhost:$FRONTEND_PORT/frontend/"
             LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || (hostname -I 2>/dev/null | awk '{print $1}') || (ifconfig 2>/dev/null | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}'))
-            [ -n "$LOCAL_IP" ] && echo "   Network access: http://$LOCAL_IP:$FRONTEND_PORT"
+            [ -n "$LOCAL_IP" ] && echo "   Network access: http://$LOCAL_IP:$FRONTEND_PORT/frontend/"
         else
             print_error "Failed to start frontend"
             return 1
@@ -151,8 +151,8 @@ start() {
         print_header "✅ System Ready!"
         echo
         echo -e "🌐 Open your browser:"
-        echo -e "   → ${GREEN}http://localhost:$FRONTEND_PORT${NC} (local)"
-        [ -n "$LOCAL_IP" ] && echo -e "   → ${GREEN}http://$LOCAL_IP:$FRONTEND_PORT${NC} (network)"
+        echo -e "   → ${GREEN}http://localhost:$FRONTEND_PORT/frontend/${NC} (local)"
+        [ -n "$LOCAL_IP" ] && echo -e "   → ${GREEN}http://$LOCAL_IP:$FRONTEND_PORT/frontend/${NC} (network)"
         echo
         echo "📡 Backend API:"
         echo "   → http://localhost:$BACKEND_PORT (local)"
@@ -163,7 +163,7 @@ start() {
         
         # Auto-open browser
         sleep 1
-        open "http://localhost:$FRONTEND_PORT" 2>/dev/null || true
+        open "http://localhost:$FRONTEND_PORT/frontend/" 2>/dev/null || true
     fi
 }
 
@@ -225,7 +225,7 @@ status() {
     if is_running $FRONTEND_PORT; then
         FRONTEND_PID=$(get_pid $FRONTEND_PORT | tr '\n' ' ' | sed 's/ *$//')
         print_success "Running (PID: $FRONTEND_PID)"
-        echo "   URL: http://localhost:$FRONTEND_PORT"
+        echo "   URL: http://localhost:$FRONTEND_PORT/frontend/"
     else
         print_error "Not running"
     fi
