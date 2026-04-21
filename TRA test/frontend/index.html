@@ -768,7 +768,8 @@
             transition: max-width 0.2s ease, opacity 0.2s ease, flex-basis 0.2s ease;
         }
 
-        .app-bottombar-progress-slot:has(#calcProgressWrap.visible) {
+        .app-bottombar-progress-slot:has(#calcProgressWrap.visible),
+        .app-bottombar-progress-slot.tra-progress-slot-active {
             flex: 1 1 160px;
             min-width: 120px;
             max-width: 280px;
@@ -956,6 +957,20 @@
             background: rgba(218, 36, 36, 0.25);
             border-color: var(--tra-accent);
             box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
+        }
+
+        /* Grid snap + camera view: same selected treatment as Edit → Transform */
+        #functionbox .tra-tool-flyout-body .tra-panel-body #gridSnapBtn.active,
+        #functionbox .tra-tool-flyout-body .view-buttons-container > button.active {
+            background: rgba(218, 36, 36, 0.25);
+            border-color: var(--tra-accent);
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-panel-body #gridSnapBtn.active:hover,
+        #functionbox .tra-tool-flyout-body .view-buttons-container > button.active:hover {
+            background: rgba(218, 36, 36, 0.32);
+            border-color: var(--tra-accent);
         }
 
         #functionbox .tra-tool-flyout-body .custom-file-upload {
@@ -1254,6 +1269,18 @@
         /* Thin bar: shimmer from global styles clips awkwardly */
         #app-bottombar #calcProgressFill::after {
             display: none;
+        }
+
+        .tra-calc-progress-sub {
+            margin-top: 2px;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--tra-muted);
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
 
         #app-bottombar #calcProgressPct {
@@ -1941,13 +1968,15 @@
         }
 
         #tra-panels-store .transform-btn.active {
-            background: #006662;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            background: rgba(218, 36, 36, 0.25);
+            border: 1px solid var(--tra-accent);
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
         }
 
         #tra-panels-store .plane-btn.active {
-            background: #006662;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            background: rgba(218, 36, 36, 0.25);
+            border: 1px solid var(--tra-accent);
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
         }
 
         #tra-panels-store .grid-buttons-container {
@@ -1980,8 +2009,25 @@
         }
 
         #tra-panels-store #gridSnapBtn.active {
-            background: #006662;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            background: rgba(218, 36, 36, 0.25);
+            border: 1px solid var(--tra-accent);
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
+        }
+
+        #tra-panels-store #gridSnapBtn.active:hover {
+            background: rgba(218, 36, 36, 0.32);
+            border-color: var(--tra-accent);
+        }
+
+        #tra-panels-store .view-buttons-container > button.active {
+            background: rgba(218, 36, 36, 0.25);
+            border: 1px solid var(--tra-accent);
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
+        }
+
+        #tra-panels-store .view-buttons-container > button.active:hover {
+            background: rgba(218, 36, 36, 0.32);
+            border-color: var(--tra-accent);
         }
 
         #tra-panels-store #addPlaneMode {
@@ -2210,14 +2256,14 @@
                             <button id="top" type="button">Top</button>
                             <button id="front" type="button">Front</button>
                             <button id="side" type="button">Side</button>
-                            <button id="perspective" type="button">Perspective</button>
+                            <button id="perspective" type="button" class="active">Perspective</button>
                         </div>
                     </section>
                     <section class="tra-k-block" aria-labelledby="k-view-grid">
                         <h4 id="k-view-grid" class="tra-k-subtitle">Grid</h4>
                         <div class="grid-buttons-container">
                             <button id="toggleGrid" type="button">Hide Grid</button>
-                            <button id="gridSnapBtn" type="button">Grid Snap</button>
+                            <button id="gridSnapBtn" type="button" class="active">Grid Snap</button>
                         </div>
                     </section>
                 </div>
@@ -2295,7 +2341,8 @@
             <div class="app-bottombar-progress-slot">
                 <div id="calcProgressWrap" class="">
                     <div id="calcProgressBar"><div id="calcProgressFill"></div></div>
-                    <div id="calcProgressPct">0%</div>
+                    <div id="calcProgressPct">0 / 0</div>
+                    <div id="calcProgressSub" class="tra-calc-progress-sub"></div>
                 </div>
             </div>
             <button id="calculate" type="button" class="tra-sr-only" tabindex="-1" aria-hidden="true">Calculate</button>
@@ -2410,6 +2457,7 @@
             
             // API endpoints
             CALCULATE_ENDPOINT: '/calculate',
+            CALCULATE_STREAM_ENDPOINT: '/calculate/stream',
             HEALTH_ENDPOINT: '/health',
             STATUS_ENDPOINT: '/status',
             
@@ -2696,6 +2744,7 @@
             } else {
                 gridSnapBtn.classList.remove('active');
             }
+            syncTransformControlsScaleSnap();
         }
 
         // At the top with your other variables
@@ -2798,8 +2847,7 @@
             }
         };
 
-        // Initialize grid snap button state (grid snap is enabled by default)
-        updateGridSnapButtonState();
+        // Initialize grid snap button state after TransformControls exist (see initTransformControls).
 
         // Grid snapping utility functions
         function snapToGrid(value, gridSize) {
@@ -2892,6 +2940,21 @@
         controls.rotateSpeed = 0.4;
 
         controls.update();
+
+        function updateViewCameraButtons() {
+            const pairs = [
+                ['perspective', cameras.perspective],
+                ['top', cameras.top],
+                ['front', cameras.front],
+                ['side', cameras.left]
+            ];
+            for (let i = 0; i < pairs.length; i++) {
+                const el = document.getElementById(pairs[i][0]);
+                if (!el) continue;
+                if (activeCamera === pairs[i][1]) el.classList.add('active');
+                else el.classList.remove('active');
+            }
+        }
 
         function setView(camera) {
 
@@ -2993,6 +3056,7 @@
             
             // Update transform controls to apply view-specific settings
             updateTransformControls();
+            updateViewCameraButtons();
         }
         // setView(activeCamera);
 
@@ -3820,10 +3884,20 @@
             
         }
 
+        // Right params sidebar: one decimal place for display and stored values.
+        function roundParamValue(v) {
+            if (typeof v !== 'number' || !Number.isFinite(v)) return 0;
+            return Math.round(v * 10) / 10;
+        }
+        function formatParamNumber(v) {
+            return roundParamValue(v).toFixed(1);
+        }
+
         // Multi-select functions for height and type changes
         function changeMultiplePlanesHeight(newHeight) {
             if (selectedPlanes.length < 2) return;
-            
+            newHeight = roundParamValue(newHeight);
+
             captureState("Change multiple planes height");
             
             selectedPlanes.forEach(planeData => {
@@ -3894,7 +3968,8 @@
         // Function to change temperature (Heat Flux) for all selected emitter planes
         function changeMultiplePlanesTemperature(newTemperature) {
             if (selectedPlanes.length < 2) return;
-            
+            newTemperature = roundParamValue(newTemperature);
+
             captureState("Change multiple planes temperature");
             
             // Count how many emitters were updated
@@ -4288,10 +4363,10 @@
                 const inp = document.createElement('input');
                 inp.type = 'number';
                 inp.step = step;
-                inp.value = typeof value === 'number' && !isNaN(value) ? String(value) : '0';
+                inp.value = typeof value === 'number' && !isNaN(value) ? formatParamNumber(value) : '0.0';
                 inp.addEventListener('input', () => {
                     const v = parseFloat(inp.value);
-                    if (!isNaN(v)) onVal(v);
+                    if (!isNaN(v)) onVal(roundParamValue(v));
                 });
                 wrap.appendChild(lab);
                 wrap.appendChild(inp);
@@ -4358,11 +4433,11 @@
             const rowAng = document.createElement('div');
             rowAng.className = 'pp-row2';
             gPos.appendChild(rowAng);
-            els.angle = addNumberRow('Rotation', planeData.angle, '1', v => {
+            els.angle = addNumberRow('Rotation', planeData.angle, '0.1', v => {
                 planeData.angle = v;
                 syncFromPlaneData();
             }, rowAng);
-            els.incline = addNumberRow('Tilt', planeData.incline, '1', v => {
+            els.incline = addNumberRow('Tilt', planeData.incline, '0.1', v => {
                 planeData.incline = v;
                 syncFromPlaneData();
             }, rowAng);
@@ -4388,15 +4463,15 @@
             tempWrap.innerHTML = '<label>Heat flux</label>';
             const tempInp = document.createElement('input');
             tempInp.type = 'number';
-            tempInp.step = 'any';
-            tempInp.value = String(planeData.temperature);
+            tempInp.step = '0.1';
+            tempInp.value = formatParamNumber(planeData.temperature);
             tempWrap.appendChild(tempInp);
             gThermal.appendChild(tempWrap);
             els.temp = tempInp;
             tempInp.addEventListener('input', () => {
                 const v = parseFloat(tempInp.value);
                 if (!isNaN(v)) {
-                    planeData.temperature = v;
+                    planeData.temperature = roundParamValue(v);
                     syncFromPlaneData();
                 }
             });
@@ -4459,7 +4534,7 @@
                 if (!isEmitter) {
                     if (planeData.temperature !== 0) {
                         planeData.temperature = 0;
-                        els.temp.value = '0';
+                        els.temp.value = '0.0';
                         captureState();
                     }
                     els.temp.disabled = true;
@@ -4968,15 +5043,25 @@
         /** True briefly after transform drag ends — ignore the synthetic canvas click so selection stays. */
         let suppressPlaneClickAfterTransform = false;
 
+        // Align TransformControls scale handle snap with app grid snap (0.5 when on, continuous when off).
+        function syncTransformControlsScaleSnap() {
+            if (!transformControlss) return;
+            if (gridSnapConfig.scale.enabled) {
+                transformControlss.setScaleSnap(0.5);
+            } else {
+                transformControlss.setScaleSnap(null);
+            }
+        }
+
         // Initialize transform controls
         function initTransformControls() {
             transformControlss = new THREE.TransformControls(activeCamera, renderer.domElement);
             transformControlss.setSpace('local');
             transformControlss.setMode('translate');
             transformControlss.size = 0.5;
-            transformControlss.setTranslationSnap(0.01);  // Snap translation to 0.1 units
-            transformControlss.setRotationSnap(Math.PI / 180); // Snap rotation to 10 degrees
-            transformControlss.setScaleSnap(0.1); // Snap scaling to 0.05 units (5% increments)
+            transformControlss.setTranslationSnap(0.01);
+            transformControlss.setRotationSnap(Math.PI / 180);
+            transformControlss.setScaleSnap(null);
 
             transformControlss.showX = true;
             transformControlss.showY = true;
@@ -5010,9 +5095,9 @@
                 if (selectedPlaneGroup && transformControlss.object === selectedPlaneGroup) {
                     // Update all planes when group moves
                     selectedPlanes.forEach(plane => {
-                        plane.x = plane.mesh.position.x + selectedPlaneGroup.position.x;
-                        plane.y = plane.mesh.position.y + selectedPlaneGroup.position.y;
-                        plane.z = plane.mesh.position.z + selectedPlaneGroup.position.z;
+                        plane.x = roundParamValue(plane.mesh.position.x + selectedPlaneGroup.position.x);
+                        plane.y = roundParamValue(plane.mesh.position.y + selectedPlaneGroup.position.y);
+                        plane.z = roundParamValue(plane.mesh.position.z + selectedPlaneGroup.position.z);
                         
                         // Update top view line if in top view
                         if (activeCamera === cameras.top) {
@@ -5037,6 +5122,8 @@
                 // Always keep distance display up to date
                 updateDistanceDisplay();
             });
+
+            syncTransformControlsScaleSnap();
         }
 
         // Grid snapping implementation
@@ -5107,9 +5194,9 @@
                 );
 
                 // Update plane data
-                plane.x = newWorldPos.x;
-                plane.y = newWorldPos.y;
-                plane.z = newWorldPos.z;
+                plane.x = roundParamValue(newWorldPos.x);
+                plane.y = roundParamValue(newWorldPos.y);
+                plane.z = roundParamValue(newWorldPos.z);
 
                 // Update original positions (for future grouping)
                 if (originalPositions.has(plane)) {
@@ -5176,22 +5263,24 @@
             const mesh = planeData.mesh;
 
             // Update position from actual mesh position
-            planeData.x = mesh.position.x;
-            planeData.y = mesh.position.y;
-            planeData.z = mesh.position.z;
+            planeData.x = roundParamValue(mesh.position.x);
+            planeData.y = roundParamValue(mesh.position.y);
+            planeData.z = roundParamValue(mesh.position.z);
 
             // Extract rotation from mesh quaternion (more accurate than Euler angles)
             const euler = new THREE.Euler();
             euler.setFromQuaternion(mesh.quaternion, 'YXZ'); // Y rotation first, then X, then Z
             
             // Convert to degrees and update
-            planeData.angle = Math.abs(euler.y * (180 / Math.PI)) < 1e-10 ? 0 : euler.y * (180 / Math.PI);
-            planeData.incline = Math.abs(euler.x * (180 / Math.PI)) < 1e-10 ? 0 : euler.x * (180 / Math.PI);
+            const angDeg = Math.abs(euler.y * (180 / Math.PI)) < 1e-10 ? 0 : euler.y * (180 / Math.PI);
+            const incDeg = Math.abs(euler.x * (180 / Math.PI)) < 1e-10 ? 0 : euler.x * (180 / Math.PI);
+            planeData.angle = roundParamValue(angDeg);
+            planeData.incline = roundParamValue(incDeg);
 
             // Handle scaling
             if (transformControlss.getMode() === 'scale') {
-                planeData.width = planeData.defaultWidth * mesh.scale.x;
-                planeData.height = planeData.defaultHeight * mesh.scale.y;
+                planeData.width = roundParamValue(planeData.defaultWidth * mesh.scale.x);
+                planeData.height = roundParamValue(planeData.defaultHeight * mesh.scale.y);
                 
             }
 
@@ -5202,6 +5291,7 @@
 
         // Call this after setting up your scene
         initTransformControls();
+        updateGridSnapButtonState();
 
         function restoration() {
             if (state_control) {
@@ -6401,18 +6491,10 @@
         // Receiver grid size (N x N), default 2 (Low)
         let receiverGridSize = 2;
         // Backend endpoint for contour generation
-        const BACKEND_CONTOUR_URL = CONFIG.BACKEND_URL + CONFIG.CALCULATE_ENDPOINT;
+        const BACKEND_CONTOUR_STREAM_URL = CONFIG.BACKEND_URL + CONFIG.CALCULATE_STREAM_ENDPOINT;
         
-        // Calculation abort and progress (stop button + pseudo progress bar)
+        // Calculation abort (stop button) + real per-plane progress via SSE (/calculate/stream)
         let calculationAbortController = null;
-        let calculationProgressInterval = null;
-        
-        // Approximate duration (ms) from total iterations. Rule: 1000 iterations = 1 second.
-        // 1 iteration = 1 receiver-point × 1 emitter-point pair (point-to-point). Each pair casts num_rays rays.
-        function estimateCalculationMs(totalIterations) {
-            const estimatedMs = totalIterations; // 1000 iterations = 1s, so 1 iter = 1ms
-            return Math.max(1000, Math.min(3600000, estimatedMs)); // 1s min, 60min max
-        }
         
         // Pure frontend: count receiver-emitter point interactions based on resolution and plane sizes.
         // Formula: totalInteractions = (sum of receiver grid points) × (sum of emitter grid points)
@@ -6894,94 +6976,197 @@
                     num_rays: numRays
                 };
 
-                // Pure frontend: count receiver-emitter point-to-point iterations (no backend)
                 const interactionCount = countReceiverEmitterInteractions();
-                const totalIterations = interactionCount.totalInteractions; // receiver pts × emitter pts
+                const totalIterations = interactionCount.totalInteractions;
                 console.log(`Iterations: ${totalIterations.toLocaleString()} (est. ~${(totalIterations / 1000).toFixed(0)}s)`);
 
-                // Pseudo progress: estimate time from iterations (1000 point-to-point pairs = 1s)
-                const estimatedMs = estimateCalculationMs(totalIterations);
+                const progressSlot = document.querySelector('.app-bottombar-progress-slot');
                 const progressWrap = document.getElementById('calcProgressWrap');
                 const progressFill = document.getElementById('calcProgressFill');
                 const progressPct = document.getElementById('calcProgressPct');
+                const progressSub = document.getElementById('calcProgressSub');
                 progressWrap.classList.add('visible');
+                if (progressSlot) progressSlot.classList.add('tra-progress-slot-active');
                 progressFill.style.width = '0%';
-                progressPct.textContent = '0%';
-                
+                progressPct.textContent = '0 / 0';
+                if (progressSub) progressSub.textContent = '';
+
                 calculationAbortController = new AbortController();
-                const startTime = Date.now();
-                calculationProgressInterval = setInterval(() => {
-                    if (!calculationAbortController) return;
-                    const elapsed = Date.now() - startTime;
-                    const pct = Math.min(95, Math.round((elapsed / estimatedMs) * 95));
-                    progressFill.style.width = pct + '%';
-                    progressPct.textContent = pct + '%';
-                }, 150);
-                
-                console.log('Calculating...');
-                const resp = await fetch(BACKEND_CONTOUR_URL, {
+
+                let totalPlanesStream = 0;
+                const planesNotMatched = [];
+                let planesProcessed = 0;
+
+                function parseOneSseFrame(frameText) {
+                    const lines = frameText.split('\n');
+                    let eventType = 'message';
+                    const dataParts = [];
+                    for (const line of lines) {
+                        if (line.startsWith('event:')) {
+                            eventType = line.slice(6).trim();
+                        } else if (line.startsWith('data:')) {
+                            dataParts.push(line.slice(5).replace(/^\s/, ''));
+                        }
+                    }
+                    return { eventType, data: dataParts.join('\n') };
+                }
+
+                function handleSseEvent(eventType, dataStr) {
+                    if (!dataStr) return;
+                    let jsonData;
+                    try {
+                        jsonData = JSON.parse(dataStr);
+                    } catch (e) {
+                        console.warn('SSE data JSON:', e);
+                        return;
+                    }
+                    if (eventType === 'started') {
+                        totalPlanesStream = Number(jsonData.totalPlanes) || 0;
+                        const n = totalPlanesStream;
+                        progressPct.textContent = n ? `0 / ${n}` : '0 / 0';
+                        if (progressSub) {
+                            progressSub.textContent = n ? `Plane 1 out of ${n}` : '';
+                        }
+                    } else if (eventType === 'plane') {
+                        const name = jsonData.name;
+                        const width = jsonData.width;
+                        const height = jsonData.height;
+                        const values = jsonData.values;
+                        const planeIndex = Number(jsonData.planeIndex);
+                        const totalPl = Number(jsonData.totalPlanes) || totalPlanesStream;
+                        totalPlanesStream = totalPl;
+                        const idx = Number.isFinite(planeIndex) ? planeIndex : 0;
+                        const denom = Math.max(1, totalPl);
+                        const fillPct = Math.min(100, Math.max(0, (idx / denom) * 100));
+                        progressFill.style.width = `${fillPct}%`;
+                        progressPct.textContent = `${idx} / ${denom}`;
+                        if (progressSub) {
+                            progressSub.textContent = `Plane ${idx} out of ${denom}`;
+                        }
+
+                        const matchingPlane = planes.find(p =>
+                            p.type === 'Receiver' && p.name === name
+                        );
+                        if (matchingPlane) {
+                            matchingPlane.contourData = { width, height, values };
+                            queueMicrotask(() => applyContourTexture(matchingPlane));
+                            planesProcessed++;
+                        } else {
+                            console.error(`No match for plane: ${name}`);
+                            planesNotMatched.push(name);
+                        }
+                    } else if (eventType === 'complete') {
+                        const n = totalPlanesStream > 0 ? totalPlanesStream : planesProcessed;
+                        if (n > 0) {
+                            progressFill.style.width = '100%';
+                            progressPct.textContent = `${n} / ${n}`;
+                            if (progressSub) progressSub.textContent = `Plane ${n} out of ${n}`;
+                        }
+                    } else if (eventType === 'error') {
+                        throw new Error(jsonData.message || 'Stream error');
+                    }
+                }
+
+                console.log('Calculating (streamed per plane)...');
+                const resp = await fetch(BACKEND_CONTOUR_STREAM_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    cache: 'no-store',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'text/event-stream'
+                    },
                     body: JSON.stringify(exportData),
                     signal: calculationAbortController.signal
                 });
-                
+
                 if (!resp.ok) {
                     const errorText = await resp.text();
                     throw new Error(`Backend error: ${resp.status} - ${errorText}`);
                 }
-                
-                clearInterval(calculationProgressInterval);
-                calculationProgressInterval = null;
-                progressFill.style.width = '100%';
-                progressPct.textContent = '100%';
-                
-                const responseData = await resp.json();
-                
-                const calcElapsedMs = Date.now() - calcStartTime;
-                console.log(`Done in ${(calcElapsedMs / 1000).toFixed(1)}s`);
-                
-                if (responseData.success && responseData.planes && Array.isArray(responseData.planes)) {
-                    // Process multiple planes
-                    let planesProcessed = 0;
-                    let planesNotMatched = [];
-                    
-                    responseData.planes.forEach(planeData => {
-                        // Find matching receiver plane by name
-                        const matchingPlane = planes.find(p => 
-                            p.type === "Receiver" && p.name === planeData.name
-                        );
-                        
-                        if (matchingPlane) {
-                            // Store contour data on the plane object
-                            matchingPlane.contourData = {
-                                width: planeData.width,
-                                height: planeData.height,
-                                values: planeData.values
-                            };
-                            
-                            planesProcessed++;
-                            
-                            // Apply contour texture to the plane
-                            applyContourTexture(matchingPlane);
-                        } else {
-                            console.error(`No match for plane: ${planeData.name}`);
-                            planesNotMatched.push(planeData.name);
+                if (!resp.body) {
+                    throw new Error('No response body (streaming not supported in this browser?)');
+                }
+
+                let buf = '';
+                if (typeof TextDecoderStream !== 'undefined' && typeof resp.body.pipeThrough === 'function') {
+                    const reader = resp.body.pipeThrough(new TextDecoderStream()).getReader();
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        if (value) buf += value;
+                        buf = buf.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                        let sep;
+                        while ((sep = buf.indexOf('\n\n')) !== -1) {
+                            const rawFrame = buf.slice(0, sep);
+                            buf = buf.slice(sep + 2);
+                            try {
+                                const { eventType, data } = parseOneSseFrame(rawFrame);
+                                handleSseEvent(eventType, data);
+                            } catch (e) {
+                                if (e instanceof SyntaxError) {
+                                    console.warn('SSE frame parse:', e);
+                                } else {
+                                    throw e;
+                                }
+                            }
                         }
-                    });
-                    
-                    console.log(`Matched ${planesProcessed} plane(s)`);
-                    
-                    if (planesNotMatched.length > 0) {
-                        alert(`Calculation complete!\n\nMatched: ${planesProcessed} plane(s)\nNot matched: ${planesNotMatched.length} plane(s) (${planesNotMatched.join(', ')})\n\nCheck console for details.`);
-                    } else {
-                        alert(`Calculation complete! Contour data applied to ${planesProcessed} receiver plane(s).`);
                     }
                 } else {
-                    throw new Error('Invalid response format from backend');
+                    const reader = resp.body.getReader();
+                    const decoder = new TextDecoder();
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            buf += decoder.decode(new Uint8Array(), { stream: false });
+                            break;
+                        }
+                        buf += decoder.decode(value, { stream: true });
+                        buf = buf.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                        let sep;
+                        while ((sep = buf.indexOf('\n\n')) !== -1) {
+                            const rawFrame = buf.slice(0, sep);
+                            buf = buf.slice(sep + 2);
+                            try {
+                                const { eventType, data } = parseOneSseFrame(rawFrame);
+                                handleSseEvent(eventType, data);
+                            } catch (e) {
+                                if (e instanceof SyntaxError) {
+                                    console.warn('SSE frame parse:', e);
+                                } else {
+                                    throw e;
+                                }
+                            }
+                        }
+                    }
+                }
+                buf = buf.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                {
+                    let sep;
+                    while ((sep = buf.indexOf('\n\n')) !== -1) {
+                        const rawFrame = buf.slice(0, sep);
+                        buf = buf.slice(sep + 2);
+                        try {
+                            const { eventType, data } = parseOneSseFrame(rawFrame);
+                            handleSseEvent(eventType, data);
+                        } catch (e) {
+                            if (e instanceof SyntaxError) {
+                                console.warn('SSE tail parse:', e);
+                            } else {
+                                throw e;
+                            }
+                        }
+                    }
+                }
+
+                const calcElapsedMs = Date.now() - calcStartTime;
+                console.log(`Done in ${(calcElapsedMs / 1000).toFixed(1)}s, applied ${planesProcessed} plane(s)`);
+
+                if (planesNotMatched.length > 0) {
+                    alert(`Calculation complete!\n\nMatched: ${planesProcessed} plane(s)\nNot matched: ${planesNotMatched.length} plane(s) (${planesNotMatched.join(', ')})\n\nCheck console for details.`);
+                } else {
+                    alert(`Calculation complete! Contour data applied to ${planesProcessed} receiver plane(s).`);
                 }
             } catch (err) {
-                const calcElapsedMs = Date.now() - calcStartTime;
                 if (err.name === 'AbortError') {
                     console.log('Calculation stopped');
                 } else {
@@ -6989,17 +7174,17 @@
                     alert(`Failed to fetch contour data from backend: ${err.message}`);
                 }
             } finally {
-                if (calculationProgressInterval) {
-                    clearInterval(calculationProgressInterval);
-                    calculationProgressInterval = null;
-                }
                 calculationAbortController = null;
+                const progressSlot = document.querySelector('.app-bottombar-progress-slot');
+                if (progressSlot) progressSlot.classList.remove('tra-progress-slot-active');
                 const wrap = document.getElementById('calcProgressWrap');
                 const fill = document.getElementById('calcProgressFill');
                 const pctEl = document.getElementById('calcProgressPct');
+                const subEl = document.getElementById('calcProgressSub');
                 if (wrap) wrap.classList.remove('visible');
                 if (fill) fill.style.width = '0%';
-                if (pctEl) pctEl.textContent = '0%';
+                if (pctEl) pctEl.textContent = '0 / 0';
+                if (subEl) subEl.textContent = '';
                 calculateBtn.textContent = originalText;
                 calculateBtn.classList.remove('calculating');
                 calculateBtn.disabled = false;

@@ -17,6 +17,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <map>
+#include <functional>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -664,6 +665,92 @@ static bool parseInputJson(const std::string& json, JsonInput& out, std::string&
 	return true;
 }
 
+// Invoked once per receiver plane after its grid has been computed. Return false to stop processing.
+using ReceiverPlaneDoneFn = std::function<bool(
+    const std::string& planeName,
+    const PlaneData& planeData,
+    const std::vector<double>& planeTemperatures,
+    size_t planeIndex1Based,
+    size_t totalPlanes)>;
+
+static bool processReceiverPlanes(JsonInput& in, std::mt19937_64& rng, const ReceiverPlaneDoneFn& onPlaneDone) {
+	size_t globalPointIdx = 0;
+	const size_t totalPlanes = in.planeDataMap.size();
+	size_t planeIndex = 0;
+
+	std::cout << "=== Processing " << totalPlanes << " receiver planes ===" << std::endl;
+	std::cout << "Total receiver points: " << in.receiverPoints.size() << std::endl;
+
+	for (const auto& planePair : in.planeDataMap) {
+		const std::string& planeName = planePair.first;
+		const PlaneData& planeData = planePair.second;
+		++planeIndex;
+
+		std::cout << "Processing plane: \"" << planeName << "\"" << std::endl;
+		std::cout << "  Grid: " << planeData.width << "x" << planeData.height << std::endl;
+		std::cout << "  Num points: " << planeData.numPoints << std::endl;
+		std::cout << "  Starting at globalPointIdx: " << globalPointIdx << std::endl;
+
+		if (globalPointIdx < in.receiverPoints.size()) {
+			const auto& firstPoint = in.receiverPoints[globalPointIdx];
+			std::cout << "  Sample point 0 origin: [" << firstPoint.origin.x << ", " << firstPoint.origin.y << ", " << firstPoint.origin.z << "]" << std::endl;
+			std::cout << "  Sample point 0 normal: [" << firstPoint.normal.x << ", " << firstPoint.normal.y << ", " << firstPoint.normal.z << "]" << std::endl;
+		}
+
+		std::cout << "  Number of emitters: " << in.polygons.size() << std::endl;
+		for (size_t i = 0; i < in.polygons.size(); ++i) {
+			std::cout << "    Emitter " << i << ": temp=" << in.polygons[i].temperature << ", vertices=" << in.polygons[i].vertices.size() << std::endl;
+			if (in.polygons[i].vertices.size() > 0) {
+				std::cout << "      First vertex: [" << in.polygons[i].vertices[0].x << ", " << in.polygons[i].vertices[0].y << ", " << in.polygons[i].vertices[0].z << "]" << std::endl;
+			}
+		}
+
+		std::vector<double> planeTemperatures;
+		planeTemperatures.reserve(planeData.numPoints);
+
+		double minTemp = std::numeric_limits<double>::infinity();
+		double maxTemp = -std::numeric_limits<double>::infinity();
+
+		for (size_t localIdx = 0; localIdx < planeData.numPoints; ++localIdx) {
+			if (globalPointIdx >= in.receiverPoints.size()) {
+				std::cerr << "ERROR: globalPointIdx " << globalPointIdx << " exceeds receiverPoints size " << in.receiverPoints.size() << std::endl;
+				break;
+			}
+
+			const auto& receiverPoint = in.receiverPoints[globalPointIdx];
+
+			std::mt19937_64 pointRng = rng;
+			if (in.seed.has_value()) {
+				pointRng.seed(in.seed.value() + globalPointIdx * 12345);
+			}
+
+			auto res = calculateViewFactorsWithBlockage(receiverPoint.origin, receiverPoint.normal, in.polygons, in.inertPolygons, in.numRays, pointRng);
+
+			double totalTemperature = 0.0;
+			for (size_t p = 0; p < in.polygons.size(); ++p) {
+				double temperatureContribution = res.viewFactors[p] * in.polygons[p].temperature;
+				totalTemperature += temperatureContribution;
+			}
+
+			planeTemperatures.push_back(totalTemperature);
+
+			if (totalTemperature < minTemp) minTemp = totalTemperature;
+			if (totalTemperature > maxTemp) maxTemp = totalTemperature;
+
+			globalPointIdx++;
+		}
+
+		std::cout << "  Finished plane \"" << planeName << "\"" << std::endl;
+		std::cout << "    Temperature range: " << minTemp << " to " << maxTemp << std::endl;
+		std::cout << "    Next globalPointIdx: " << globalPointIdx << std::endl;
+
+		if (!onPlaneDone(planeName, planeData, planeTemperatures, planeIndex, totalPlanes)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 static std::string runCalculation(const std::string& jsonInput, bool& ok) {
 	JsonInput in;
 	std::string err;
@@ -681,106 +768,66 @@ static std::string runCalculation(const std::string& jsonInput, bool& ok) {
 		rng = std::mt19937_64(seedSeq);
 	}
 
-	// Process each receiver plane separately
 	std::ostringstream out;
 	out << "{";
 	out << "\"success\":true,";
 	out << "\"planes\":[";
-	
-	size_t globalPointIdx = 0;
+
 	bool firstPlane = true;
-	
-	std::cout << "=== Processing " << in.planeDataMap.size() << " receiver planes ===" << std::endl;
-	std::cout << "Total receiver points: " << in.receiverPoints.size() << std::endl;
-	
-	// Iterate through each plane in the map
-	for (const auto& planePair : in.planeDataMap) {
-		const std::string& planeName = planePair.first;
-		const PlaneData& planeData = planePair.second;
-		
-		std::cout << "Processing plane: \"" << planeName << "\"" << std::endl;
-		std::cout << "  Grid: " << planeData.width << "x" << planeData.height << std::endl;
-		std::cout << "  Num points: " << planeData.numPoints << std::endl;
-		std::cout << "  Starting at globalPointIdx: " << globalPointIdx << std::endl;
-		
-		// Log first point's position and normal for debugging
-		if (globalPointIdx < in.receiverPoints.size()) {
-			const auto& firstPoint = in.receiverPoints[globalPointIdx];
-			std::cout << "  Sample point 0 origin: [" << firstPoint.origin.x << ", " << firstPoint.origin.y << ", " << firstPoint.origin.z << "]" << std::endl;
-			std::cout << "  Sample point 0 normal: [" << firstPoint.normal.x << ", " << firstPoint.normal.y << ", " << firstPoint.normal.z << "]" << std::endl;
+	const bool finished = processReceiverPlanes(in, rng, [&](const std::string& planeName, const PlaneData& planeData,
+	                                                       const std::vector<double>& planeTemperatures, size_t /*idx1*/,
+	                                                       size_t /*totalPlanes*/) {
+		if (!firstPlane) {
+			out << ",";
 		}
-		
-		// Log emitter info
-		std::cout << "  Number of emitters: " << in.polygons.size() << std::endl;
-		for (size_t i = 0; i < in.polygons.size(); ++i) {
-			std::cout << "    Emitter " << i << ": temp=" << in.polygons[i].temperature << ", vertices=" << in.polygons[i].vertices.size() << std::endl;
-			if (in.polygons[i].vertices.size() > 0) {
-				std::cout << "      First vertex: [" << in.polygons[i].vertices[0].x << ", " << in.polygons[i].vertices[0].y << ", " << in.polygons[i].vertices[0].z << "]" << std::endl;
-			}
-		}
-		
-		if (!firstPlane) out << ",";
 		firstPlane = false;
-		
-		// Calculate temperatures for this plane's points
-		std::vector<double> planeTemperatures;
-		planeTemperatures.reserve(planeData.numPoints);
-		
-		double minTemp = std::numeric_limits<double>::infinity();
-		double maxTemp = -std::numeric_limits<double>::infinity();
-		
-		for (size_t localIdx = 0; localIdx < planeData.numPoints; ++localIdx) {
-			if (globalPointIdx >= in.receiverPoints.size()) {
-				std::cerr << "ERROR: globalPointIdx " << globalPointIdx << " exceeds receiverPoints size " << in.receiverPoints.size() << std::endl;
-				break;
-			}
-			
-			const auto& receiverPoint = in.receiverPoints[globalPointIdx];
-			
-			std::mt19937_64 pointRng = rng;
-			if (in.seed.has_value()) {
-				pointRng.seed(in.seed.value() + globalPointIdx * 12345);
-			}
-			
-			auto res = calculateViewFactorsWithBlockage(receiverPoint.origin, receiverPoint.normal, in.polygons, in.inertPolygons, in.numRays, pointRng);
-			
-			double totalTemperature = 0.0;
-			for (size_t p = 0; p < in.polygons.size(); ++p) {
-				double temperatureContribution = res.viewFactors[p] * in.polygons[p].temperature;
-				totalTemperature += temperatureContribution;
-			}
-			
-			planeTemperatures.push_back(totalTemperature);
-			
-			if (totalTemperature < minTemp) minTemp = totalTemperature;
-			if (totalTemperature > maxTemp) maxTemp = totalTemperature;
-			
-			globalPointIdx++;
-		}
-		
-		std::cout << "  Finished plane \"" << planeName << "\"" << std::endl;
-		std::cout << "    Temperature range: " << minTemp << " to " << maxTemp << std::endl;
-		std::cout << "    Next globalPointIdx: " << globalPointIdx << std::endl;
-		
-		// Output this plane's data
 		out << "{";
 		out << "\"name\":\"" << planeName << "\",";
 		out << "\"width\":" << planeData.width << ",";
 		out << "\"height\":" << planeData.height << ",";
 		out << "\"values\":[";
 		for (size_t i = 0; i < planeTemperatures.size(); ++i) {
-			if (i > 0) out << ",";
+			if (i > 0) {
+				out << ",";
+			}
 			out << planeTemperatures[i];
 		}
 		out << "]";
 		out << "}";
+		return true;
+	});
+
+	if (!finished) {
+		ok = false;
+		return std::string("{\"error\": \"calculation interrupted\"}");
 	}
-	
+
 	out << "]";
 	out << "}";
-	
+
 	ok = true;
 	return out.str();
+}
+
+static std::string jsonEscapeStringValue(const std::string& s) {
+	std::string o;
+	o.reserve(s.size() + 8);
+	for (char c : s) {
+		if (c == '\\') {
+			o += "\\\\";
+		} else if (c == '"') {
+			o += "\\\"";
+		} else if (c == '\n') {
+			o += "\\n";
+		} else if (c == '\r') {
+			o += "\\r";
+		} else if (c == '\t') {
+			o += "\\t";
+		} else {
+			o += c;
+		}
+	}
+	return o;
 }
 
 int main() {
@@ -797,7 +844,7 @@ int main() {
     svr.set_default_headers({
         {"Access-Control-Allow-Origin", "*"},
         {"Access-Control-Allow-Methods", "GET, POST, OPTIONS"},
-        {"Access-Control-Allow-Headers", "Content-Type"}
+        {"Access-Control-Allow-Headers", "Content-Type, Accept"}
     });
 
     // Handle OPTIONS requests (CORS preflight)
@@ -834,6 +881,91 @@ int main() {
         }
     });
 
+    // Same calculation as /calculate, but streams one SSE event per finished receiver plane (then complete).
+    svr.Post("/calculate/stream", [](const Request& req, Response& res) {
+        std::cout << "Received streaming calculation request" << std::endl;
+
+        JsonInput in;
+        std::string err;
+        if (!parseInputJson(req.body, in, err)) {
+            res.status = 400;
+            res.set_content(std::string("{\"error\": \"") + err + "\"}", "application/json");
+            return;
+        }
+
+        std::mt19937_64 rng;
+        if (in.seed.has_value()) {
+            rng.seed(in.seed.value());
+        } else {
+            std::random_device rd;
+            std::seed_seq seedSeq{rd(), rd(), rd(), rd(), rd(), rd()};
+            rng = std::mt19937_64(seedSeq);
+        }
+
+        auto inPtr = std::make_shared<JsonInput>(std::move(in));
+        auto rngPtr = std::make_shared<std::mt19937_64>(std::move(rng));
+        auto runOnce = std::make_shared<bool>(false);
+
+        res.status = 200;
+        res.set_header("Cache-Control", "no-cache");
+
+        res.set_chunked_content_provider(
+            "text/event-stream",
+            [inPtr, rngPtr, runOnce](size_t /*offset*/, DataSink& sink) mutable -> bool {
+                if (*runOnce) {
+                    sink.done();
+                    return true;
+                }
+                *runOnce = true;
+
+                auto sendSse = [&sink](const char* eventName, const std::string& data) -> bool {
+                    const std::string msg = std::string("event: ") + eventName + "\ndata: " + data + "\n\n";
+                    return sink.write(msg.c_str(), msg.size());
+                };
+
+                JsonInput& jIn = *inPtr;
+                std::mt19937_64& jRng = *rngPtr;
+                const size_t totalPlanes = jIn.planeDataMap.size();
+
+                if (!sendSse("started", std::string("{\"totalPlanes\":") + std::to_string(totalPlanes) + "}")) {
+                    sink.done();
+                    return true;
+                }
+
+                const bool ok = processReceiverPlanes(jIn, jRng,
+                                                      [&](const std::string& planeName, const PlaneData& planeData,
+                                                          const std::vector<double>& planeTemperatures, size_t planeIndex1Based,
+                                                          size_t nPlanes) {
+                                                          (void)nPlanes;
+                                                          std::ostringstream planeJson;
+                                                          planeJson << "{\"name\":\"" << jsonEscapeStringValue(planeName) << "\"";
+                                                          planeJson << ",\"width\":" << planeData.width;
+                                                          planeJson << ",\"height\":" << planeData.height;
+                                                          planeJson << ",\"planeIndex\":" << planeIndex1Based;
+                                                          planeJson << ",\"totalPlanes\":" << nPlanes;
+                                                          planeJson << ",\"values\":[";
+                                                          for (size_t i = 0; i < planeTemperatures.size(); ++i) {
+                                                              if (i > 0) {
+                                                                  planeJson << ",";
+                                                              }
+                                                              planeJson << planeTemperatures[i];
+                                                          }
+                                                          planeJson << "]}";
+                                                          return sendSse("plane", planeJson.str());
+                                                      });
+
+                if (ok) {
+                    sendSse("complete", "{\"success\":true}");
+                } else {
+                    sendSse("error", "{\"message\":\"calculation interrupted\"}");
+                }
+
+                sink.done();
+                return true;
+            },
+            nullptr);
+    });
+
     std::cout << "========================================" << std::endl;
     std::cout << "Thermal Radiation Analysis Server" << std::endl;
     std::cout << "========================================" << std::endl;
@@ -843,7 +975,8 @@ int main() {
     std::cout << "Endpoints:" << std::endl;
     std::cout << "  GET  /health     - Health check" << std::endl;
     std::cout << "  GET  /status     - Server status" << std::endl;
-    std::cout << "  POST /calculate  - Run calculation" << std::endl;
+    std::cout << "  POST /calculate        - Run calculation (JSON response)" << std::endl;
+    std::cout << "  POST /calculate/stream - Run calculation (SSE, one event per plane)" << std::endl;
     std::cout << "========================================" << std::endl;
 
     svr.listen("0.0.0.0", 8080);
