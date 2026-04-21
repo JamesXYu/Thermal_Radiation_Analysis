@@ -355,8 +355,8 @@
                 <tr><td><code>Ctrl + Z</code></td><td>Undo</td></tr>
                 <tr><td><code>Ctrl + Y</code></td><td>Redo</td></tr>
                 <tr><td><code>Delete</code></td><td>Delete selected plane(s)</td></tr>
-                <tr><td><code>Ctrl + C</code></td><td>Copy</td></tr>
-                <tr><td><code>Ctrl + V</code></td><td>Paste</td></tr>
+                <tr><td><code>Ctrl + C</code></td><td>Copy selected plane(s) (same as Build → Geometry → Copy)</td></tr>
+                <tr><td><code>Ctrl + V</code></td><td>Paste (same as Build → Geometry → Paste)</td></tr>
                 <tr><td><code>Shift</code> + click</td><td>Multi-select</td></tr>
                 <tr><td colspan="2"><strong>Transform</strong></td></tr>
                 <tr><td><code>Q</code></td><td>Toggle local/world</td></tr>
@@ -365,6 +365,8 @@
                 <tr><td><code>R</code></td><td>Rotate</td></tr>
                 <tr><td colspan="2"><strong>Actions</strong></td></tr>
                 <tr><td><code>A</code></td><td>Add plane</td></tr>
+                <tr><td><code>X</code></td><td>Reset selected plane(s) to default (same as Reset Plane)</td></tr>
+                <tr><td><code>L</code></td><td>Cycle results color scale mode (Auto Scale: manual → per-plane → global, same as Simulation → Auto Scale)</td></tr>
                 <tr><td><code>M</code></td><td>Add Walls (toggle)</td></tr>
                 <tr><td><code>C</code></td><td>Run analysis / Stop</td></tr>
                 <tr><td><code>D</code></td><td>Show detail</td></tr>
@@ -446,7 +448,7 @@ python3 -m http.server 3000</pre>
         <h2 id="interface">Interface Layout</h2>
         <ul>
             <li><strong>3D Viewport</strong>: Main area showing your 3D model</li>
-            <li><strong>Left toolkit</strong>: Panels for Build, Edit, View, Simulation, Data (mesh density, color scale, and <strong>Show detail</strong> live under Simulation → Result)</li>
+            <li><strong>Left toolkit</strong>: Panels for Build, Edit, View, Simulation, Data. Under <strong>Build → Geometry</strong>, <strong>Copy</strong> and <strong>Paste</strong> duplicate the <code>Ctrl+C</code> / <code>Ctrl+V</code> plane clipboard. <strong>X</strong> resets the selection; <strong>L</strong> cycles the Simulation <strong>Auto Scale</strong> color mode. Mesh density, color scale, and <strong>Show detail</strong> live under Simulation → Result.</li>
             <li><strong>Right sidebar</strong>: Plane properties when a surface is selected</li>
             <li><strong>Bottom bar</strong>: Global metrics and <strong>Run analysis</strong> with progress to the left while a run is active</li>
             <li><strong>Grid</strong>: Reference grid (can be toggled on/off)</li>

@@ -2198,6 +2198,8 @@
                             <button id="deleteplane" type="button" class="plane-btn">Delete Plane</button>
                             <button id="resetPlane" type="button" class="plane-btn">Reset Plane</button>
                             <button id="standPlane" type="button" class="plane-btn">Stand Plane</button>
+                            <button id="copyPlanesBtn" type="button" class="plane-btn">Copy</button>
+                            <button id="pastePlanesBtn" type="button" class="plane-btn">Paste</button>
                         </div>
                         <button id="addPlaneMode" type="button" class="plane-btn tra-panel-fullbtn">Add Walls Mode</button>
                     </section>
@@ -4102,6 +4104,8 @@
 
         // Add event listener for the reset button
         document.getElementById("resetPlane").addEventListener("click", resetPlaneToDefault);
+        document.getElementById("copyPlanesBtn")?.addEventListener("click", () => copySelected());
+        document.getElementById("pastePlanesBtn")?.addEventListener("click", () => pasteFromClipboard());
 
         // Function to make plane stand on ground (bottom edge at y=0)
         // Uses world space so it works for both single selection and multi-selection (grouped planes).
@@ -5426,6 +5430,14 @@
                     if (planeMode) {
                         exitPlaneMode();
                     }
+                    break;
+                case 'x':
+                    event.preventDefault();
+                    resetPlaneToDefault();
+                    break;
+                case 'l':
+                    event.preventDefault();
+                    cycleAutoColorScaleMode();
                     break;
             }
         });
@@ -7317,31 +7329,30 @@
             });
         }
 
-        // Auto color scale button handler - cycles: Auto -> Per Plane -> Global -> Per Plane -> Global -> ...
+        function cycleAutoColorScaleMode() {
+            const scaleBtn = document.getElementById('autoColorScaleBtn');
+            if (!scaleBtn) return;
+            if (colorScaleMode === 'manual') {
+                colorScaleMode = 'perPlane';
+                scaleBtn.textContent = 'Plane';
+            } else if (colorScaleMode === 'perPlane') {
+                colorScaleMode = 'global';
+                scaleBtn.textContent = 'Global';
+            } else {
+                colorScaleMode = 'perPlane';
+                scaleBtn.textContent = 'Plane';
+            }
+            planes.forEach(plane => {
+                if (plane.type === "Receiver" && plane.contourData) {
+                    applyContourTexture(plane);
+                }
+            });
+            console.log(`Color scale: ${colorScaleMode}`);
+        }
+
         const autoColorScaleBtn = document.getElementById('autoColorScaleBtn');
         if (autoColorScaleBtn) {
-            autoColorScaleBtn.addEventListener('click', function() {
-                // Cycle mode: manual -> perPlane -> global -> perPlane -> global -> ...
-                if (colorScaleMode === 'manual') {
-                    colorScaleMode = 'perPlane';
-                    autoColorScaleBtn.textContent = 'Plane';
-                } else if (colorScaleMode === 'perPlane') {
-                    colorScaleMode = 'global';
-                    autoColorScaleBtn.textContent = 'Global';
-                } else {
-                    colorScaleMode = 'perPlane';
-                    autoColorScaleBtn.textContent = 'Plane';
-                }
-                
-                // Re-apply contours to all receiver planes with data
-                planes.forEach(plane => {
-                    if (plane.type === "Receiver" && plane.contourData) {
-                        applyContourTexture(plane);
-                    }
-                });
-                
-                console.log(`Color scale: ${colorScaleMode}`);
-            });
+            autoColorScaleBtn.addEventListener('click', cycleAutoColorScaleMode);
         }
 
         // Add this function to handle the contour generation
