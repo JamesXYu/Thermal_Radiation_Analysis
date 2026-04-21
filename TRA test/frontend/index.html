@@ -2,37 +2,1285 @@
 <html>
 
 <head>
-    <title>Radiation 3D prototype</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Thermal Radiation Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="./radiation_icon.svg" type="image/svg+xml">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('tra-theme') === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            } catch (e) { /* ignore */ }
+        })();
+    </script>
     <style>
+        :root {
+            /* Shared accent (dark & light) */
+            --tra-primary: #da2424;
+            --tra-secondary: #bf574f;
+            --tra-tertiary: #892a2a;
+            --tra-accent: #da2424;
+            --tra-accent-deep: #b01a1a;
+            --tra-accent-light: #e8a098;
+            --tra-accent-muted: rgba(218, 36, 36, 0.14);
+            --tra-mint: #4ade80;
+        }
+
+        /* Dark theme (default) */
+        html {
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
+            color-scheme: dark;
+            --tra-bg: #0a0a0c;
+            --tra-panel: #12151e;
+            --tra-panel-inner: #0e1118;
+            --tra-border: #2a2832;
+            --tra-text: #f0e8ea;
+            --tra-muted: #ada8b0;
+            --tra-topbar-bg: linear-gradient(180deg, #141824 0%, #0d1017 100%);
+            --tra-toolbar-bg: #0d1017;
+            --tra-flyout-bg: linear-gradient(165deg, #141922 0%, #0c0f14 48%, #0a0c11 100%);
+            --tra-flyout-header-bg: linear-gradient(180deg, rgba(22, 27, 38, 0.98) 0%, rgba(12, 15, 22, 0.95) 100%);
+            --tra-flyout-border: rgba(255, 255, 255, 0.08);
+            --tra-flyout-shadow: 0 24px 48px rgba(0, 0, 0, 0.65);
+            --tra-flyout-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            --tra-bottombar-bg: #0a0c11;
+            --tra-scene-bg: #0b0e14;
+            --tra-hover-wash: rgba(255, 255, 255, 0.04);
+            --tra-card-bg: rgba(0, 0, 0, 0.22);
+            --tra-card-border: rgba(255, 255, 255, 0.06);
+            --tra-btn-ghost-bg: rgba(255, 255, 255, 0.05);
+            --tra-btn-ghost-border: rgba(255, 255, 255, 0.1);
+            --tra-input-bg: rgba(6, 8, 12, 0.92);
+            --tra-input-border: rgba(255, 255, 255, 0.1);
+            --tra-color-bracket-bg: rgba(0, 0, 0, 0.28);
+            --tra-color-bracket-border: rgba(255, 255, 255, 0.1);
+            --tra-color-input-bg: rgba(22, 26, 34, 0.98);
+            --tra-manual-bg: rgba(255, 255, 255, 0.03);
+            --tra-progress-track: rgba(0, 0, 0, 0.45);
+            --tra-chip-inactive: rgba(255, 255, 255, 0.06);
+            --tra-distance-pill-bg: rgba(255, 255, 255, 0.06);
+            --tra-distance-pill-border: rgba(255, 255, 255, 0.08);
+        }
+
+        html[data-theme="light"] {
+            color-scheme: light;
+            --tra-bg: #ebe8ee;
+            --tra-panel: #ffffff;
+            --tra-panel-inner: #f7f5f9;
+            --tra-border: #cfc8d4;
+            --tra-text: #1c181b;
+            --tra-muted: #5e5863;
+            --tra-topbar-bg: linear-gradient(180deg, #ffffff 0%, #f3f1f6 100%);
+            --tra-toolbar-bg: #ede8f0;
+            --tra-flyout-bg: linear-gradient(165deg, #ffffff 0%, #f6f4f9 48%, #eeeaf2 100%);
+            --tra-flyout-header-bg: linear-gradient(180deg, #faf9fc 0%, #f0ecf4 100%);
+            --tra-flyout-border: rgba(0, 0, 0, 0.1);
+            --tra-flyout-shadow: 0 20px 44px rgba(0, 0, 0, 0.12);
+            --tra-flyout-inset: inset 0 1px 0 rgba(255, 255, 255, 0.98);
+            --tra-bottombar-bg: #f4f2f7;
+            --tra-scene-bg: #ddd9e4;
+            --tra-hover-wash: rgba(0, 0, 0, 0.04);
+            --tra-card-bg: rgba(255, 255, 255, 0.88);
+            --tra-card-border: rgba(0, 0, 0, 0.08);
+            --tra-btn-ghost-bg: rgba(255, 255, 255, 0.96);
+            --tra-btn-ghost-border: rgba(0, 0, 0, 0.12);
+            --tra-input-bg: #ffffff;
+            --tra-input-border: rgba(0, 0, 0, 0.14);
+            --tra-color-bracket-bg: rgba(0, 0, 0, 0.04);
+            --tra-color-bracket-border: rgba(0, 0, 0, 0.1);
+            --tra-color-input-bg: #ffffff;
+            --tra-manual-bg: rgba(0, 0, 0, 0.03);
+            --tra-progress-track: rgba(0, 0, 0, 0.12);
+            --tra-chip-inactive: rgba(0, 0, 0, 0.04);
+            --tra-distance-pill-bg: rgba(0, 0, 0, 0.05);
+            --tra-distance-pill-border: rgba(0, 0, 0, 0.1);
+        }
+
         body {
             margin: 0;
         }
 
-        #functionbox {
-            width: 250px;
-            height: auto;
-            max-height: calc(100vh - 60px);
-            position: absolute;
-            top: 50px;
-            left: 10px;
-            z-index: 100;
+        body.tra-app {
+            height: 100%;
+            max-height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
+            background: var(--tra-bg);
+            color: var(--tra-text);
+            font-family: 'Inter', 'Poppins', system-ui, sans-serif;
+        }
 
-            background-color: #b5cea8;
-            background-color: #4444447e;
+        #app-shell {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-height: 100%;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .app-topbar {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 48px;
+            padding: 0 16px 0 20px;
+            background: var(--tra-topbar-bg);
+            border-bottom: 1px solid var(--tra-border);
+            z-index: 200;
+            box-sizing: border-box;
+        }
+
+        .app-brand {
+            font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.14em;
+            color: var(--tra-text);
+        }
+
+        .app-nav {
+            display: flex;
+            gap: 28px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            color: var(--tra-muted);
+        }
+
+        .app-nav span.is-active {
+            color: var(--tra-accent);
+            box-shadow: 0 2px 0 0 var(--tra-accent);
+            padding-bottom: 4px;
+        }
+
+        .app-topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 11px;
+        }
+
+        .app-engine-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
             border-radius: 4px;
+            background: rgba(74, 222, 128, 0.08);
+            color: var(--tra-mint);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .app-engine-pill .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--tra-mint);
+            box-shadow: 0 0 6px var(--tra-mint);
+        }
+
+        .tra-theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 32px;
+            padding: 0 12px;
+            margin: 0;
+            border: 1px solid var(--tra-border);
+            border-radius: 8px;
+            background: var(--tra-btn-ghost-bg);
+            color: var(--tra-text);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .tra-theme-toggle:hover {
+            background: rgba(218, 36, 36, 0.1);
+            border-color: rgba(218, 36, 36, 0.35);
+            color: var(--tra-accent);
+        }
+
+        .tra-theme-toggle .tra-theme-icon {
+            display: inline-flex;
+            width: 18px;
+            height: 18px;
+            line-height: 1;
+        }
+
+        .tra-theme-toggle .tra-theme-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+        }
+
+        .app-icon-btn {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            color: var(--tra-muted);
+            cursor: default;
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        .app-user {
+            border: 1px solid var(--tra-border);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+        }
+
+        #app-main-row {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+            align-items: stretch;
+        }
+
+        #functionbox {
+            --tra-toolstrip-w: 96px;
+            width: var(--tra-toolstrip-w);
+            flex-shrink: 0;
+            height: 100%;
+            max-height: 100%;
+            position: relative;
+            z-index: 120;
+            background: var(--tra-toolbar-bg);
+            border-right: 1px solid var(--tra-border);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: visible;
+        }
+
+        .tra-manual-link {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 10px 6px;
+            margin: 0;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-align: center;
+            text-decoration: none;
+            color: var(--tra-muted);
+            background: var(--tra-manual-bg);
+            border-bottom: 1px solid var(--tra-border);
+            transition: color 0.15s ease, background 0.15s ease;
+        }
+
+        .tra-manual-link:hover {
+            color: var(--tra-accent);
+            background: rgba(218, 36, 36, 0.08);
+        }
+
+        .tra-manual-icon {
+            width: 22px;
+            height: 22px;
+            opacity: 0.9;
+        }
+
+        .tra-toolkit-nav {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 2px;
+            padding: 8px 6px;
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
         }
 
-        #renderbody {
-            width: 100%;
-            height: 100vh;
+        .tra-tool-validation {
+            flex-shrink: 0;
+            padding: 8px 6px;
+            border-top: 1px solid var(--tra-border);
         }
 
-        .custom-file-upload {
+        #validationbtn.tra-validation-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 100%;
+            margin: 0;
+            padding: 10px 4px;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-align: center;
+            color: var(--tra-muted);
+            background: var(--tra-manual-bg);
+            text-decoration: none;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            box-sizing: border-box;
+        }
+
+        #validationbtn.tra-validation-link:hover {
+            color: var(--tra-accent);
+            border-color: rgba(218, 36, 36, 0.35);
+            background: rgba(218, 36, 36, 0.08);
+        }
+
+        .tra-tool-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 6px;
+            width: 100%;
+            padding: 12px 4px 10px;
+            margin: 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            color: var(--tra-muted);
+            background: transparent;
+            transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .tra-tool-item:hover {
+            color: var(--tra-text);
+            background: var(--tra-hover-wash);
+        }
+
+        .tra-tool-item.is-open {
+            color: var(--tra-accent);
+            background: rgba(218, 36, 36, 0.14);
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
+        }
+
+        .tra-tool-icon {
+            width: 26px;
+            height: 26px;
+            display: block;
+            opacity: 0.95;
+        }
+
+        .tra-tool-icon svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .tra-tool-label {
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            line-height: 1.15;
+            text-transform: uppercase;
+            text-align: center;
+            max-width: 100%;
+        }
+
+        .tra-tool-flyout {
+            position: absolute;
+            left: 100%;
+            top: 0;
+            margin-left: 10px;
+            width: min(320px, calc(100vw - var(--tra-toolstrip-w) - 40px));
+            max-width: min(320px, calc(100vw - var(--tra-toolstrip-w) - 40px));
+            max-height: min(72vh, calc(100vh - 100px));
+            z-index: 160;
+            display: flex;
+            flex-direction: column;
+            background: var(--tra-flyout-bg);
+            border: 1px solid var(--tra-flyout-border);
+            border-radius: 10px;
+            box-shadow:
+                var(--tra-flyout-shadow),
+                0 0 0 1px rgba(218, 36, 36, 0.06),
+                var(--tra-flyout-inset);
+            overflow: hidden;
+        }
+
+        .tra-tool-flyout[hidden] {
+            display: none !important;
+        }
+
+        .tra-tool-flyout-grip {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 14px 11px;
+            background: var(--tra-flyout-header-bg);
+            border-bottom: 1px solid var(--tra-border);
+        }
+
+        .tra-tool-flyout-title {
+            font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            color: var(--tra-text);
+            text-transform: uppercase;
+        }
+
+        .tra-tool-flyout-title::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            margin-right: 10px;
+            border-radius: 1px;
+            background: var(--tra-accent);
+            vertical-align: middle;
+            box-shadow: 0 0 10px rgba(218, 36, 36, 0.55);
+        }
+
+        .tra-tool-flyout-close {
+            border: none;
+            background: var(--tra-btn-ghost-bg);
+            color: var(--tra-muted);
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .tra-tool-flyout-close:hover {
+            color: var(--tra-text);
+            background: rgba(218, 36, 36, 0.15);
+        }
+
+        .tra-tool-flyout-body {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 14px 14px 18px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(218, 36, 36, 0.35) transparent;
+        }
+
+        .tra-tool-flyout-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .tra-tool-flyout-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .tra-tool-flyout-body::-webkit-scrollbar-thumb {
+            background: rgba(218, 36, 36, 0.25);
+            border-radius: 3px;
+        }
+
+        .tra-tool-flyout-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(218, 36, 36, 0.4);
+        }
+
+        #tra-panels-store {
+            position: absolute;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        #tra-panels-store .tra-panel-body {
+            pointer-events: auto;
+        }
+
+        #app-center {
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #renderbody {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            min-height: 200px;
+            margin: 0;
+            padding: 0;
+            background: var(--tra-bg);
+        }
+
+        #renderbody canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .params-sidebar {
+            width: 288px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--tra-panel);
+            border-left: 1px solid var(--tra-border);
+            box-sizing: border-box;
+            z-index: 90;
+            min-height: 0;
+        }
+
+        .params-panel-wrap {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .plane-params-panel {
+            flex: 1;
+            min-height: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 8px 10px 10px;
+            scrollbar-gutter: stable;
+        }
+
+        .pp-group {
+            margin-bottom: 6px;
+            padding: 7px 8px 6px;
+            border: 1px solid var(--tra-border);
+            border-radius: 6px;
+            background: var(--tra-panel-inner);
+        }
+
+        .pp-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .pp-group-title {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--tra-muted);
+            margin: 0 0 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+        }
+
+        .pp-section-title {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--tra-muted);
+            margin: 10px 0 6px;
+        }
+
+        .pp-section-title:first-child {
+            margin-top: 0;
+        }
+
+        .pp-field {
+            margin-bottom: 6px;
+        }
+
+        .pp-group .pp-field:last-child {
+            margin-bottom: 0;
+        }
+
+        .pp-row2 .pp-field,
+        .pp-row3 .pp-field {
+            margin-bottom: 0;
+        }
+
+        .pp-field label {
+            display: block;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            color: var(--tra-muted);
+            margin-bottom: 2px;
+        }
+
+        .pp-field input[type="text"],
+        .pp-field input[type="number"],
+        .pp-field select,
+        .pp-field textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 4px 6px;
+            font-size: 12px;
+            line-height: 1.25;
+            font-family: inherit;
+            color: var(--tra-text);
+            background: var(--tra-bg);
+            border: 1px solid var(--tra-border);
+            border-radius: 4px;
+            min-height: 0;
+        }
+
+        .pp-field input:disabled,
+        .pp-field select:disabled,
+        .pp-field textarea:disabled {
+            opacity: 0.55;
+        }
+
+        .pp-row2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            align-items: start;
+        }
+
+        .pp-row3 {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            align-items: start;
+        }
+
+        .pp-hint {
+            font-size: 10px;
+            color: var(--tra-muted);
+            line-height: 1.35;
+            margin: 0 0 6px;
+        }
+
+        .pp-checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .plane-params-panel textarea {
+            resize: vertical;
+            max-height: 4.25rem;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .params-sidebar select {
+            cursor: pointer;
+        }
+
+        .pp-checkbox-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--tra-accent);
+        }
+
+        .app-bottombar {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            min-height: 48px;
+            padding: 8px 16px;
+            background: var(--tra-bottombar-bg);
+            border-top: 1px solid var(--tra-border);
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+
+        .app-bottombar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--tra-muted);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+        }
+
+        .app-status-ok {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--tra-mint);
+            font-size: 12px;
+            letter-spacing: normal;
+            font-weight: 600;
+        }
+
+        .app-bottombar-center {
+            display: flex;
+            gap: 24px;
+            color: var(--tra-muted);
+            font-size: 11px;
+        }
+
+        .app-metric strong {
+            color: var(--tra-text);
+            font-weight: 600;
+        }
+
+        #app-metric-flux sup {
+            font-size: 0.7em;
+            font-weight: 600;
+            line-height: 0;
+            vertical-align: 0.15em;
+        }
+
+        .app-bottombar-actions {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .app-bottombar-progress-slot {
+            flex: 0 1 0;
+            min-width: 0;
+            max-width: 0;
+            overflow: hidden;
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            transition: max-width 0.2s ease, opacity 0.2s ease, flex-basis 0.2s ease;
+        }
+
+        .app-bottombar-progress-slot:has(#calcProgressWrap.visible) {
+            flex: 1 1 160px;
+            min-width: 120px;
+            max-width: 280px;
+            opacity: 1;
+        }
+
+        .tra-sr-only {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
+        .btn-run-analysis {
+            padding: 10px 22px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Space Grotesk', 'Inter', inherit;
+            letter-spacing: 0.04em;
+            color: #fff;
+            background: linear-gradient(180deg, var(--tra-primary) 0%, var(--tra-accent-deep) 100%);
+            border: 1px solid rgba(232, 160, 152, 0.55);
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(218, 36, 36, 0.28);
+        }
+
+        .btn-run-analysis:hover {
+            filter: brightness(1.07);
+            box-shadow: 0 8px 22px rgba(218, 36, 36, 0.38);
+        }
+
+        .btn-run-analysis.calculating {
+            background: linear-gradient(180deg, var(--tra-tertiary) 0%, #5c1818 100%) !important;
+            border-color: rgba(191, 87, 79, 0.45) !important;
+            box-shadow: none !important;
+        }
+
+        .btn-run-analysis.calculating:hover {
+            filter: brightness(1.04);
+        }
+
+        .tra-muted-inline {
+            color: var(--tra-muted);
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .tra-field-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--tra-muted);
+            margin-bottom: 8px;
+        }
+
+        .tra-select-dark {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--tra-text);
+            background: var(--tra-panel-inner);
+            border: 1px solid var(--tra-border);
+            border-radius: 4px;
+        }
+
+        .tra-panel-fullbtn {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 10px 0 0 !important;
+            box-sizing: border-box;
+        }
+
+        /* Toolkit flyout — subsection cards + unified controls */
+        .tra-k-root {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .tra-k-root-title {
+            display: none;
+        }
+
+        .tra-k-block {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px 12px 14px;
+            border-radius: 10px;
+            background: var(--tra-card-bg);
+            border: 1px solid var(--tra-card-border);
+            border-left: 3px solid rgba(218, 36, 36, 0.55);
+            box-shadow: var(--tra-flyout-inset);
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        /* Uniform 2-column tool rows inside flyout (full-width cells) */
+        .tra-btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .tra-k-subtitle {
+            margin: 0 0 2px 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--tra-muted);
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-field-label {
+            margin-bottom: 6px;
+            margin-top: 4px;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-panel-body button,
+        #functionbox .tra-tool-flyout-body .tra-panel-body label.custom-file-upload {
+            margin: 0 !important;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 12px;
+            letter-spacing: 0.02em;
+            border-radius: 8px;
+            min-height: 38px;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.2;
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-panel-body button {
+            cursor: pointer;
+            border: 1px solid var(--tra-btn-ghost-border);
+            background: var(--tra-btn-ghost-bg);
+            color: var(--tra-text);
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-panel-body button:hover {
+            background: rgba(218, 36, 36, 0.12);
+            border-color: rgba(218, 36, 36, 0.3);
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-panel-body button:active {
+            transform: scale(0.98);
+        }
+
+        #functionbox .tra-tool-flyout-body .plane-btn,
+        #functionbox .tra-tool-flyout-body .transform-btn {
+            background: rgba(218, 36, 36, 0.08);
+            border: 1px solid rgba(218, 36, 36, 0.2);
+        }
+
+        #functionbox .tra-tool-flyout-body .plane-btn:hover,
+        #functionbox .tra-tool-flyout-body .transform-btn:hover {
+            background: rgba(218, 36, 36, 0.16);
+            border-color: rgba(218, 36, 36, 0.42);
+        }
+
+        #functionbox .tra-tool-flyout-body .plane-btn.active,
+        #functionbox .tra-tool-flyout-body .transform-btn.active {
+            background: rgba(218, 36, 36, 0.25);
+            border-color: var(--tra-accent);
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
+        }
+
+        #functionbox .tra-tool-flyout-body .custom-file-upload {
+            width: 100%;
+            min-height: 44px;
+            padding: 10px 14px;
+            font-size: 12px;
+            background: rgba(218, 36, 36, 0.06);
+            border: 1px dashed rgba(218, 36, 36, 0.4);
+            color: var(--tra-text);
+        }
+
+        #functionbox .tra-tool-flyout-body .custom-file-upload:hover {
+            background: rgba(218, 36, 36, 0.14);
+            border-style: solid;
+        }
+
+        #functionbox .tra-tool-flyout-body .plane-buttons-container,
+        #functionbox .tra-tool-flyout-body .transform-buttons-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Camera: 2×2 — same width as other tool grids (no 3+1 ragged rows) */
+        #functionbox .tra-tool-flyout-body .view-buttons-container {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            padding: 0;
+            margin: 0;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-btn-grid > button {
+            width: 100%;
+            min-width: 0;
+        }
+
+        #functionbox .tra-tool-flyout-body .plane-buttons-container > button,
+        #functionbox .tra-tool-flyout-body .transform-buttons-container > button,
+        #functionbox .tra-tool-flyout-body .view-buttons-container > button,
+        #functionbox .tra-tool-flyout-body .grid-buttons-container > button,
+        #functionbox .tra-tool-flyout-body .scene-buttons-container > button {
+            width: 100%;
+            min-width: 0;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-panel-fullbtn {
+            margin: 0 !important;
+        }
+
+        #functionbox .tra-tool-flyout-body #scalingbutton {
+            width: 100%;
+        }
+
+        #functionbox .tra-tool-flyout-body .grid-buttons-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 0 !important;
+            padding: 0;
+        }
+
+        #functionbox .tra-tool-flyout-body .scene-buttons-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Simulation: mesh density — 4 exclusive chips in one row */
+        #functionbox .tra-tool-flyout-body .tra-density-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 6px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-density-btn {
+            margin: 0 !important;
+            padding: 8px 2px !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.04em !important;
+            line-height: 1.15 !important;
+            white-space: nowrap;
+            background: rgba(218, 36, 36, 0.08) !important;
+            border: 1px solid rgba(218, 36, 36, 0.22) !important;
+            color: var(--tra-text) !important;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-density-btn:hover {
+            background: rgba(218, 36, 36, 0.14) !important;
+            border-color: rgba(218, 36, 36, 0.38) !important;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-density-btn.active {
+            background: rgba(218, 36, 36, 0.26) !important;
+            border-color: var(--tra-accent) !important;
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-color-scale-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            min-width: 0;
+            margin: 0;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-color-scale-layout #autoColorScaleBtn {
+            width: 100%;
+            font-size: 11px;
+            letter-spacing: 0.06em;
+        }
+
+        /* Same width as Auto Scale button (full column) */
+        #functionbox .tra-tool-flyout-body .tra-color-scale-bracket {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-color-scale-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            justify-items: stretch;
+            width: 100%;
+            max-width: none;
+            padding: 10px 12px;
+            margin: 0;
+            box-sizing: border-box;
+            border: 1px solid var(--tra-color-bracket-border);
+            border-radius: 8px;
+            background: var(--tra-color-bracket-bg);
+            box-shadow: var(--tra-flyout-inset);
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-color-scale-row .tra-muted-inline {
+            color: var(--tra-muted);
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            padding: 0 4px;
+            flex-shrink: 0;
+            line-height: 1.2;
+            min-width: 1.5rem;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-select-dark,
+        #functionbox .tra-tool-flyout-body #sceneDropdown {
+            width: 100%;
+            margin: 0 !important;
+            padding: 9px 10px;
+            font-size: 12px;
+            font-family: inherit;
+            border-radius: 8px;
+            background: var(--tra-input-bg) !important;
+            border: 1px solid var(--tra-input-border) !important;
+            color: var(--tra-text) !important;
+            cursor: pointer;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-select-dark:focus,
+        #functionbox .tra-tool-flyout-body #sceneDropdown:focus {
+            outline: none;
+            border-color: rgba(218, 36, 36, 0.45);
+            box-shadow: 0 0 0 3px rgba(218, 36, 36, 0.12);
+        }
+
+        #functionbox .tra-tool-flyout-body input[type="number"],
+        #functionbox .tra-tool-flyout-body input[type="text"] {
+            background: var(--tra-input-bg);
+            border: 1px solid var(--tra-input-border);
+            color: var(--tra-text);
+            border-radius: 8px;
+            padding: 9px 10px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        /* Results scale min/max: larger type and tap height */
+        #functionbox .tra-tool-flyout-body .tra-color-scale-row input[type="number"] {
+            flex: initial;
+            width: 100%;
+            max-width: none;
+            min-width: 0 !important;
+            min-height: 44px !important;
+            margin: 0 !important;
+            padding: 10px 8px !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
+            line-height: 1.2 !important;
+            text-align: center;
+            border-radius: 8px !important;
+            box-sizing: border-box !important;
+            background: var(--tra-color-input-bg) !important;
+            border: 1px solid var(--tra-input-border) !important;
+            color: var(--tra-text) !important;
+            color-scheme: dark;
+            accent-color: #9aa3b2;
+        }
+
+        html[data-theme="light"] #functionbox .tra-tool-flyout-body input[type="number"],
+        html[data-theme="light"] #functionbox .tra-tool-flyout-body input[type="text"] {
+            color-scheme: light;
+        }
+
+        html[data-theme="light"] #functionbox .tra-tool-flyout-body .tra-color-scale-row input[type="number"] {
+            color-scheme: light;
+        }
+
+        html[data-theme="light"] #functionbox .tra-tool-flyout-body .tra-color-scale-row input[type="number"]::-webkit-inner-spin-button,
+        html[data-theme="light"] #functionbox .tra-tool-flyout-body .tra-color-scale-row input[type="number"]::-webkit-outer-spin-button {
+            filter: none;
+            opacity: 0.65;
+        }
+
+        #functionbox .tra-tool-flyout-body .tra-color-scale-row input[type="number"]::-webkit-outer-spin-button,
+        #functionbox .tra-tool-flyout-body .tra-color-scale-row input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: inner-spin-button !important;
+            opacity: 0.88 !important;
+            margin: 0;
+            height: 1.35em;
+            min-height: 20px;
+            cursor: pointer;
+            /* Default glyphs read as near-black on dark fills — lift to mid grey */
+            filter: brightness(2.35) contrast(0.92);
+        }
+
+        #functionbox .tra-tool-flyout-body #distanceRow {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            gap: 8px;
+            margin: 0 !important;
+        }
+
+        #functionbox .tra-tool-flyout-body #distanceRow span {
+            padding: 8px 12px !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase;
+            border-radius: 8px !important;
+            background: var(--tra-distance-pill-bg) !important;
+            border: 1px solid var(--tra-distance-pill-border) !important;
+            color: var(--tra-muted) !important;
+            height: auto !important;
+        }
+
+        #functionbox .tra-tool-flyout-body #distanceInput {
+            flex: 1;
+            min-width: 72px;
+        }
+
+        #app-bottombar #calcProgressWrap {
+            margin: 0 !important;
+            width: 100% !important;
+            display: none;
+            box-sizing: border-box;
+        }
+
+        #app-bottombar #calcProgressWrap.visible {
+            display: block;
+        }
+
+        #app-bottombar #calcProgressBar {
+            height: 8px;
+            border-radius: 100px;
+            background: var(--tra-progress-track);
+            overflow: hidden;
+        }
+
+        #app-bottombar #calcProgressFill {
+            height: 100%;
+            width: 0%;
+            min-width: 0;
+            border-radius: 100px;
+            background: linear-gradient(90deg, var(--tra-primary), var(--tra-accent-light)) !important;
+            box-shadow: 0 0 18px rgba(218, 36, 36, 0.45) !important;
+            transition: width 0.15s ease-out;
+        }
+
+        #app-bottombar #calcProgressWrap.visible #calcProgressFill {
+            min-width: 4px;
+        }
+
+        /* Thin bar: shimmer from global styles clips awkwardly */
+        #app-bottombar #calcProgressFill::after {
+            display: none;
+        }
+
+        #app-bottombar #calcProgressPct {
+            margin-top: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            color: var(--tra-muted) !important;
+        }
+
+        /* Simulation: Show detail */
+        #functionbox .tra-tool-flyout-body #detail {
+            width: 100%;
+            background: var(--tra-btn-ghost-bg);
+            border: 1px solid var(--tra-btn-ghost-border);
+            color: var(--tra-text);
+            font-weight: 600;
+            box-shadow: none;
+        }
+
+        #functionbox .tra-tool-flyout-body #detail:hover {
+            background: rgba(218, 36, 36, 0.1);
+            border-color: rgba(218, 36, 36, 0.35);
+            filter: none;
+        }
+
+        #tra-panels-store .custom-file-upload {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -52,15 +1300,15 @@
             margin-bottom: 5px;
         }
 
-        .custom-file-upload:hover {
+        #tra-panels-store .custom-file-upload:hover {
             background-color: #007e7a;
         }
 
-        .custom-file-upload:active {
+        #tra-panels-store .custom-file-upload:active {
             transform: scale(0.97);
         }
 
-        #top {
+        #tra-panels-store #top {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -80,11 +1328,11 @@
             margin-bottom: 5px;
         }
 
-        #top:hover {
+        #tra-panels-store #top:hover {
             background: #007e7a;
         }
 
-        #front {
+        #tra-panels-store #front {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -104,11 +1352,11 @@
             margin-bottom: 5px;
         }
 
-        #front:hover {
+        #tra-panels-store #front:hover {
             background: #007e7a;
         }
 
-        #side {
+        #tra-panels-store #side {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -128,11 +1376,11 @@
             margin-bottom: 5px;
         }
 
-        #side:hover {
+        #tra-panels-store #side:hover {
             background: #007e7a;
         }
 
-        #perspective {
+        #tra-panels-store #perspective {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -152,16 +1400,8 @@
             margin-bottom: 5px;
         }
 
-        #perspective:hover {
+        #tra-panels-store #perspective:hover {
             background: #007e7a;
-        }
-
-        #renderbody {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            margin: 0;
-            padding: 0;
         }
 
         /* Add this to your existing style section */
@@ -273,7 +1513,7 @@
             z-index: 1003;
         }
 
-        #scalinginput, #gridSizeInput {
+        #tra-panels-store #gridSizeInput {
             padding: 6px 8px;
             font-size: 20px;
             font-family: 'Poppins', sans-serif;
@@ -289,12 +1529,12 @@
             margin-bottom: 5px;
         }
         
-        #gridSizeInput {
+        #tra-panels-store #gridSizeInput {
             background-color: white;
             cursor: pointer;
         }
         
-        #colorScaleMin, #colorScaleMax {
+        #tra-panels-store #colorScaleMin, #tra-panels-store #colorScaleMax {
             padding: 6px 8px;
             font-size: 18px;
             font-family: 'Poppins', sans-serif;
@@ -307,7 +1547,7 @@
             margin: 5px 5px;
         }
 
-        #autoColorScaleBtn {
+        #tra-panels-store #autoColorScaleBtn {
             padding: 3px 6px;
             font-size: 14px;
             font-family: 'Poppins', sans-serif;
@@ -321,11 +1561,11 @@
             transition: background 0.2s;
         }
 
-        #autoColorScaleBtn:hover {
+        #tra-panels-store #autoColorScaleBtn:hover {
             background: #007e7a;
         }
         
-        .color-scale-container {
+        #tra-panels-store .color-scale-container {
             display: flex;
             align-items: center;
             margin-left: 25px;
@@ -333,16 +1573,16 @@
             margin-bottom: 5px;
         }
 
-        #scalinginput:placeholder, #gridSizeInput:placeholder, #colorScaleMin:placeholder, #colorScaleMax:placeholder {
+        #tra-panels-store #gridSizeInput:placeholder, #tra-panels-store #colorScaleMin:placeholder, #tra-panels-store #colorScaleMax:placeholder {
             color: #aaa;
         }
 
-        #scalinginput:focus, #gridSizeInput:focus, #colorScaleMin:focus, #colorScaleMax:focus {
+        #tra-panels-store #gridSizeInput:focus, #tra-panels-store #colorScaleMin:focus, #tra-panels-store #colorScaleMax:focus {
             border-color: #4a90e2;
             box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
         }
 
-        #scalingbutton {
+        #tra-panels-store #scalingbutton {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -362,11 +1602,11 @@
             margin-bottom: 5px;
         }
 
-        #scalingbutton:hover {
+        #tra-panels-store #scalingbutton:hover {
             background: #007e7a;
         }
 
-        #updatescale {
+        #tra-panels-store #exportBtn {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -386,36 +1626,12 @@
             margin-bottom: 5px;
         }
 
-        #updatescale:hover {
-            background: #007e7a;
-        }
-
-        #exportBtn {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Poppins', sans-serif;
-            font: 700;
-            font-size: x-large;
-            padding: 8px 16px;
-            background: #00a19b;
-            width: 200px;
-            height: 50px;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 25px;
-            margin-top: 5px;
-            margin-bottom: 5px;
-        }
-
-        #exportBtn:hover {
+        #tra-panels-store #exportBtn:hover {
             background: #007e7a;
         }
 
 
-        #importbtn {
+        #tra-panels-store #importbtn {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -435,15 +1651,15 @@
             margin-bottom: 5px;
         }
 
-        #importbtn:hover {
+        #tra-panels-store #importbtn:hover {
             background-color: #007e7a;
         }
 
-        #importbtn:active {
+        #tra-panels-store #importbtn:active {
             transform: scale(0.97);
         }
 
-        #detail {
+        #tra-panels-store #detail {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -463,97 +1679,12 @@
             margin-bottom: 5px;
         }
 
-        #detail:hover {
+        #tra-panels-store #detail:hover {
             background: #007e7a;
-        }
-
-        #calculate {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Poppins', sans-serif;
-            font: 700;
-            font-size: x-large;
-            padding: 8px 16px;
-            background: #00a19b;
-            width: 200px;
-            height: 50px;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 25px;
-            margin-top: 5px;
-            margin-bottom: 5px;
-        }
-
-        #calculate:hover {
-            background: #007e7a;
-        }
-
-        #calculate.calculating {
-            background: #e07b39;
-        }
-        #calculate.calculating:hover {
-            background: #c46930;
-        }
-
-        #calcProgressWrap {
-            margin-left: 25px;
-            margin-top: 8px;
-            margin-bottom: 8px;
-            display: none;
-            width: calc(100% - 50px);
-            box-sizing: border-box;
-        }
-        #calcProgressWrap.visible {
-            display: block;
-        }
-        #calcProgressBar {
-            width: 100%;
-            height: 20px;
-            background: rgba(0,0,0,0.25);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        #calcProgressFill {
-            height: 100%;
-            width: 0%;
-            min-width: 0;
-            position: relative;
-            background: linear-gradient(90deg, #0088cc, #00b4d8);
-            border-radius: 4px;
-            transition: width 0.15s ease-out;
-            box-shadow: 0 0 12px rgba(0, 180, 216, 0.4);
-            overflow: hidden;
-        }
-        #calcProgressWrap.visible #calcProgressFill {
-            min-width: 4px;
-        }
-        #calcProgressFill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 36px;
-            height: 100%;
-            background: rgba(255,255,255,0.5);
-            border-radius: 2px;
-            animation: calcProgressShimmer 2.5s ease-in-out infinite;
-        }
-        @keyframes calcProgressShimmer {
-            0% { left: 0; }
-            100% { left: 100%; }
-        }
-        #calcProgressPct {
-            font-family: 'Poppins', sans-serif;
-            font-size: 12px;
-            color: rgba(255,255,255,0.9);
-            margin-top: 4px;
         }
 
         /* Distance display */
-        #distanceRow {
+        #tra-panels-store #distanceRow {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -562,7 +1693,7 @@
             margin-bottom: 5px;
         }
 
-        #distanceRow span {
+        #tra-panels-store #distanceRow span {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -577,7 +1708,7 @@
             border-radius: 4px;
         }
 
-        #distanceInput {
+        #tra-panels-store #distanceInput {
             padding: 6px 8px;
             font-size: 18px;
             font-family: 'Poppins', sans-serif;
@@ -590,7 +1721,7 @@
         }
 
         /* Scene Manager Styles */
-        #sceneNameInput {
+        #tra-panels-store #sceneNameInput {
             font-family: 'Poppins', sans-serif;
             font-size: large;
             padding: 8px;
@@ -603,12 +1734,12 @@
             box-sizing: border-box;
         }
 
-        #sceneNameInput:focus {
+        #tra-panels-store #sceneNameInput:focus {
             outline: none;
             background: #f0f0f0;
         }
 
-        #saveSceneBtn, #newSceneBtn {
+        #tra-panels-store #saveSceneBtn, #tra-panels-store #newSceneBtn {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -628,19 +1759,19 @@
             margin-bottom: 5px;
         }
 
-        #saveSceneBtn:hover {
+        #tra-panels-store #saveSceneBtn:hover {
             background: #007e7a;
         }
 
-        #newSceneBtn {
+        #tra-panels-store #newSceneBtn {
             background: #00a19b;
         }
 
-        #newSceneBtn:hover {
+        #tra-panels-store #newSceneBtn:hover {
             background: #007e7e;
         }
 
-        #sceneDropdown {
+        #tra-panels-store #sceneDropdown {
             padding: 6px 8px;
             font-size: 20px;
             font-family: 'Poppins', sans-serif;
@@ -658,23 +1789,23 @@
             cursor: pointer;
         }
 
-        #sceneDropdown:focus {
+        #tra-panels-store #sceneDropdown:focus {
             border-color: #4a90e2;
             box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
         }
 
-        #sceneDropdown option {
+        #tra-panels-store #sceneDropdown option {
             background: white;
             color: black;
         }
 
-        .scene-buttons-container {
+        #tra-panels-store .scene-buttons-container {
             display: flex;
             justify-content: center;
             gap: 10px;
         }
 
-        #loadSceneBtn {
+        #tra-panels-store #loadSceneBtn {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -694,12 +1825,12 @@
             margin-bottom: 5px;
         }
 
-        #loadSceneBtn:hover {
+        #tra-panels-store #loadSceneBtn:hover {
             background: #007e7a;
             margin-left: 10px;
         }
 
-        #deleteSceneBtn {
+        #tra-panels-store #deleteSceneBtn {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -719,7 +1850,7 @@
             margin-bottom: 5px;
         }
 
-        #deleteSceneBtn:hover {
+        #tra-panels-store #deleteSceneBtn:hover {
             background: #c9302c;
         }
 
@@ -736,224 +1867,12 @@
             margin: 10px 0;
         }
 
-        p {
-            font: bolder;
-            font-size: 24px;
-            font-family: 'Poppins', sans-serif;
-            text-align: center;
-            margin: 5px 0 10px 0;
-            font-weight: bold;
-            color: aliceblue;
-        }
-
-        #validationbtn {
-            display: block;
-            font: 400;
-            font-size: 20px;
-            font-family: 'Poppins', sans-serif;
-            text-align: center;
-            font-weight: bold;
-            color: aliceblue;
-            background: #00a19c85;
-            text-decoration: none;
-            border-radius: 4px;
-            width: 250px;
-            margin: 12px 0;
-            padding: 10px 0;
-        }
-
-        #validationbtn:hover {
-            background: #007e7a;
-        }
-
-        #manualLinkTop {
-            display: block;
-            font: 400;
-            font-size: 20px;
-            font-family: 'Poppins', sans-serif;
-            text-align: center;
-            font-weight: bold;
-            color: aliceblue;
-            background: #00a19c85;
-            text-decoration: none;
-            border-radius: 4px;
-            width: 250px;
-            margin: 0 0 12px 0;
-            padding: 10px 0;
-        }
-
-        #manualLinkTop:hover {
-            background: #007e7a;
-        }
-
-        /* Accordion/Dropdown Sections */
-        .section-header {
-            font: bolder;
-            font-size: 22px;
-            font-family: 'Poppins', sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 12px 10px;
-            font-weight: bold;
-            color: aliceblue;
-            background-color: rgba(0, 161, 155, 0.5);
-            cursor: pointer;
-            user-select: none;
-            transition: background-color 0.3s ease;
-            position: relative;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .section-header:hover {
-            background-color: rgba(0, 161, 155, 0.5);
-        }
-
-        .section-header:active {
-            background-color: rgba(0, 161, 155, 0.6);
-        }
-
-        .section-header::after {
-            content: '\25BC'; /* Down arrow Unicode */
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 16px;
-            transition: transform 0.3s ease;
-        }
-
-        .section-header.collapsed::after {
-            transform: translateY(-50%) rotate(-90deg);
-        }
-
-        .section-content {
-            max-height: 1000px;
-            overflow: hidden;
-            transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
-            opacity: 1;
-            padding: 5px 0;
-        }
-
-        .section-content.collapsed {
-            max-height: 0;
-            opacity: 0;
-            padding: 0;
-        }
-
-        .my-custom-gui {
-            font-size: 26px;
-            width: 700px;
-            background-color: #222;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        /* Bigger dat.GUI with your color scheme */
-        .dg.main {
-            font-family: 'Poppins', sans-serif !important;
-            font-size: 20px !important;
-            background-color: rgba(68, 68, 68, 0.8) !important;
-            border-radius: 4px !important;
-            width: 500px !important;
-        }
-
-        .dg .cr {
-            height: 40px !important;
-            line-height: 40px !important;
-            border-bottom: 1px solid #444 !important;
-        }
-
-        .dg .c input[type=text] {
-            height: 28px !important;
-            font-size: 20px !important;
-            background: #555 !important;
-            color: white !important;
-            border: 1px solid #666 !important;
-            border-radius: 4px !important;
-            font-family: 'Poppins', sans-serif;
-            font: 700;
-            width: 100% !important;
-            margin-left: 0 !important;
-        }
-
-        .dg .c select {
-            height: 34px !important;
-            font-size: 20px !important;
-            background: #555 !important;
-            color: white !important;
-            border: 1px solid #666 !important;
-            border-radius: 4px !important;
-            font-family: 'Poppins', sans-serif;
-            font: 700;
-            width: 102% !important;
-            margin-left: -7px !important;
-        }
-
-        .dg .c select option {
-            border-radius: 8px;
-            padding: 4px 8px;
-        }
-        
-
-        .dg .c .slider {
-            display: none !important;
-        }
-
-        .dg .c .slider-fg {
-            background: #00a19b !important;
-            height: 24px !important;
-        }
-
-        .dg .c .slider:hover .slider-fg {
-            background: #007e7a !important;
-        }
-
-        .dg .title {
-            font-size: 18px !important;
-            padding: 8px 10px !important;
-            background-color: rgba(0, 161, 155, 0.3) !important;
-        }
-
-        .dg .cr.function .property-name {
-            color: white !important;
-            font-weight: 500 !important;
-        }
-
-        .dg .cr.function:hover {
-            background: rgba(0, 161, 155, 0.2) !important;
-        }
-
-        .dg .cr.number .property-name,
-        .dg .cr.boolean .property-name {
-            color: white !important;
-            font-weight: 500 !important;
-        }
-
-        /* Make checkbox bigger to fit the larger GUI */
-        .dg .cr.boolean input[type="checkbox"] {
-            width: 20px !important;
-            height: 20px !important;
-        }
-
-        .dg .cr.boolean .checkbox {
-            width: 20px !important;
-            height: 20px !important;
-        }
-
-        .dg.main .close-button {
-            display: none !important;
-        }
-
-        .dg.main .close-button:hover {
-            background-color: #007e7a !important;
-        }
-
-        .view-buttons-container {
+        #tra-panels-store .view-buttons-container {
             display: flex;
             justify-content: center;
         }
 
-        .transform-buttons-container {
+        #tra-panels-store .transform-buttons-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
@@ -962,7 +1881,7 @@
             margin-bottom: 5px;
         }
 
-        .plane-buttons-container {
+        #tra-panels-store .plane-buttons-container {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
             gap: 10px;
@@ -971,7 +1890,7 @@
             margin-bottom: 5px;
         }
 
-        .transform-btn {
+        #tra-panels-store .transform-btn {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -987,15 +1906,15 @@
             cursor: pointer;
         }
 
-        .transform-btn:hover {
+        #tra-panels-store .transform-btn:hover {
             background: #007e7a;
         }
 
-        .transform-btn:active {
+        #tra-panels-store .transform-btn:active {
             transform: scale(0.97);
         }
 
-        .plane-btn {
+        #tra-panels-store .plane-btn {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -1013,25 +1932,25 @@
             box-sizing: border-box;
         }
 
-        .plane-btn:hover {
+        #tra-panels-store .plane-btn:hover {
             background: #007e7a;
         }
 
-        .plane-btn:active {
+        #tra-panels-store .plane-btn:active {
             transform: scale(0.97);
         }
 
-        .transform-btn.active {
+        #tra-panels-store .transform-btn.active {
             background: #006662;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .plane-btn.active {
+        #tra-panels-store .plane-btn.active {
             background: #006662;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .grid-buttons-container {
+        #tra-panels-store .grid-buttons-container {
             display: flex;
             gap: 5px;
             margin-left: 25px;
@@ -1039,7 +1958,7 @@
             margin-bottom: 5px;
         }
 
-        #toggleGrid, #gridSnapBtn {
+        #tra-panels-store #toggleGrid, #tra-panels-store #gridSnapBtn {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -1056,16 +1975,16 @@
             cursor: pointer;
         }
 
-        #toggleGrid:hover, #gridSnapBtn:hover {
+        #tra-panels-store #toggleGrid:hover, #tra-panels-store #gridSnapBtn:hover {
             background: #007e7a;
         }
 
-        #gridSnapBtn.active {
+        #tra-panels-store #gridSnapBtn.active {
             background: #006662;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        #addPlaneMode {
+        #tra-panels-store #addPlaneMode {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -1085,11 +2004,11 @@
             margin-bottom: 5px;
         }
 
-        #addPlaneMode:hover {
+        #tra-panels-store #addPlaneMode:hover {
             background: #007e7a;
         }
         
-        #addPlaneMode:disabled {
+        #tra-panels-store #addPlaneMode:disabled {
             cursor: not-allowed;
             opacity: 0.9;
         }
@@ -1152,126 +2071,239 @@
 
 </head>
 
-<body>
+<body class="tra-app">
 
+    <div id="app-shell">
+    <header class="app-topbar" id="app-topbar">
+        <div class="app-brand">TRA</div>
+        <nav class="app-nav" aria-hidden="true">
+        </nav>
+        <div class="app-topbar-right">
+            <button type="button" class="tra-theme-toggle" id="tra-theme-toggle" aria-pressed="false" title="Switch color theme">
+                <span class="tra-theme-icon" id="tra-theme-toggle-icon" aria-hidden="true"></span>
+                <span id="tra-theme-toggle-label">Light</span>
+            </button>
+        </div>
+    </header>
+    <div id="app-main-row">
     <div id="functionbox">
-        <a href="manual.html" target="_blank" id="manualLinkTop">User Manual</a>
-        <!-- Floor plan section -->
-        <div class="section-header collapsed" onclick="toggleSection(this)">Floor plan</div>
-        <div class="section-content collapsed">
-        <input type="file" id="imageInput" accept="image/*" hidden>
-        <label for="imageInput" class="custom-file-upload">Upload Image</label>
+        <a href="manual.html" target="_blank" id="manualLinkTop" class="tra-manual-link">
+            <svg class="tra-manual-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                <path d="M6 4h11a2 2 0 0 1 2 2v13a1 1 0 0 1-1.64.77L14 17.24V6H6V4z"/>
+                <path d="M6 4H4a1 1 0 0 0-1 1v14a2 2 0 0 0 2 2h7"/>
+            </svg>
+            <span>Manual</span>
+        </a>
+
+        <div class="tra-toolkit-nav" role="toolbar" aria-label="Toolkit">
+            <button type="button" class="tra-tool-item" data-tool-title="Build" onclick="openToolkitPanel('tra-panel-build', this)" title="Build — import, geometry, levels">
+                <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20h16v-9l-4-4H8l-4 4v9z"/><path d="M9 3v5h10V5a2 2 0 0 0-2-2H9z"/></svg></span>
+                <span class="tra-tool-label">Build</span>
+            </button>
+            <button type="button" class="tra-tool-item" data-tool-title="Edit" onclick="openToolkitPanel('tra-panel-edit', this)" title="Edit — transform, scale, and distance">
+                <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="2.5"/></svg></span>
+                <span class="tra-tool-label">Edit</span>
+            </button>
+            <button type="button" class="tra-tool-item" data-tool-title="View" onclick="openToolkitPanel('tra-panel-view', this)" title="View — camera and grid">
+                <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8l8-4 8 4v8l-8 4-8-4V8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+                <span class="tra-tool-label">View</span>
+            </button>
+            <button type="button" class="tra-tool-item" data-tool-title="Simulation" onclick="openToolkitPanel('tra-panel-simulation', this)" title="Simulation — mesh, result scale, and detail">
+                <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4z"/><path d="M4 12h16M12 4v16"/></svg></span>
+                <span class="tra-tool-label">Sim</span>
+            </button>
+            <button type="button" class="tra-tool-item" data-tool-title="Data" onclick="openToolkitPanel('tra-panel-data', this)" title="Data — scene and system">
+                <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="7" rx="4" ry="2"/><path d="M8 7v6c0 1.1 1.8 2 4 2s4-.9 4-2V7"/><path d="M8 13v4c0 1.1 1.8 2 4 2s4-.9 4-2v-4"/></svg></span>
+                <span class="tra-tool-label">Data</span>
+            </button>
         </div>
 
-        <!-- Plane section -->
-        <div class="section-header collapsed" onclick="toggleSection(this)">Plane</div>
-        <div class="section-content collapsed">
-            <div class="plane-buttons-container">
-                <button id="addplane" class="plane-btn">Add</button>
-                <button id="deleteplane" class="plane-btn">Delete</button>
-                <button id="resetPlane" class="plane-btn">Reset</button>
-                <button id="standPlane" class="plane-btn">Stand</button>
+        <div class="tra-tool-validation">
+            <a id="validationbtn" class="tra-validation-link" href="../validation/validation.html" target="_blank">
+                <svg class="tra-manual-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                    <path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/>
+                </svg>
+                <span>Valid</span>
+            </a>
+        </div>
+
+        <div id="tra-tool-flyout" class="tra-tool-flyout" hidden role="dialog" aria-modal="false" aria-labelledby="tra-tool-flyout-title">
+            <div class="tra-tool-flyout-grip">
+                <span id="tra-tool-flyout-title" class="tra-tool-flyout-title">Tool</span>
+                <button type="button" class="tra-tool-flyout-close" onclick="closeToolkitFlyout()" title="Close">&times;</button>
             </div>
-            <button id="addPlaneMode" class="plane-btn" style="margin: 5px 25px; width: 200px" >Add Walls</button>
+            <div id="tra-tool-flyout-body" class="tra-tool-flyout-body"></div>
         </div>
 
-        <!-- Transform Controls section -->
-        <div class="section-header collapsed" onclick="toggleSection(this)">Controls</div>
-        <div class="section-content collapsed">
-            <div class="transform-buttons-container">
-                <button id="transformQ" class="transform-btn">Local</button>
-                <button id="transformW" class="transform-btn">Translate</button>
-                <button id="transformE" class="transform-btn">Scale</button>
-                <button id="transformR" class="transform-btn">Rotate</button>
+        <div id="tra-panels-store" aria-hidden="true">
+            <!-- Build: Import, Geometry, Levels -->
+            <div id="tra-panel-build" class="tra-panel-body">
+                <div class="tra-k-root">
+                    <h3 class="tra-k-root-title">Build</h3>
+                    <section class="tra-k-block" aria-labelledby="k-build-import">
+                        <h4 id="k-build-import" class="tra-k-subtitle">Import</h4>
+                        <input type="file" id="imageInput" accept="image/*" hidden>
+                        <label for="imageInput" class="custom-file-upload">Upload Image</label>
+                    </section>
+                    <section class="tra-k-block" aria-labelledby="k-build-geom">
+                        <h4 id="k-build-geom" class="tra-k-subtitle">Geometry</h4>
+                        <div class="plane-buttons-container">
+                            <button id="addplane" type="button" class="plane-btn">Add Plane</button>
+                            <button id="deleteplane" type="button" class="plane-btn">Delete Plane</button>
+                            <button id="resetPlane" type="button" class="plane-btn">Reset Plane</button>
+                            <button id="standPlane" type="button" class="plane-btn">Stand Plane</button>
+                        </div>
+                        <button id="addPlaneMode" type="button" class="plane-btn tra-panel-fullbtn">Add Walls Mode</button>
+                    </section>
+                    <section class="tra-k-block" aria-labelledby="k-build-levels">
+                        <h4 id="k-build-levels" class="tra-k-subtitle">Levels</h4>
+                        <div class="tra-btn-grid">
+                            <button id="saveSceneBtn" type="button">Save Level</button>
+                            <button id="newSceneBtn" type="button">New Level</button>
+                        </div>
+                        <label class="tra-field-label" for="sceneDropdown">Level</label>
+                        <select id="sceneDropdown">
+                            <option value="">Select a level...</option>
+                        </select>
+                        <div class="scene-buttons-container">
+                            <button id="loadSceneBtn" type="button">Load Level</button>
+                            <button id="deleteSceneBtn" type="button">Delete Level</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Edit: Transform, Scale -->
+            <div id="tra-panel-edit" class="tra-panel-body">
+                <div class="tra-k-root">
+                    <h3 class="tra-k-root-title">Edit</h3>
+                    <section class="tra-k-block" aria-labelledby="k-edit-transform">
+                        <h4 id="k-edit-transform" class="tra-k-subtitle">Transform</h4>
+                        <div class="transform-buttons-container">
+                            <button id="transformQ" type="button" class="transform-btn">Local</button>
+                            <button id="transformW" type="button" class="transform-btn">Translate</button>
+                            <button id="transformE" type="button" class="transform-btn">Scale</button>
+                            <button id="transformR" type="button" class="transform-btn">Rotate</button>
+                        </div>
+                    </section>
+                    <section class="tra-k-block" aria-labelledby="k-edit-scale">
+                        <h4 id="k-edit-scale" class="tra-k-subtitle">Scale</h4>
+                        <button id="scalingbutton" type="button">Set Real-World Scale</button>
+                    </section>
+                    <section class="tra-k-block" aria-labelledby="k-edit-distance">
+                        <h4 id="k-edit-distance" class="tra-k-subtitle">Distance</h4>
+                        <div id="distanceRow">
+                            <span>Distance</span>
+                            <input type="text" id="distanceInput" readonly value="-">
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- View: Camera, Grid -->
+            <div id="tra-panel-view" class="tra-panel-body">
+                <div class="tra-k-root">
+                    <h3 class="tra-k-root-title">View</h3>
+                    <section class="tra-k-block" aria-labelledby="k-view-camera">
+                        <h4 id="k-view-camera" class="tra-k-subtitle">Camera</h4>
+                        <div class="view-buttons-container">
+                            <button id="top" type="button">Top</button>
+                            <button id="front" type="button">Front</button>
+                            <button id="side" type="button">Side</button>
+                            <button id="perspective" type="button">Perspective</button>
+                        </div>
+                    </section>
+                    <section class="tra-k-block" aria-labelledby="k-view-grid">
+                        <h4 id="k-view-grid" class="tra-k-subtitle">Grid</h4>
+                        <div class="grid-buttons-container">
+                            <button id="toggleGrid" type="button">Hide Grid</button>
+                            <button id="gridSnapBtn" type="button">Grid Snap</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Simulation: Mesh, Results scale -->
+            <div id="tra-panel-simulation" class="tra-panel-body">
+                <div class="tra-k-root">
+                    <h3 class="tra-k-root-title">Simulation</h3>
+                    <section class="tra-k-block" aria-labelledby="k-sim-mesh">
+                        <h4 id="k-sim-mesh" class="tra-k-subtitle">Mesh</h4>
+                        <label class="tra-field-label" id="grid-density-lbl">Grid density</label>
+                        <div class="tra-density-row" role="radiogroup" aria-labelledby="grid-density-lbl">
+                            <button type="button" class="tra-density-btn active" data-grid-density="2" aria-pressed="true" title="Low resolution">Low</button>
+                            <button type="button" class="tra-density-btn" data-grid-density="3" aria-pressed="false" title="Medium resolution">Med</button>
+                            <button type="button" class="tra-density-btn" data-grid-density="5" aria-pressed="false" title="High resolution">High</button>
+                            <button type="button" class="tra-density-btn" data-grid-density="10" aria-pressed="false" title="Detailed resolution">Detail</button>
+                        </div>
+                        <input type="hidden" id="gridSizeInput" value="2" autocomplete="off" aria-hidden="true">
+                    </section>
+                    <section class="tra-k-block" aria-labelledby="k-sim-results">
+                        <h4 id="k-sim-results" class="tra-k-subtitle">Results scale</h4>
+                        <div class="tra-color-scale-layout">
+                            <button id="autoColorScaleBtn" type="button">Auto Scale</button>
+                            <div class="tra-color-scale-bracket" aria-label="Manual min and max">
+                                <div class="tra-color-scale-row">
+                                    <input type="number" id="colorScaleMin" placeholder="Min" step="0.1" value="0" aria-label="Minimum value">
+                                    <span class="tra-muted-inline">to</span>
+                                    <input type="number" id="colorScaleMax" placeholder="Max" step="0.1" value="20" aria-label="Maximum value">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="tra-k-block" aria-labelledby="k-sim-result">
+                        <h4 id="k-sim-result" class="tra-k-subtitle">Result</h4>
+                        <button id="detail" type="button" class="tra-panel-fullbtn">Show Detail</button>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Data: Scene management -->
+            <div id="tra-panel-data" class="tra-panel-body">
+                <div class="tra-k-root">
+                    <h3 class="tra-k-root-title">Data</h3>
+                    <section class="tra-k-block" aria-labelledby="k-data-scene">
+                        <h4 id="k-data-scene" class="tra-k-subtitle">Scene management</h4>
+                        <input type="file" id="importFile" accept=".json" hidden>
+                        <div class="tra-btn-grid">
+                            <button id="exportBtn" type="button">Export Scene</button>
+                            <button type="button" id="importbtn">Import Scene</button>
+                        </div>
+                    </section>
+                </div>
             </div>
         </div>
-
-        <!-- Views section -->
-        <div class="section-header collapsed" onclick="toggleSection(this)">Views</div>
-        <div class="section-content collapsed">
-        <div class="view-buttons-container">
-            <button id="top">Top</button>
-            <button id="front"> Front</button>
-            <button id="side">Side</button>
-        </div>
-        <button id="perspective">Perspective</button>
-            <div class="grid-buttons-container">
-                <button id="toggleGrid">Hide Grid</button>
-                <button id="gridSnapBtn">Grid Snap</button>
+    </div>
+    <div id="app-center">
+    <div id="renderbody"></div>
+    </div>
+    <aside id="params-sidebar" class="params-sidebar" aria-label="Parameters">
+        <div class="params-panel-wrap">
+            <div id="plane-params-panel" class="plane-params-panel">
+                <p class="pp-hint" id="plane-params-empty"> </p>
+                <div id="plane-params-content"></div>
             </div>
         </div>
-
-        <!-- Scaling section -->
-        <div class="section-header collapsed" onclick="toggleSection(this)">Scaling</div>
-        <div class="section-content collapsed">
-        <button id="scalingbutton"> Set Scale </button>
+    </aside>
+    </div>
+    <footer class="app-bottombar" id="app-bottombar">
+        
+        <div class="app-bottombar-center">
+            <span class="app-metric">MAX HEAT FLUX <strong id="app-metric-flux" data-flux-placeholder=" - "> - </strong></span>
         </div>
-
-        <!-- Precision section -->
-        <div class="section-header collapsed" onclick="toggleSection(this)">Resolution</div>
-        <div class="section-content collapsed">
-            <select id="gridSizeInput" style="margin-left: 25px; margin-top: 5px; margin-bottom: 5px;">
-                <option value="2" selected>Low</option>
-                <option value="3">Mid</option>
-                <option value="5">High</option>
-                <option value="10">Detailed</option>
-            </select>
+        <div class="app-bottombar-actions">
+            <div class="app-bottombar-progress-slot">
+                <div id="calcProgressWrap" class="">
+                    <div id="calcProgressBar"><div id="calcProgressFill"></div></div>
+                    <div id="calcProgressPct">0%</div>
+                </div>
+            </div>
+            <button id="calculate" type="button" class="tra-sr-only" tabindex="-1" aria-hidden="true">Calculate</button>
+            <button type="button" class="btn-run-analysis" id="appRunAnalysisBtn">RUN ANALYSIS</button>
         </div>
-
-        <!-- Color Scale section -->
-        <div class="section-header collapsed" onclick="toggleSection(this)">Color Scale</div>
-        <div class="section-content collapsed">
-        <div class="color-scale-container">
-            <button id="autoColorScaleBtn">Auto</button>
-            <input type="number" id="colorScaleMin" placeholder="Min" step="0.1" value="0">
-            <span style="color: white; font-family: 'Poppins', sans-serif;">to</span>
-            <input type="number" id="colorScaleMax" placeholder="Max" step="0.1" value="20">
-        </div>
-        </div>
-
-        <!-- Save section -->
-        <div class="section-header collapsed" onclick="toggleSection(this)">Save</div>
-        <div class="section-content collapsed">
-        <button id="exportBtn"> Export Scene</button>
-        <input type="file" id="importFile" accept=".json" hidden>
-        <label for="importFile" id="importbtn"> Import Scene </label>
-        </div>
-
-
-        <!-- Calculation section -->
-        <div class="section-header collapsed" onclick="toggleSection(this)">Calculation</div>
-        <div class="section-content collapsed">
-        <button id="detail">Show detail</button>
-        <button id="calculate">Calculate</button>
-        <div id="calcProgressWrap" class="">
-            <div id="calcProgressBar"><div id="calcProgressFill"></div></div>
-            <div id="calcProgressPct">0%</div>
-        </div>
-        <div id="distanceRow">
-            <span>Distance</span>
-            <input type="text" id="distanceInput" readonly value="-" />
-        </div>
-        </div>
-
-        <!-- Scene Manager section -->
-        <div class="section-header collapsed" onclick="toggleSection(this)">Level Manager</div>
-        <div class="section-content collapsed">
-        <button id="saveSceneBtn">Save Level</button>
-        <select id="sceneDropdown">
-            <option value="">Select a level...</option>
-        </select>
-        <div class="scene-buttons-container">
-            <button id="loadSceneBtn">Load</button>
-            <button id="deleteSceneBtn">Delete</button>
-        </div>
-        <button id="newSceneBtn">New Level</button>
-        </div>
-
-        <a id="validationbtn" href="../validation/validation.html" target="_blank">Validation</a>
-
+    </footer>
     </div>
     <svg id="contour-svg" width="512" height="512" style="display:none;"></svg>
-    <div id="renderbody"></div>
     <div id="contourModal" class="modal">
         <span class="close">&times;</span>
         <div id="valueDisplay"></div>
@@ -1303,32 +2335,73 @@
         <button id="confirmLevelName">Save Level</button>
         <button id="cancelLevelName">Cancel</button>
     </div>
-    <svg id="contour-svg" width="512" height="512" style="display:none;"></svg>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.7/build/dat.gui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/TransformControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-contour@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/renderers/CSS2DRenderer.js"></script>
 
     <script>
-        // Toggle section collapse/expand
-        function toggleSection(header) {
-            const content = header.nextElementSibling;
-            const isCollapsed = content.classList.contains('collapsed');
-            
-            if (isCollapsed) {
-                // Expand
-                content.classList.remove('collapsed');
-                header.classList.remove('collapsed');
-            } else {
-                // Collapse
-                content.classList.add('collapsed');
-                header.classList.add('collapsed');
+        let traActivePanelId = null;
+
+        function stashToolkitFlyoutBody() {
+            const flyoutBody = document.getElementById('tra-tool-flyout-body');
+            const store = document.getElementById('tra-panels-store');
+            if (!flyoutBody || !store) return;
+            while (flyoutBody.firstChild) {
+                store.appendChild(flyoutBody.firstChild);
             }
+            traActivePanelId = null;
         }
+
+        function openToolkitPanel(panelId, triggerBtn) {
+            const flyout = document.getElementById('tra-tool-flyout');
+            const flyoutBody = document.getElementById('tra-tool-flyout-body');
+            const titleEl = document.getElementById('tra-tool-flyout-title');
+            const panel = document.getElementById(panelId);
+            if (!flyout || !flyoutBody || !panel) return;
+
+            if (traActivePanelId === panelId) {
+                stashToolkitFlyoutBody();
+                document.querySelectorAll('#functionbox .tra-tool-item.is-open').forEach(el => el.classList.remove('is-open'));
+                flyout.hidden = true;
+                return;
+            }
+
+            stashToolkitFlyoutBody();
+            document.querySelectorAll('#functionbox .tra-tool-item.is-open').forEach(el => el.classList.remove('is-open'));
+            if (triggerBtn) triggerBtn.classList.add('is-open');
+
+            flyoutBody.appendChild(panel);
+            traActivePanelId = panelId;
+            const t = triggerBtn && triggerBtn.getAttribute('data-tool-title');
+            if (titleEl) titleEl.textContent = t || 'Tool';
+            flyout.hidden = false;
+        }
+
+        function closeToolkitFlyout() {
+            const flyout = document.getElementById('tra-tool-flyout');
+            stashToolkitFlyoutBody();
+            document.querySelectorAll('#functionbox .tra-tool-item.is-open').forEach(el => el.classList.remove('is-open'));
+            if (flyout) flyout.hidden = true;
+        }
+
+        document.addEventListener('click', (e) => {
+            const flyout = document.getElementById('tra-tool-flyout');
+            const fb = document.getElementById('functionbox');
+            if (!flyout || flyout.hidden || !fb) return;
+            const t = e.target;
+            if (fb.contains(t) || flyout.contains(t)) return;
+            closeToolkitFlyout();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if (typeof isTypingInInput === 'function' && isTypingInInput()) return;
+            closeToolkitFlyout();
+        });
 
         // Configuration
         const CONFIG = {
@@ -1495,14 +2568,59 @@
 
         // Now we need to capture states at key moments. Add these calls:
 
+        function getRenderViewportSize() {
+            const rb = document.getElementById('renderbody');
+            const w = rb && rb.clientWidth > 0 ? rb.clientWidth : window.innerWidth;
+            const h = rb && rb.clientHeight > 0 ? rb.clientHeight : window.innerHeight;
+            return { w: Math.max(1, w), h: Math.max(1, h) };
+        }
+
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color("#f5f5f5"); // Gentle white background
+
+        function syncTraSceneBackground() {
+            const v = getComputedStyle(document.documentElement).getPropertyValue('--tra-scene-bg').trim();
+            scene.background = new THREE.Color(v || '#0b0e14');
+        }
+        syncTraSceneBackground();
+
+        function updateTraThemeToggleButton() {
+            const btn = document.getElementById('tra-theme-toggle');
+            const lbl = document.getElementById('tra-theme-toggle-label');
+            const icon = document.getElementById('tra-theme-toggle-icon');
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            if (btn) {
+                btn.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+                btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+                btn.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+            }
+            if (lbl) lbl.textContent = isLight ? 'Dark' : 'Light';
+            if (icon) {
+                icon.innerHTML = isLight
+                    ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+                    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
+            }
+        }
+
+        document.getElementById('tra-theme-toggle')?.addEventListener('click', function () {
+            const root = document.documentElement;
+            if (root.getAttribute('data-theme') === 'light') {
+                root.removeAttribute('data-theme');
+                try { localStorage.setItem('tra-theme', 'dark'); } catch (e) { /* ignore */ }
+            } else {
+                root.setAttribute('data-theme', 'light');
+                try { localStorage.setItem('tra-theme', 'light'); } catch (e) { /* ignore */ }
+            }
+            syncTraSceneBackground();
+            updateTraThemeToggleButton();
+        });
+        updateTraThemeToggleButton();
 
 
         //set up different camera parameters
         const frustumSize = 40;
+        const initialVp = getRenderViewportSize();
         const cameras = {
-            perspective: new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000),
+            perspective: new THREE.PerspectiveCamera(75, initialVp.w / initialVp.h, 0.1, 1000),
             top: new THREE.OrthographicCamera(),
             front: new THREE.OrthographicCamera(),
             left: new THREE.OrthographicCamera()
@@ -1520,7 +2638,8 @@
         let activeCamera = cameras.perspective;
 
         function updateOrthoCameras() {
-            const aspect = window.innerWidth / window.innerHeight;
+            const { w, h } = getRenderViewportSize();
+            const aspect = w / h;
             for (const key of ['top', 'front', 'left']) {
                 const cam = cameras[key];
                 cam.left = frustumSize * aspect / -2; cam.right = frustumSize * aspect / 2;
@@ -1632,8 +2751,17 @@
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.shadowMap.enabled = true;
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        const initialRenderSize = getRenderViewportSize();
+        renderer.setSize(initialRenderSize.w, initialRenderSize.h);
         document.getElementById("renderbody").appendChild(renderer.domElement);
+
+        function eventToNDC(event) {
+            const canvas = renderer.domElement;
+            const rect = canvas.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            return new THREE.Vector2(x, y);
+        }
 
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -1650,7 +2778,7 @@
         // Add a grid (hidden by default) with snapping-compatible size
         const gridSize = 100;
         const gridDivisions = 100;
-        const grid = new THREE.GridHelper(gridSize, gridDivisions, 0x000000, 0x000000); // Black grid
+        const grid = new THREE.GridHelper(gridSize, gridDivisions, 0x5c6370, 0x3d4450);
         sceneContentGroup.add(grid);
 
         // Grid snapping configuration
@@ -1689,21 +2817,24 @@
 
         // Add CSS2DRenderer for axis labels
         const labelRenderer = new THREE.CSS2DRenderer();
-        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.setSize(initialRenderSize.w, initialRenderSize.h);
         labelRenderer.domElement.style.position = 'absolute';
         labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.width = '100%';
+        labelRenderer.domElement.style.height = '100%';
         labelRenderer.domElement.style.pointerEvents = 'none';
-        document.body.appendChild(labelRenderer.domElement);
+        document.getElementById('renderbody').appendChild(labelRenderer.domElement);
 
         // Create axis indicator labels
         function createAxisLabel(text, position, color) {
             const labelDiv = document.createElement('div');
             labelDiv.textContent = text;
-            labelDiv.style.color = '#000000'; // Black text for white background
+            labelDiv.style.color = '#e8eaed';
             labelDiv.style.fontSize = '24px';
             labelDiv.style.fontWeight = 'bold';
-            labelDiv.style.fontFamily = 'Arial, sans-serif';
-            labelDiv.style.textShadow = '1px 1px 2px rgba(255,255,255,0.8)'; // White shadow for contrast
+            labelDiv.style.fontFamily = 'Inter, Arial, sans-serif';
+            labelDiv.style.textShadow = '0 0 6px rgba(0,0,0,0.9)';
             labelDiv.style.pointerEvents = 'none';
             
             const label = new THREE.CSS2DObject(labelDiv);
@@ -2290,11 +3421,44 @@
             reader.readAsDataURL(file);
         }
 
+        function clearParamsPanel() {
+            const content = document.getElementById('plane-params-content');
+            const empty = document.getElementById('plane-params-empty');
+            if (content) content.innerHTML = '';
+            if (empty) empty.style.display = '';
+        }
+
+        function updateAppBottomMetrics() {
+            const fluxEl = document.getElementById('app-metric-flux');
+            if (!fluxEl) return;
+            let maxFlux = null;
+            const vals = [];
+            if (selectedPlanes.length === 1 && selectedPlanes[0].type === 'Receiver' && selectedPlanes[0].contourData && selectedPlanes[0].contourData.values) {
+                vals.push(...selectedPlanes[0].contourData.values);
+            } else {
+                planes.forEach(p => {
+                    if (p.type === 'Receiver' && p.contourData && p.contourData.values) {
+                        vals.push(...p.contourData.values);
+                    }
+                });
+            }
+            if (vals.length) maxFlux = Math.max(...vals);
+            if (maxFlux != null && isFinite(maxFlux)) {
+                fluxEl.innerHTML = '';
+                fluxEl.append(document.createTextNode(maxFlux.toFixed(2) + ' kW/m'));
+                const sup = document.createElement('sup');
+                sup.textContent = '2';
+                fluxEl.append(sup);
+            } else {
+                const ph = fluxEl.dataset.fluxPlaceholder;
+                fluxEl.textContent = ph !== undefined ? ph : ' — ';
+            }
+        }
+
         // Array to store all planes
         const planes = [];
         let selectedPlane = null;
-        let gui = new dat.GUI();
-        gui.domElement.classList.add("my-custom-gui");
+        let gui = { destroy: clearParamsPanel, domElement: document.createElement('div') };
         let transformControls = null;
 
         //new bit for scaling
@@ -2305,9 +3469,7 @@
         function handleMeasurementClick(event) {
             if (!isMeasuring) return;
 
-            const mouse = new THREE.Vector2();
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            const mouse = eventToNDC(event);
 
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(mouse, cameras.top);
@@ -3007,7 +4169,6 @@
             }
 
             gui.destroy();
-            gui = new dat.GUI();
             selectedPlanes = [];
             removeNormalArrow(); // Remove arrow when planes are deleted
             captureState();
@@ -3015,151 +4176,268 @@
 
         document.getElementById("deleteplane").addEventListener("click", deleteplanefn);
 
-        /**
-         * Override DAT.GUI number controller display to force consistent decimal precision.
-         * Fixes known DAT.GUI 0.7.7 behavior where step(0.1) rounds values >=10 to integers in display.
-         * @param {dat.GUI.Controller} controller - The number controller to fix
-         * @param {number} decimals - Number of decimal places to always show (default: 1)
-         */
-        function forceDatGuiDecimalPrecision(controller, decimals = 1) {
-            if (!controller) return;
-            const input = controller.__input || (controller.domElement && controller.domElement.querySelector('input'));
-            if (!input) return;
-            const formatValue = () => {
-                try {
-                    if (document.activeElement === input) return;
-                    const val = controller.getValue();
-                    if (typeof val === 'number' && !isNaN(val)) {
-                        const formatted = Number(val).toFixed(decimals);
-                        if (input.value !== formatted) input.value = formatted;
-                    }
-                } catch (e) {}
-            };
-            const origUpdateDisplay = controller.updateDisplay && controller.updateDisplay.bind(controller);
-            if (typeof origUpdateDisplay === 'function') {
-                controller.updateDisplay = function() {
-                    origUpdateDisplay();
-                    formatValue();
-                };
-            }
-            formatValue();
-            input.addEventListener('blur', formatValue);
-            const pollId = setInterval(formatValue, 150);
-            setTimeout(() => clearInterval(pollId), 2000);
-        }
-
-        // Function to update GUI for selected plane(s)
+        // Parameters sidebar (replaces dat.GUI) — numeric fields only, no range sliders.
         function updateGUI(planeData) {
             gui.destroy();
-            gui = new dat.GUI();
+            const root = document.getElementById('plane-params-content');
+            const empty = document.getElementById('plane-params-empty');
+            if (!root) return;
+            if (empty) empty.style.display = 'none';
 
-            // Check if multiple planes are selected
             const isMultiSelect = selectedPlanes.length > 1;
-            
+
             if (isMultiSelect) {
-                // Multi-select GUI
-                gui.add({ info: `Multiple Planes (${selectedPlanes.length})` }, 'info').name('Selection').listen();
-                
-                // Multi-select height control
-                const multiHeightController = gui.add({ height: 1 }, 'height').name('Height (All)').step(0.1);
-                forceDatGuiDecimalPrecision(multiHeightController, 1);
-                multiHeightController.onChange(function (newHeight) {
-                    changeMultiplePlanesHeight(newHeight);
+                function openMultiGroup(title) {
+                    const g = document.createElement('div');
+                    g.className = 'pp-group';
+                    const t = document.createElement('div');
+                    t.className = 'pp-group-title';
+                    t.textContent = title;
+                    g.appendChild(t);
+                    root.appendChild(g);
+                    return g;
+                }
+
+                const gIntro = openMultiGroup('MULTI-SELECTION');
+                const hint = document.createElement('p');
+                hint.className = 'pp-hint';
+                hint.textContent = `${selectedPlanes.length} planes selected. Edits apply to all selected.`;
+                gIntro.appendChild(hint);
+
+                const gGeom = openMultiGroup('GEOMETRY');
+                const avgH = selectedPlanes.reduce((a, p) => a + p.height, 0) / selectedPlanes.length;
+                const hf = document.createElement('div');
+                hf.className = 'pp-field';
+                hf.innerHTML = '<label>Height (all)</label>';
+                const hi = document.createElement('input');
+                hi.type = 'number';
+                hi.step = '0.1';
+                hi.value = avgH.toFixed(1);
+                hf.appendChild(hi);
+                gGeom.appendChild(hf);
+                hi.addEventListener('input', () => {
+                    const v = parseFloat(hi.value);
+                    if (!isNaN(v)) changeMultiplePlanesHeight(v);
                 });
-                
-                // Multi-select type control
-                const multiTypeController = gui.add({ type: 'Receiver' }, 'type', ['Receiver', 'Emitter', 'Inert']).name('Type (All)');
-                multiTypeController.onChange(function (newType) {
-                    changeMultiplePlanesType(newType);
+
+                const gTh = openMultiGroup('TYPE & HEAT');
+                const tf = document.createElement('div');
+                tf.className = 'pp-field';
+                tf.innerHTML = '<label>Type (all)</label>';
+                const typeSel = document.createElement('select');
+                ['Receiver', 'Emitter', 'Inert'].forEach(t => {
+                    const o = document.createElement('option');
+                    o.value = t;
+                    o.textContent = t;
+                    typeSel.appendChild(o);
                 });
-                
-                // Multi-select temperature control (only affects Emitter planes)
-                const emitterCount = selectedPlanes.filter(p => p.type === 'Emitter').length;
-                const multiTempController = gui.add({ temperature: 0 }, 'temperature').name(`Heat Flux `);
-                multiTempController.onChange(function (newTemp) {
-                    changeMultiplePlanesTemperature(newTemp);
+                typeSel.value = 'Receiver';
+                tf.appendChild(typeSel);
+                gTh.appendChild(tf);
+                typeSel.addEventListener('change', () => changeMultiplePlanesType(typeSel.value));
+
+                const qf = document.createElement('div');
+                qf.className = 'pp-field';
+                qf.innerHTML = '<label>Heat flux (emitters)</label>';
+                const tpi = document.createElement('input');
+                tpi.type = 'number';
+                tpi.step = 'any';
+                tpi.value = '0';
+                qf.appendChild(tpi);
+                gTh.appendChild(qf);
+                tpi.addEventListener('input', () => {
+                    const v = parseFloat(tpi.value);
+                    if (!isNaN(v)) changeMultiplePlanesTemperature(v);
                 });
-                
-                // Show info about selected planes
-                const planeNames = selectedPlanes.map(p => p.name).join(', ');
-                gui.add({ names: planeNames }, 'names').name('Selected Planes').listen();
-                
+
+                const gSel = openMultiGroup('SELECTED');
+                const tw = document.createElement('div');
+                tw.className = 'pp-field';
+                const tlab = document.createElement('label');
+                tlab.textContent = 'Names';
+                const ta = document.createElement('textarea');
+                ta.readOnly = true;
+                ta.value = selectedPlanes.map(p => p.name).join(', ');
+                ta.rows = Math.min(3, Math.max(2, Math.ceil(selectedPlanes.length / 4)));
+                tw.appendChild(tlab);
+                tw.appendChild(ta);
+                gSel.appendChild(tw);
+
+                updateAppBottomMetrics();
                 return;
             }
 
-            // Single plane GUI (existing functionality)
-            const nameController = gui.add(planeData, 'name').name('Name');
-            nameController.onChange(function (newName) {
-                // Trim whitespace
-                newName = newName.trim();
-                
-                // Check for empty name
+            const els = {};
+
+            function openGroup(title) {
+                const g = document.createElement('div');
+                g.className = 'pp-group';
+                const t = document.createElement('div');
+                t.className = 'pp-group-title';
+                t.textContent = title;
+                g.appendChild(t);
+                root.appendChild(g);
+                return g;
+            }
+
+            function addNumberRow(label, value, step, onVal, parent = root) {
+                const wrap = document.createElement('div');
+                wrap.className = 'pp-field';
+                const lab = document.createElement('label');
+                lab.textContent = label;
+                const inp = document.createElement('input');
+                inp.type = 'number';
+                inp.step = step;
+                inp.value = typeof value === 'number' && !isNaN(value) ? String(value) : '0';
+                inp.addEventListener('input', () => {
+                    const v = parseFloat(inp.value);
+                    if (!isNaN(v)) onVal(v);
+                });
+                wrap.appendChild(lab);
+                wrap.appendChild(inp);
+                parent.appendChild(wrap);
+                return inp;
+            }
+
+            const gIdentity = openGroup('IDENTITY');
+            const nameWrap = document.createElement('div');
+            nameWrap.className = 'pp-field';
+            nameWrap.innerHTML = '<label>Name</label>';
+            const nameInp = document.createElement('input');
+            nameInp.type = 'text';
+            nameInp.value = planeData.name || '';
+            nameWrap.appendChild(nameInp);
+            gIdentity.appendChild(nameWrap);
+            nameInp.addEventListener('change', () => {
+                let newName = nameInp.value.trim();
                 if (!newName) {
                     alert('Name cannot be empty! Please provide a valid name.');
-                    nameController.setValue(planeData.name);
+                    nameInp.value = planeData.name;
                     return;
                 }
-                
-                // Check for duplicate names
-                const nameExists = planes.some(p => p !== planeData && p.name === newName);
-                if (nameExists) {
+                if (planes.some(p => p !== planeData && p.name === newName)) {
                     alert(`This name already exists! Please choose a different name.\n\nExisting planes: ${planes.map(p => p.name).join(', ')}`);
-                    nameController.setValue(planeData.name);
+                    nameInp.value = planeData.name;
                     return;
                 }
-                
                 planeData.name = newName;
                 captureState();
             });
 
-            // Add controllers with explicit state capture
-            const controllers = {
-                width: gui.add(planeData, 'width').name('Width').step(0.1),
-                height: gui.add(planeData, 'height').name('Height').step(0.1),
-                x: gui.add(planeData, 'x').name('X-position').step(0.1),
-                y: gui.add(planeData, 'y').name('Y-position').step(0.1),
-                z: gui.add(planeData, 'z').name('Z-position').step(0.1),
-                angle: gui.add(planeData, 'angle', -180, 180).name('Rotation').step(1),
-                incline: gui.add(planeData, 'incline', -180, 180).name("Inclination").step(1),
-                temp: gui.add(planeData, "temperature").name("Heat Flux"),
-                type: gui.add(planeData, "type", ["Receiver", "Emitter", "Inert"]).name("Type"),
-                positive: gui.add(planeData, "positive").name("Normal Direction -"),
-            };
+            const gGeom = openGroup('GEOMETRY');
+            const rowWH = document.createElement('div');
+            rowWH.className = 'pp-row2';
+            gGeom.appendChild(rowWH);
+            let prevW = planeData.width;
+            let prevH = planeData.height;
+            els.width = addNumberRow('Width', planeData.width, '0.1', v => {
+                planeData.width = v;
+                syncFromPlaneData();
+            }, rowWH);
+            els.height = addNumberRow('Height', planeData.height, '0.1', v => {
+                planeData.height = v;
+                syncFromPlaneData();
+            }, rowWH);
 
-            // Fix DAT.GUI display: force 1 decimal place for position/size (values >=10 otherwise show as integers)
-            ['width', 'height', 'x', 'y', 'z'].forEach(key => forceDatGuiDecimalPrecision(controllers[key], 1));
+            const gPos = openGroup('POSITION & ROTATION');
+            const rowXYZ = document.createElement('div');
+            rowXYZ.className = 'pp-row3';
+            gPos.appendChild(rowXYZ);
+            els.x = addNumberRow('X', planeData.x, '0.1', v => {
+                planeData.x = v;
+                syncFromPlaneData();
+            }, rowXYZ);
+            els.y = addNumberRow('Y', planeData.y, '0.1', v => {
+                planeData.y = v;
+                syncFromPlaneData();
+            }, rowXYZ);
+            els.z = addNumberRow('Z', planeData.z, '0.1', v => {
+                planeData.z = v;
+                syncFromPlaneData();
+            }, rowXYZ);
+            const rowAng = document.createElement('div');
+            rowAng.className = 'pp-row2';
+            gPos.appendChild(rowAng);
+            els.angle = addNumberRow('Rotation', planeData.angle, '1', v => {
+                planeData.angle = v;
+                syncFromPlaneData();
+            }, rowAng);
+            els.incline = addNumberRow('Tilt', planeData.incline, '1', v => {
+                planeData.incline = v;
+                syncFromPlaneData();
+            }, rowAng);
 
-            // Track previous values
-            controllers.width.__oldValue = planeData.width;
-            controllers.height.__oldValue = planeData.height;
+            const gThermal = openGroup('THERMAL');
+            const typeWrap = document.createElement('div');
+            typeWrap.className = 'pp-field';
+            typeWrap.innerHTML = '<label>Type</label>';
+            const typeSel = document.createElement('select');
+            ['Receiver', 'Emitter', 'Inert'].forEach(t => {
+                const o = document.createElement('option');
+                o.value = t;
+                o.textContent = t;
+                typeSel.appendChild(o);
+            });
+            typeSel.value = planeData.type || 'Receiver';
+            typeWrap.appendChild(typeSel);
+            gThermal.appendChild(typeWrap);
+            els.type = typeSel;
 
-            // Single onChange handler for all properties
-            function handleGUIChange() {
-                // Handle geometry changes
-                if (controllers.width.__oldValue !== planeData.width ||
-                    controllers.height.__oldValue !== planeData.height) {
+            const tempWrap = document.createElement('div');
+            tempWrap.className = 'pp-field';
+            tempWrap.innerHTML = '<label>Heat flux</label>';
+            const tempInp = document.createElement('input');
+            tempInp.type = 'number';
+            tempInp.step = 'any';
+            tempInp.value = String(planeData.temperature);
+            tempWrap.appendChild(tempInp);
+            gThermal.appendChild(tempWrap);
+            els.temp = tempInp;
+            tempInp.addEventListener('input', () => {
+                const v = parseFloat(tempInp.value);
+                if (!isNaN(v)) {
+                    planeData.temperature = v;
+                    syncFromPlaneData();
+                }
+            });
 
+            const normWrap = document.createElement('div');
+            normWrap.className = 'pp-field';
+            const cbRow = document.createElement('div');
+            cbRow.className = 'pp-checkbox-row';
+            const posCb = document.createElement('input');
+            posCb.type = 'checkbox';
+            posCb.checked = !!planeData.positive;
+            const posLab = document.createElement('label');
+            posLab.textContent = 'Normal (+)';
+            posLab.style.marginBottom = '0';
+            cbRow.appendChild(posCb);
+            cbRow.appendChild(posLab);
+            normWrap.appendChild(cbRow);
+            gThermal.appendChild(normWrap);
+            posCb.addEventListener('change', () => {
+                planeData.positive = posCb.checked;
+                if (planeData.type === "Receiver" && planeData.contourData) {
+                    console.warn('Normal direction changed; recalculate if needed');
+                }
+                if (planeData.type === "Receiver") {
+                    visualizeNormal(planeData);
+                }
+                captureState();
+            });
+
+            function syncFromPlaneData() {
+                if (prevW !== planeData.width || prevH !== planeData.height) {
                     planeData.defaultWidth = planeData.width;
                     planeData.defaultHeight = planeData.height;
-
                     planeData.mesh.geometry.dispose();
-                    planeData.mesh.geometry = new THREE.PlaneGeometry(
-                        planeData.width,
-                        planeData.height
-                    );
-
+                    planeData.mesh.geometry = new THREE.PlaneGeometry(planeData.width, planeData.height);
                     planeData.mesh.scale.set(1, 1, 1);
-
-                    controllers.width.__oldValue = planeData.width;
-                    controllers.height.__oldValue = planeData.height;
-                    
-                    // Update top view line if in top view
-                    if (activeCamera === cameras.top) {
-                        updateTopViewLine(planeData);
-                    }
+                    prevW = planeData.width;
+                    prevH = planeData.height;
+                    if (activeCamera === cameras.top) updateTopViewLine(planeData);
                 }
 
-                // Update position and rotation
                 planeData.mesh.position.set(planeData.x, planeData.y, planeData.z);
                 planeData.mesh.rotation.set(
                     planeData.incline * Math.PI / 180,
@@ -3167,114 +4445,63 @@
                     0
                 );
 
-                // Update top view line if in top view and position/rotation changed
-                if (activeCamera === cameras.top) {
-                    updateTopViewLine(planeData);
-                }
+                if (activeCamera === cameras.top) updateTopViewLine(planeData);
 
-                // Ensure temperature control reflects current type
                 updateTemperatureControl();
-                
-                // Update normal arrow visualization for receiver planes
                 if (planeData.type === "Receiver") {
                     visualizeNormal(planeData);
                 }
-
-                // Always capture state after any change
                 captureState();
             }
 
-            // Add listeners to all controllers
-            Object.values(controllers).forEach(controller => {
-                if (controller.onChange) {
-                    controller.onChange(handleGUIChange);
-                }
-            });
-
-            // Helper to enable/disable a GUI controller input element
-            function setControllerDisabled(controller, disabled) {
-                if (!controller || !controller.domElement) return;
-                const inputEl = controller.domElement.querySelector('input');
-                if (inputEl) inputEl.disabled = disabled;
-            }
-
-            // Enable temp only for Emitters; otherwise set to 0 and disable
             function updateTemperatureControl() {
                 const isEmitter = String(planeData.type || '').toLowerCase() === 'emitter';
                 if (!isEmitter) {
                     if (planeData.temperature !== 0) {
                         planeData.temperature = 0;
-                        controllers.temp.updateDisplay();
-                        // Capture only when value actually changed
+                        els.temp.value = '0';
                         captureState();
                     }
-                    setControllerDisabled(controllers.temp, true);
+                    els.temp.disabled = true;
                 } else {
-                    setControllerDisabled(controllers.temp, false);
+                    els.temp.disabled = false;
                 }
             }
 
-            // Update color by type, preserving selection highlight
             function updateColorByType() {
                 const typeLower = String(planeData.type || '').toLowerCase();
-                let hex = 0xe6c200; // receiver default (dark yellow)
-                if (typeLower === 'emitter') {
-                    hex = 0xff0000; // emitter red
-                } else if (typeLower === 'inert') {
-                    hex = 0x0000ff; // inert blue
-                }
+                let hex = 0xe6c200;
+                if (typeLower === 'emitter') hex = 0xff0000;
+                else if (typeLower === 'inert') hex = 0x0000ff;
                 planeData.color = hex;
-                // If currently selected, keep highlight (yellow), otherwise set mapped color
                 planeData.mesh.material.color.setHex(selectedPlanes.includes(planeData) ? 0x808080 : hex);
-                
-                // Update top view line color if in top view
                 updateTopViewLineColor(planeData, hex);
             }
 
-            // React immediately to Type changes
-            controllers.type.onChange(function () {
+            typeSel.addEventListener('change', () => {
+                planeData.type = typeSel.value;
                 updateTemperatureControl();
                 updateColorByType();
-                
-                // Clear contour when switching away from Receiver
                 if (planeData.type !== "Receiver") {
                     clearContourFromPlane(planeData);
                 }
-                
-                // Update or remove normal arrow based on type
                 if (planeData.type === "Receiver") {
                     visualizeNormal(planeData);
                 } else {
                     removeNormalArrow();
                 }
-                
-                captureState();
-            });
-            
-            // React to Normal Direction changes
-            controllers.positive.onChange(function () {
-                if (planeData.type === "Receiver" && planeData.contourData) {
-                    console.warn('Normal direction changed; recalculate if needed');
-                }
-                
-                // Update the normal arrow visualization
-                if (planeData.type === "Receiver") {
-                    visualizeNormal(planeData);
-                }
-                
                 captureState();
             });
 
-            // Initialize temperature control state on GUI creation
             updateTemperatureControl();
             updateColorByType();
-            
-            // Visualize the normal direction for receiver planes
             if (planeData.type === "Receiver") {
                 visualizeNormal(planeData);
             } else {
                 removeNormalArrow();
             }
+
+            updateAppBottomMetrics();
         }
 
 
@@ -3292,9 +4519,7 @@
                 return;
             }
             
-            const mouse = new THREE.Vector2();
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            const mouse = eventToNDC(event);
             
             const raycaster = new THREE.Raycaster();
             raycaster.params.Points.threshold = 0.5;
@@ -3339,9 +4564,12 @@
         });
 
         renderer.domElement.addEventListener('click', (event) => {
-            const mouse = new THREE.Vector2();
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            if (suppressPlaneClickAfterTransform) {
+                suppressPlaneClickAfterTransform = false;
+                return;
+            }
+
+            const mouse = eventToNDC(event);
 
             const raycaster = new THREE.Raycaster();
             // Increase raycaster threshold for better sphere detection
@@ -3573,7 +4801,6 @@
                 selectedPlanes = [];
                 transformControlss.detach();
                 gui.destroy();
-                gui = new dat.GUI();
                 removeNormalArrow(); // Remove arrow when nothing is selected
                 
                 // Reset sphere double-click tracking when clicking empty space
@@ -3589,7 +4816,6 @@
                     transformControlss.detach();
                 }
                 gui.destroy();
-                gui = new dat.GUI();
                 removeNormalArrow(); // Remove arrow when no planes selected
             } else if (selectedPlaneGroup) {
                 // Control the group if we have one
@@ -3606,7 +4832,6 @@
                     transformControlss.detach();
                     selectedPlanes = [];
                     gui.destroy();
-                    gui = new dat.GUI();
                 }
             }
             
@@ -3740,6 +4965,8 @@
         const mouse = new THREE.Vector2();
 
         let transformControlss = null;
+        /** True briefly after transform drag ends — ignore the synthetic canvas click so selection stays. */
+        let suppressPlaneClickAfterTransform = false;
 
         // Initialize transform controls
         function initTransformControls() {
@@ -3765,6 +4992,7 @@
                 }
                 // When dragging ends (event.value === false)
                 if (!event.value) {
+                    suppressPlaneClickAfterTransform = true;
                     if (selectedPlaneGroup && transformControlss.object === selectedPlaneGroup) {
                         // Commit the group transformation to individual planes
                         commitGroupTransform();
@@ -4222,10 +5450,7 @@
                 // Set timeout to detect if this is a single click
                 clickTimeout = setTimeout(() => {
                     
-                    // Get mouse position
-                    const mouse = new THREE.Vector2();
-                    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-                    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                    const mouse = eventToNDC(event);
                     
                     // Create raycaster
                     const raycaster = new THREE.Raycaster();
@@ -4458,9 +5683,7 @@
         // Mouse move handler for sphere dragging
         renderer.domElement.addEventListener('mousemove', (event) => {
             if (isDraggingSphere && activeCamera === cameras.top) {
-                const mouse = new THREE.Vector2();
-                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                const mouse = eventToNDC(event);
 
                 const raycaster = new THREE.Raycaster();
                 raycaster.setFromCamera(mouse, activeCamera);
@@ -4479,9 +5702,7 @@
         // Mouse down handler for sphere dragging
         renderer.domElement.addEventListener('mousedown', (event) => {
             if (activeCamera === cameras.top && selectedSphere && !isDraggingSphere) {
-                const mouse = new THREE.Vector2();
-                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                const mouse = eventToNDC(event);
 
                 const raycaster = new THREE.Raycaster();
                 raycaster.setFromCamera(mouse, activeCamera);
@@ -4580,6 +5801,9 @@
         // });
 
         document.getElementById('importFile').addEventListener('change', importScene);
+        document.getElementById('importbtn')?.addEventListener('click', function () {
+            document.getElementById('importFile')?.click();
+        });
 
         function importScene(event) {
             const file = event.target.files[0];
@@ -5515,7 +6739,9 @@
 
         async function Pointsinfo() {
             const calculateBtn = document.getElementById('calculate');
+            const runMainBtn = document.getElementById('appRunAnalysisBtn');
             const originalText = 'Calculate';
+            const originalMainText = 'RUN ANALYSIS';
             
             // If already calculating, treat click as Stop
             if (calculationAbortController) {
@@ -5526,6 +6752,11 @@
             calculateBtn.textContent = 'Stop';
             calculateBtn.classList.add('calculating');
             calculateBtn.disabled = false;
+            if (runMainBtn) {
+                runMainBtn.textContent = 'STOP';
+                runMainBtn.classList.add('calculating');
+                runMainBtn.setAttribute('aria-busy', 'true');
+            }
             
             const calcStartTime = Date.now();
             try {
@@ -5772,23 +7003,54 @@
                 calculateBtn.textContent = originalText;
                 calculateBtn.classList.remove('calculating');
                 calculateBtn.disabled = false;
+                if (runMainBtn) {
+                    runMainBtn.textContent = originalMainText;
+                    runMainBtn.classList.remove('calculating');
+                    runMainBtn.removeAttribute('aria-busy');
+                }
+                updateAppBottomMetrics();
             }
         }
 
         document.getElementById("calculate").addEventListener("click", Pointsinfo);
-        
-        // Update receiver grid size from dropdown
-        const gridSizeEl = document.getElementById('gridSizeInput');
-        if (gridSizeEl) {
-            // Set initial value
-            gridSizeEl.value = receiverGridSize.toString();
-            
-            gridSizeEl.addEventListener('change', function () {
-                const val = parseInt(this.value, 10);
-                if (isNaN(val)) return;
-                receiverGridSize = val;
-                console.log(`Resolution: ${this.options[this.selectedIndex].text}`);
+
+        document.getElementById('appRunAnalysisBtn')?.addEventListener('click', () => {
+            document.getElementById('calculate')?.click();
+        });
+
+        // Mesh density: 4 exclusive buttons + hidden #gridSizeInput for state/export
+        const gridSizeHidden = document.getElementById('gridSizeInput');
+        const densityBtns = document.querySelectorAll('.tra-density-btn[data-grid-density]');
+
+        const DENSITY_VALUES = [2, 3, 5, 10];
+
+        function applyGridDensityUI(val) {
+            let n = parseInt(val, 10);
+            if (isNaN(n)) return;
+            if (!DENSITY_VALUES.includes(n)) {
+                n = DENSITY_VALUES.reduce(function (best, d) {
+                    return Math.abs(d - n) < Math.abs(best - n) ? d : best;
+                }, DENSITY_VALUES[0]);
+            }
+            receiverGridSize = n;
+            if (gridSizeHidden) gridSizeHidden.value = String(n);
+            densityBtns.forEach(function (btn) {
+                const d = parseInt(btn.getAttribute('data-grid-density'), 10);
+                const on = d === n;
+                btn.classList.toggle('active', on);
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
             });
+        }
+
+        densityBtns.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const v = btn.getAttribute('data-grid-density');
+                applyGridDensityUI(v);
+                console.log(`Resolution: ${btn.textContent.trim()}`);
+            });
+        });
+        if (gridSizeHidden) {
+            applyGridDensityUI(gridSizeHidden.value || String(receiverGridSize));
         }
         
         // Update color scale when inputs change and regenerate contours on existing data
@@ -6046,6 +7308,13 @@
             plane.mesh.material.needsUpdate = true;
             const colorHex = selectedPlanes.includes(plane) ? 0x808080 : plane.color;
             plane.mesh.material.color.setHex(colorHex);
+        }
+
+        function clearAllCalculationData() {
+            dataarrayforcontour = null;
+            planes.forEach(p => clearContourFromPlane(p));
+            if (typeof captureState === 'function') captureState();
+            updateAppBottomMetrics();
         }
 
         // Function to apply contour texture to a plane automatically
@@ -6944,15 +8213,8 @@
                 dataarrayforcontour = state.contourData.values;
             }
 
-            // Update GUI and controls
+            // Update GUI and controls (updateTransformControls calls updateGUI when something is selected)
             updateTransformControls();
-            if (selectedPlanes.length > 0) {
-                updateGUI(selectedPlanes[selectedPlanes.length - 1]);
-            }
-
-            // Update GUI
-            gui.destroy();
-            gui = new dat.GUI();
 
             // If in top view, create top view lines for all restored planes
             if (activeCamera === cameras.top) {
@@ -6969,6 +8231,8 @@
 
             if (selectedPlaneGroup) {
             }
+
+            updateAppBottomMetrics();
         }
 
         // Helper function to restore contour textures
@@ -7102,11 +8366,12 @@
 
         // Handle window resize
         window.addEventListener("resize", () => {
-            cameras.perspective.aspect = window.innerWidth / window.innerHeight;
+            const { w, h } = getRenderViewportSize();
+            cameras.perspective.aspect = w / h;
             cameras.perspective.updateProjectionMatrix();
             activeCamera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(w, h);
+            labelRenderer.setSize(w, h);
             updateOrthoCameras();
 
             // Update transform controls if they exist
