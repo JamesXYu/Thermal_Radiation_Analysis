@@ -9,7 +9,9 @@
     <script>
         (function () {
             try {
-                if (localStorage.getItem('tra-theme') === 'light') {
+                if (localStorage.getItem('tra-theme') === 'dark') {
+                    document.documentElement.removeAttribute('data-theme');
+                } else {
                     document.documentElement.setAttribute('data-theme', 'light');
                 }
             } catch (e) { /* ignore */ }
@@ -380,7 +382,7 @@
                 <tr><td colspan="2"><strong>Other</strong></td></tr>
                 <tr><td><code>G</code></td><td>Toggle grid snap</td></tr>
                 <tr><td><code>H</code></td><td>Toggle grid visibility</td></tr>
-                <tr><td><code>N</code></td><td>Toggle normal arrow</td></tr>
+                <tr><td><code>N</code></td><td>Flip normal direction</td></tr>
                 <tr><td><code>S</code></td><td>Stand plane on ground</td></tr>
                 <tr><td><code>Escape</code></td><td>Exit Add Walls mode</td></tr>
                 <tr><td><code>Enter</code> / <code>Escape</code></td><td>Confirm / Cancel (in dialogs)</td></tr>
@@ -447,6 +449,7 @@ python3 -m http.server 3000</pre>
 
         <h2 id="interface">Interface Layout</h2>
         <ul>
+            <li><strong>Top bar</strong>: <strong>TRA</strong> branding, editable <strong>project name</strong>, scene tabs, and theme toggle (default theme is light; choice is remembered). <code>O</code> / <code>I</code> trigger Export / Import scene file.</li>
             <li><strong>3D Viewport</strong>: Main area showing your 3D model</li>
             <li><strong>Left toolkit</strong>: Panels for Build, Edit, View, Simulation, Data. Under <strong>Build → Geometry</strong>, <strong>Copy</strong> and <strong>Paste</strong> duplicate the <code>Ctrl+C</code> / <code>Ctrl+V</code> plane clipboard. <strong>X</strong> resets the selection; <strong>L</strong> cycles the Simulation <strong>Auto Scale</strong> color mode. Mesh density, color scale, and <strong>Show detail</strong> live under Simulation → Result.</li>
             <li><strong>Right sidebar</strong>: Plane properties when a surface is selected</li>
@@ -522,8 +525,11 @@ python3 -m http.server 3000</pre>
             <li><strong>Distance</strong> (Edit → Distance): Shown when exactly two planes are selected</li>
         </ul>
 
-        <h3>Level Manager</h3>
-        <p>Save Level / New Level, Load, Delete, Import/Export scene. Levels can be stored in the browser.</p>
+        <h3>Project &amp; scenes</h3>
+        <p>The top bar (next to <strong>TRA</strong>) has the <strong>project name</strong> (click to edit; a border appears only while focused) and <strong>scene</strong> tabs: <strong>Scene 1</strong> by default, a <strong>+</strong> at the end of the tab row to add a scene (the current one is stored automatically, then you work in the new empty scene). When there are two or more scenes, a remove control (×) appears on a tab when you point at that tab. <strong>Click</strong> a tab to load that scene; <strong>double-click</strong> a tab to rename it (names must be unique).</p>
+
+        <h3>Data — file save &amp; load (Export / Import)</h3>
+        <p>These map directly to the app’s in-memory <strong>project</strong> and <strong>scenes</strong> (the same data as the top bar, not a separate “level” system). <strong>Export</strong> (<strong>Data → Export</strong> or <code>O</code>) writes JSON <strong>version 2.0</strong> with: <code>exportType: &quot;multiLevel&quot;</code>, <code>projectName</code>, <code>sceneOrder</code>, <code>currentLevel</code> (active tab), and <code>levels</code> (per-scene payloads with <code>data</code> and <code>timestamp</code>). <strong>Import</strong> (<strong>Data → Import</strong> or <code>I</code>) restores that bundle. <strong>Legacy</strong> single-scene files (older format without the multi-scene wrapper) still load: they become a single <strong>Scene 1</strong> in the strip.</p>
 
         <hr>
 
@@ -547,9 +553,9 @@ python3 -m http.server 3000</pre>
 
         <h2 id="tips">Tips & Best Practices</h2>
         <ul>
-            <li>Save frequently; use Level Manager and Export</li>
+            <li>Save frequently; use Export in Data for a file backup (includes project name and all scenes)</li>
             <li>Use Top view (<code>T</code>) for layout</li>
-            <li>Check plane orientation with normal arrow (<code>N</code>)</li>
+            <li>For receiver planes, orbit the view: the active side (set with Normal +) is yellow with texture; the opposite face is black</li>
             <li>Verify backend: <code>curl http://localhost:8080/health</code></li>
         </ul>
 

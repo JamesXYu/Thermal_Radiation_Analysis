@@ -10,7 +10,10 @@
     <script>
         (function () {
             try {
-                if (localStorage.getItem('tra-theme') === 'light') {
+                // Default: light. Only use dark when the user has explicitly chosen it.
+                if (localStorage.getItem('tra-theme') === 'dark') {
+                    document.documentElement.removeAttribute('data-theme');
+                } else {
                     document.documentElement.setAttribute('data-theme', 'light');
                 }
             } catch (e) { /* ignore */ }
@@ -29,7 +32,7 @@
             --tra-mint: #4ade80;
         }
 
-        /* Dark theme (default) */
+        /* Dark theme (active when data-theme is not "light" — i.e. user chose “dark”) */
         html {
             height: 100%;
             overflow: hidden;
@@ -143,6 +146,228 @@
             font-size: 15px;
             letter-spacing: 0.14em;
             color: var(--tra-text);
+            flex-shrink: 0;
+        }
+
+        .app-topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .tra-topbar-scene-rail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
+            max-width: min(62vw, 720px);
+        }
+
+        .tra-project-name-input {
+            flex-shrink: 0;
+            width: min(200px, 28vw);
+            box-sizing: border-box;
+            margin: 0;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--tra-text);
+            font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            padding: 5px 10px;
+            border-radius: 8px;
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .tra-project-name-input::placeholder {
+            color: var(--tra-muted);
+            font-weight: 500;
+        }
+
+        .tra-project-name-input:hover {
+            background: var(--tra-btn-ghost-bg);
+        }
+
+        .tra-project-name-input:focus {
+            outline: none;
+            border-color: rgba(218, 36, 36, 0.45);
+            background: var(--tra-panel-inner);
+            box-shadow: 0 0 0 1px rgba(218, 36, 36, 0.2);
+        }
+
+        .tra-scene-strip {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 2px 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(218, 36, 36, 0.35) transparent;
+        }
+
+        .tra-scene-strip::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tra-scene-strip::-webkit-scrollbar-thumb {
+            background: rgba(218, 36, 36, 0.25);
+            border-radius: 3px;
+        }
+
+        .tra-scene-pill-wrap {
+            display: inline-flex;
+            flex-direction: row;
+            align-items: stretch;
+            flex-shrink: 0;
+            min-width: 120px;
+            max-width: 300px;
+            border-radius: 8px;
+            border: 1px solid var(--tra-border);
+            background: var(--tra-btn-ghost-bg);
+            overflow: hidden;
+            position: relative;
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .tra-scene-pill-wrap.is-active {
+            border-color: rgba(218, 36, 36, 0.55);
+            background: rgba(218, 36, 36, 0.12);
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.12);
+        }
+
+        .tra-scene-pill {
+            display: inline-flex;
+            align-items: center;
+            flex: 1;
+            min-width: 0;
+            margin: 0;
+            padding: 6px 4px 6px 10px;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            color: var(--tra-muted);
+            font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+
+        .tra-scene-pill:hover {
+            color: var(--tra-text);
+        }
+
+        .tra-scene-pill-wrap.is-active .tra-scene-pill {
+            color: var(--tra-text);
+        }
+
+        .tra-scene-pill-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tra-scene-pill-rename-input {
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 4px 6px 4px 8px;
+            border: 1px solid rgba(218, 36, 36, 0.45);
+            border-radius: 4px;
+            background: var(--tra-panel-inner);
+            color: var(--tra-text);
+            font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            box-sizing: border-box;
+        }
+
+        .tra-scene-pill-rename-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(218, 36, 36, 0.2);
+        }
+
+        .tra-scene-pill-remove {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 0;
+            min-width: 0;
+            min-height: 100%;
+            margin: 0;
+            border: none;
+            border-left: 1px solid transparent;
+            background: transparent;
+            color: var(--tra-muted);
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            flex-shrink: 0;
+            overflow: hidden;
+            padding: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease, width 0.12s ease, min-width 0.12s ease, background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+        }
+
+        .tra-scene-pill-wrap:hover .tra-scene-pill-remove,
+        .tra-scene-pill-wrap:focus-within .tra-scene-pill-remove {
+            width: 28px;
+            min-width: 28px;
+            opacity: 1;
+            border-left: 1px solid var(--tra-border);
+            pointer-events: auto;
+        }
+
+        .tra-scene-pill-wrap.is-active:hover .tra-scene-pill-remove {
+            border-left-color: rgba(218, 36, 36, 0.2);
+        }
+
+        .tra-scene-pill-remove:hover {
+            color: var(--tra-accent);
+            background: rgba(218, 36, 36, 0.1);
+        }
+
+        .tra-scene-add-btn {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            margin: 0;
+            padding: 0;
+            border-radius: 8px;
+            border: 1px dashed rgba(218, 36, 36, 0.4);
+            background: rgba(218, 36, 36, 0.06);
+            color: var(--tra-accent);
+            font-size: 20px;
+            font-weight: 400;
+            line-height: 1;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+        }
+
+        .tra-scene-add-btn:hover {
+            background: rgba(218, 36, 36, 0.14);
+            border-color: rgba(218, 36, 36, 0.55);
+        }
+
+        .tra-scene-add-btn:active {
+            transform: scale(0.95);
         }
 
         .app-nav {
@@ -165,6 +390,7 @@
             align-items: center;
             gap: 14px;
             font-size: 11px;
+            flex-shrink: 0;
         }
 
         .app-engine-pill {
@@ -254,13 +480,17 @@
             align-items: stretch;
         }
 
-        /* Left chrome: tool icon rail + full-height toolkit column (in flow, not a popover) */
+        /* Left chrome: 66px icon rail; secondary toolkit is absolutely positioned and overlays the scene so the renderer keeps a stable aspect ratio. */
         #tra-left-dock,
         .tra-left-dock {
             --tra-toolstrip-w: 66px;
-            --tra-flyout-w: 220px;
+            --tra-flyout-w: calc(220px * 0.85);
             display: flex;
             flex-direction: row;
+            flex: 0 0 var(--tra-toolstrip-w);
+            width: var(--tra-toolstrip-w);
+            min-width: var(--tra-toolstrip-w);
+            max-width: var(--tra-toolstrip-w);
             flex-shrink: 0;
             align-items: stretch;
             min-height: 0;
@@ -268,6 +498,7 @@
             height: 100%;
             position: relative;
             z-index: 120;
+            overflow: visible;
             box-sizing: border-box;
         }
 
@@ -415,31 +646,33 @@
         }
 
         .tra-tool-flyout {
-            /* Full-height second column: rail | toolkit | canvas | params */
-            position: static;
-            margin: 0;
-            left: auto;
-            top: auto;
-            flex: 0 0 var(--tra-flyout-w);
+            position: absolute;
+            left: 100%;
+            top: 0;
+            bottom: 0;
             width: var(--tra-flyout-w);
             min-width: 0;
             max-width: var(--tra-flyout-w);
-            max-height: none;
             height: 100%;
             min-height: 0;
-            z-index: auto;
+            margin: 0;
+            z-index: 2;
             display: flex;
             flex-direction: column;
             background: var(--tra-flyout-bg);
             border: none;
             border-right: 1px solid var(--tra-border);
-            border-radius: 0;
-            box-shadow: none;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 4px 0 28px rgba(0, 0, 0, 0.28);
             overflow: hidden;
         }
 
         .tra-tool-flyout[hidden] {
             display: none !important;
+        }
+
+        html[data-theme="light"] .tra-tool-flyout {
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
         }
 
         .tra-tool-flyout-grip {
@@ -455,7 +688,7 @@
 
         .tra-tool-flyout-title {
             font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-            font-size: 9px;
+            font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.14em;
             color: var(--tra-text);
@@ -478,7 +711,7 @@
             border: none;
             background: var(--tra-btn-ghost-bg);
             color: var(--tra-muted);
-            font-size: 16px;
+            font-size: 18px;
             line-height: 1;
             cursor: pointer;
             width: 24px;
@@ -672,10 +905,16 @@
             border-color: rgba(218, 36, 36, 0.45);
         }
 
+        /* Match left-dock “active” tools (e.g. Add Walls, grid snap): same red fill + border */
         .tra-element-row.is-selected {
-            border-color: rgba(218, 36, 36, 0.6);
-            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.2);
-            background: var(--tra-accent-muted);
+            background: rgba(218, 36, 36, 0.25);
+            border-color: var(--tra-accent);
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
+        }
+
+        .tra-element-row.is-selected:hover {
+            background: rgba(218, 36, 36, 0.32);
+            border-color: var(--tra-accent);
         }
 
         .tra-element-name {
@@ -695,19 +934,19 @@
             color: var(--tra-muted);
         }
 
-        .tra-elements-empty {
-            font-size: 10px;
-            color: var(--tra-muted);
-            margin: 0;
-            line-height: 1.4;
-        }
-
         .pp-group {
             margin-bottom: 6px;
             padding: 7px 8px 6px;
             border: 1px solid var(--tra-border);
             border-radius: 6px;
             background: var(--tra-panel-inner);
+        }
+
+        /* Multi-selection block in Parameters — same red “selected” treatment as Elements rows */
+        .pp-group.pp-group-multi {
+            background: rgba(218, 36, 36, 0.25);
+            border-color: var(--tra-accent);
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
         }
 
         .pp-group:last-child {
@@ -800,6 +1039,12 @@
             color: var(--tra-muted);
             line-height: 1.35;
             margin: 0 0 6px;
+        }
+
+        .pp-field input::placeholder,
+        .pp-field textarea::placeholder {
+            color: var(--tra-muted);
+            opacity: 1;
         }
 
         .pp-checkbox-row {
@@ -1096,10 +1341,14 @@
             color: var(--tra-muted);
         }
 
+        #tra-left-dock .tra-tool-flyout-body .tra-k-subtitle {
+            font-size: 10px;
+        }
+
         #tra-left-dock .tra-tool-flyout-body .tra-field-label {
             margin-bottom: 4px;
             margin-top: 2px;
-            font-size: 8px;
+            font-size: 10px;
             letter-spacing: 0.12em;
         }
 
@@ -1108,7 +1357,7 @@
             margin: 0 !important;
             font-family: inherit;
             font-weight: 600;
-            font-size: 10px;
+            font-size: 12px;
             letter-spacing: 0.02em;
             border-radius: 6px;
             min-height: 30px;
@@ -1150,13 +1399,14 @@
         }
 
         #tra-left-dock .tra-tool-flyout-body .plane-btn.active,
-        #tra-left-dock .tra-tool-flyout-body .transform-btn.active {
+        #tra-left-dock .tra-tool-flyout-body .transform-btn.active,
+        #tra-left-dock .tra-tool-flyout-body #addPlaneMode.active {
             background: rgba(218, 36, 36, 0.25);
             border-color: var(--tra-accent);
             box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
         }
 
-        /* Grid snap + camera view: same selected treatment as Edit → Transform */
+        /* Grid snap + camera view: same selected treatment as Edit → Transform + Add walls */
         #tra-left-dock .tra-tool-flyout-body .tra-panel-body #gridSnapBtn.active,
         #tra-left-dock .tra-tool-flyout-body .view-buttons-container>button.active {
             background: rgba(218, 36, 36, 0.25);
@@ -1165,7 +1415,8 @@
         }
 
         #tra-left-dock .tra-tool-flyout-body .tra-panel-body #gridSnapBtn.active:hover,
-        #tra-left-dock .tra-tool-flyout-body .view-buttons-container>button.active:hover {
+        #tra-left-dock .tra-tool-flyout-body .view-buttons-container>button.active:hover,
+        #tra-left-dock .tra-tool-flyout-body #addPlaneMode.active:hover {
             background: rgba(218, 36, 36, 0.32);
             border-color: var(--tra-accent);
         }
@@ -1174,7 +1425,7 @@
             width: 100%;
             min-height: 34px;
             padding: 7px 10px;
-            font-size: 10px;
+            font-size: 12px;
             background: rgba(218, 36, 36, 0.06);
             border: 1px dashed rgba(218, 36, 36, 0.4);
             color: var(--tra-text);
@@ -1221,6 +1472,11 @@
             margin: 0 !important;
         }
 
+        #tra-left-dock .tra-tool-flyout-body #addPlaneMode.active:disabled {
+            cursor: not-allowed;
+            opacity: 0.9;
+        }
+
         #tra-left-dock .tra-tool-flyout-body #scalingbutton {
             width: 100%;
         }
@@ -1253,7 +1509,7 @@
         #tra-left-dock .tra-tool-flyout-body .tra-density-btn {
             margin: 0 !important;
             padding: 6px 4px !important;
-            font-size: 9px !important;
+            font-size: 11px !important;
             font-weight: 600 !important;
             letter-spacing: 0.04em !important;
             line-height: 1.15 !important;
@@ -1274,6 +1530,42 @@
             box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
         }
 
+        /* Parameters sidebar: same chip style as grid density (plane type) */
+        .plane-params-panel .tra-density-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .plane-params-panel .tra-density-btn {
+            margin: 0 !important;
+            padding: 6px 4px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.04em !important;
+            line-height: 1.15 !important;
+            white-space: nowrap;
+            font-family: inherit;
+            border-radius: 4px;
+            cursor: pointer;
+            background: rgba(218, 36, 36, 0.08) !important;
+            border: 1px solid rgba(218, 36, 36, 0.22) !important;
+            color: var(--tra-text) !important;
+        }
+
+        .plane-params-panel .tra-density-btn:hover {
+            background: rgba(218, 36, 36, 0.14) !important;
+            border-color: rgba(218, 36, 36, 0.38) !important;
+        }
+
+        .plane-params-panel .tra-density-btn.active {
+            background: rgba(218, 36, 36, 0.26) !important;
+            border-color: var(--tra-accent) !important;
+            box-shadow: inset 0 0 0 1px rgba(218, 36, 36, 0.35);
+        }
+
         #tra-left-dock .tra-tool-flyout-body .tra-color-scale-layout {
             display: flex;
             flex-direction: column;
@@ -1285,7 +1577,7 @@
 
         #tra-left-dock .tra-tool-flyout-body .tra-color-scale-layout #autoColorScaleBtn {
             width: 100%;
-            font-size: 10px;
+            font-size: 12px;
             letter-spacing: 0.05em;
         }
 
@@ -1315,7 +1607,7 @@
 
         #tra-left-dock .tra-tool-flyout-body .tra-color-scale-row .tra-muted-inline {
             color: var(--tra-muted);
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 600;
             text-align: center;
             padding: 0 2px;
@@ -1329,7 +1621,7 @@
             width: 100%;
             margin: 0 !important;
             padding: 6px 8px;
-            font-size: 10px;
+            font-size: 12px;
             font-family: inherit;
             border-radius: 8px;
             background: var(--tra-input-bg) !important;
@@ -1352,7 +1644,7 @@
             color: var(--tra-text);
             border-radius: 6px;
             padding: 6px 8px;
-            font-size: 10px;
+            font-size: 12px;
             font-family: inherit;
         }
 
@@ -1365,7 +1657,7 @@
             min-height: 32px !important;
             margin: 0 !important;
             padding: 6px 4px !important;
-            font-size: 11px !important;
+            font-size: 13px !important;
             font-weight: 600 !important;
             line-height: 1.2 !important;
             text-align: center;
@@ -1415,7 +1707,7 @@
 
         #tra-left-dock .tra-tool-flyout-body #distanceRow span {
             padding: 8px 12px !important;
-            font-size: 10px !important;
+            font-size: 12px !important;
             font-weight: 600 !important;
             letter-spacing: 0.1em !important;
             text-transform: uppercase;
@@ -2326,14 +2618,24 @@
 
     <div id="app-shell">
         <header class="app-topbar" id="app-topbar">
-            <div class="app-brand">TRA</div>
-            <nav class="app-nav" aria-hidden="true">
-            </nav>
+            <div class="app-topbar-left">
+                <div class="app-brand">TRA</div>
+                <div class="tra-topbar-scene-rail" aria-label="Project and scenes">
+                    <label for="tra-project-name" class="tra-sr-only">Project name</label>
+                    <input type="text" id="tra-project-name" class="tra-project-name-input"
+                        placeholder="Untitled project" autocomplete="off" spellcheck="false" maxlength="120"
+                        title="Project name">
+                    <div class="tra-scene-strip" id="tra-scene-strip" role="group" aria-label="Scenes">
+                        <button type="button" id="tra-scene-add" class="tra-scene-add-btn" title="New scene"
+                            aria-label="Add new scene">+</button>
+                    </div>
+                </div>
+            </div>
             <div class="app-topbar-right">
                 <button type="button" class="tra-theme-toggle" id="tra-theme-toggle" aria-pressed="false"
                     title="Switch color theme">
                     <span class="tra-theme-icon" id="tra-theme-toggle-icon" aria-hidden="true"></span>
-                    <span id="tra-theme-toggle-label">Light</span>
+                    <span id="tra-theme-toggle-label">Dark</span>
                 </button>
             </div>
         </header>
@@ -2351,7 +2653,7 @@
 
                 <div class="tra-toolkit-nav" role="toolbar" aria-label="Toolkit">
                     <button type="button" class="tra-tool-item" data-tool-title="Build"
-                        onclick="openToolkitPanel('tra-panel-build', this)" title="Build — import, geometry, levels">
+                        onclick="openToolkitPanel('tra-panel-build', this)" title="Build — import and geometry">
                         <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="1.6">
                                 <path d="M4 20h16v-9l-4-4H8l-4 4v9z" />
@@ -2435,21 +2737,6 @@
                                 <button id="addPlaneMode" type="button" class="plane-btn tra-panel-fullbtn">Add Walls
                                     Mode</button>
                             </section>
-                            <section class="tra-k-block" aria-labelledby="k-build-levels">
-                                <h4 id="k-build-levels" class="tra-k-subtitle">Levels</h4>
-                                <div class="tra-btn-grid">
-                                    <button id="saveSceneBtn" type="button">Save Level</button>
-                                    <button id="newSceneBtn" type="button">New Level</button>
-                                </div>
-                                <label class="tra-field-label" for="sceneDropdown">Level</label>
-                                <select id="sceneDropdown">
-                                    <option value="">Select a level...</option>
-                                </select>
-                                <div class="scene-buttons-container">
-                                    <button id="loadSceneBtn" type="button">Load Level</button>
-                                    <button id="deleteSceneBtn" type="button">Delete Level</button>
-                                </div>
-                            </section>
                         </div>
                     </div>
 
@@ -2473,7 +2760,6 @@
                             <section class="tra-k-block" aria-labelledby="k-edit-distance">
                                 <h4 id="k-edit-distance" class="tra-k-subtitle">Distance</h4>
                                 <div id="distanceRow">
-                                    <span>Distance</span>
                                     <input type="text" id="distanceInput" readonly value="-">
                                 </div>
                             </section>
@@ -2584,14 +2870,16 @@
                     <div id="params-section-parameters" class="params-sidebar-section" role="tabpanel"
                         aria-labelledby="params-tab-params">
                     <div id="plane-params-panel" class="plane-params-panel">
-                        <p class="pp-hint" id="plane-params-empty"> </p>
+                        <p class="pp-hint" id="plane-params-empty" data-default-hint="Select a plane to edit its parameters.">Select a plane to edit its parameters.</p>
                         <div id="plane-params-content"></div>
                     </div>
                     </div>
                     <div id="params-section-elements" class="params-sidebar-section" role="tabpanel" hidden
                         aria-labelledby="params-tab-elements">
                         <div class="plane-params-panel tra-elements-panel">
-                            <p class="pp-hint tra-elements-hint"> </p>
+                            <p class="pp-hint tra-elements-hint" id="tra-elements-hint"
+                                data-hint-empty="No planes in the scene yet."
+                                data-hint-list="Select a plane in the list or the 3D view. Hold Shift to multi-select.">No planes in the scene yet.</p>
                             <div id="tra-elements-list" class="tra-elements-list" role="list"></div>
                         </div>
                     </div>
@@ -2646,15 +2934,6 @@
         <input type="number" id="scaleDistanceInput" placeholder="Enter distance">
         <br>
         <button id="confirmScale">Confirm</button>
-    </div>
-
-    <!-- Level Name Input Modal -->
-    <div id="levelNameModal" class="scale-input-modal" style="display: none;">
-        <h3>Enter Level Name</h3>
-        <input type="text" id="levelNameInput" placeholder="Enter level name">
-        <br>
-        <button id="confirmLevelName">Save Level</button>
-        <button id="cancelLevelName">Cancel</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
@@ -3116,8 +3395,6 @@
         // Add these near your other variables
         let selectedPlaneGroup = null; // Will store the temporary group
         let originalPositions = new Map(); // Stores original positions before grouping
-        let normalArrow = null; // Arrow to visualize the normal direction
-        let showNormalArrow = true; // Toggle for showing normal arrow
 
         // Add these near your other event listeners (like the keydown for transform controls)
         window.addEventListener('keydown', (event) => {
@@ -3696,73 +3973,6 @@
             }
         }
 
-        // Function to visualize the normal direction of a receiver plane (theme-colored arrow; no label)
-        function visualizeNormal(plane) {
-            removeNormalArrow();
-
-            if (!showNormalArrow) {
-                return;
-            }
-            if (plane.type !== "Receiver") {
-                return;
-            }
-
-            const normal = new THREE.Vector3(0, 0, 1);
-            const wq = new THREE.Quaternion();
-            plane.mesh.getWorldQuaternion(wq);
-            normal.applyQuaternion(wq).normalize();
-            if (plane.positive) {
-                normal.negate();
-            }
-
-            const origin = new THREE.Vector3();
-            plane.mesh.getWorldPosition(origin);
-
-            const minDim = Math.min(plane.width, plane.height);
-            const arrowLength = THREE.MathUtils.clamp(minDim * 1, 0.3, 7.0);
-            const headLength = Math.max(arrowLength * 0.3, 0.25);
-            const headWidth = headLength * 0.5;
-
-            const isPlus = !!plane.positive;
-            const arrowColor = isPlus ? 0xda2424 : 0xbf574f;
-
-            normalArrow = new THREE.ArrowHelper(
-                normal,
-                origin,
-                arrowLength,
-                arrowColor,
-                headLength,
-                headWidth
-            );
-
-            if (normalArrow.line) {
-                normalArrow.line.renderOrder = 1000;
-                if (normalArrow.line.material) {
-                    normalArrow.line.material.depthTest = true;
-                }
-            }
-            if (normalArrow.cone) {
-                normalArrow.cone.renderOrder = 1000;
-            }
-
-            sceneContentGroup.add(normalArrow);
-        }
-
-        function removeNormalArrow() {
-            if (normalArrow) {
-                sceneContentGroup.remove(normalArrow);
-                if (normalArrow.line) {
-                    normalArrow.line.geometry.dispose();
-                    normalArrow.line.material.dispose();
-                }
-                if (normalArrow.cone) {
-                    normalArrow.cone.geometry.dispose();
-                    normalArrow.cone.material.dispose();
-                }
-                normalArrow = null;
-            }
-        }
-
         let scalingcheck = false;
         let aspect = null;
 
@@ -3819,7 +4029,11 @@
             const content = document.getElementById('plane-params-content');
             const empty = document.getElementById('plane-params-empty');
             if (content) content.innerHTML = '';
-            if (empty) empty.style.display = '';
+            if (empty) {
+                empty.style.display = '';
+                const def = empty.getAttribute('data-default-hint');
+                if (def) empty.textContent = def;
+            }
         }
 
         function updateAppBottomMetrics() {
@@ -4223,6 +4437,103 @@
             return roundParamValue(v).toFixed(1);
         }
 
+        /**
+         * Receiver planes: double-sided, fragment shader blackens the non-receiver face; yellow/texture on the other.
+         * uFlipReceiverFace flips with "Normal (+)" (plane.positive) so the yellow side matches physics.
+         */
+        function updateReceiverFaceFlipUniform(plane) {
+            if (!plane || !plane.mesh || !plane.mesh.material || !plane.mesh.material.userData) return;
+            const u = plane.mesh.material.userData.receiverShaderUniforms;
+            if (u && u.uFlipReceiverFace) {
+                u.uFlipReceiverFace.value = plane.positive ? 1.0 : 0.0;
+            }
+        }
+
+        /** Same as the Normal (+) checkbox: flip `plane.positive` for every selected plane; updates receiver shader. */
+        function toggleSelectedPlanesNormalDirection() {
+            if (!selectedPlanes.length) return;
+            let warnedContour = false;
+            selectedPlanes.forEach(plane => {
+                plane.positive = !plane.positive;
+                if (plane.type === "Receiver") {
+                    updateReceiverFaceFlipUniform(plane);
+                    if (plane.contourData && !warnedContour) {
+                        console.warn('Normal direction changed; recalculate if needed');
+                        warnedContour = true;
+                    }
+                }
+            });
+            captureState();
+            if (selectedPlanes.length === 1) {
+                updateGUI(selectedPlanes[0]);
+            }
+        }
+
+        function installReceiverDualFaceOnMaterial(material, plane) {
+            const uFlip = { value: plane.positive ? 1.0 : 0.0 };
+            const uOn = { value: 1.0 };
+            material.userData = material.userData || {};
+            material.userData.receiverDualInstalled = true;
+            material.userData.receiverShaderUniforms = { uFlipReceiverFace: uFlip, uReceiverDual: uOn };
+            material.onBeforeCompile = (shader) => {
+                shader.uniforms.uFlipReceiverFace = uFlip;
+                shader.uniforms.uReceiverDual = uOn;
+                if (shader.fragmentShader.indexOf('uReceiverDualPatch') === -1) {
+                    shader.fragmentShader = 'uniform float uFlipReceiverFace;\nuniform float uReceiverDual;\n' + shader.fragmentShader;
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        '#include <output_fragment>',
+                        'if (uReceiverDual > 0.5) { bool _recvF = gl_FrontFacing; if (uFlipReceiverFace > 0.5) _recvF = !_recvF; if (!_recvF) outgoingLight = vec3(0.0); } //uReceiverDualPatch\n#include <output_fragment>'
+                    );
+                }
+            };
+            material.side = THREE.DoubleSide;
+            material.needsUpdate = true;
+        }
+
+        /** Replace or patch mesh material for Receiver (dual-face shader) vs Emitter/Inert (double-sided, no shader). */
+        function setPlaneMaterialForType(plane) {
+            if (!plane || !plane.mesh) return;
+            const mesh = plane.mesh;
+            const wasMap = mesh.material && mesh.material.map;
+            const mapRef = wasMap ? mesh.material.map : null;
+
+            if (plane.type === "Receiver") {
+                if (mesh.material && mesh.material.userData && mesh.material.userData.receiverDualInstalled) {
+                    if (mapRef) mesh.material.map = mapRef;
+                    updateReceiverFaceFlipUniform(plane);
+                    return;
+                }
+                const old = mesh.material;
+                const c = old && old.color ? old.color.clone() : new THREE.Color(plane.color);
+                const savedMap = old && old.map ? old.map : null;
+                if (old) {
+                    old.map = null;
+                    old.dispose();
+                }
+                const m = new THREE.MeshStandardMaterial({
+                    color: c,
+                    side: THREE.DoubleSide,
+                    wireframe: false
+                });
+                if (savedMap) m.map = savedMap;
+                else if (mapRef) m.map = mapRef;
+                mesh.material = m;
+                installReceiverDualFaceOnMaterial(m, plane);
+            } else {
+                if (mesh.material) {
+                    const m0 = mesh.material;
+                    m0.map = null;
+                    m0.dispose();
+                }
+                const m = new THREE.MeshStandardMaterial({
+                    color: new THREE.Color(plane.color),
+                    side: THREE.DoubleSide,
+                    wireframe: false
+                });
+                mesh.material = m;
+            }
+        }
+
         // Multi-select functions for height and type changes
         function changeMultiplePlanesHeight(newHeight) {
             if (selectedPlanes.length < 2) return;
@@ -4272,10 +4583,10 @@
                 }
                 planeData.color = hex;
 
-                // Clear contour when switching away from Receiver
                 if (newType !== "Receiver") {
                     clearContourFromPlane(planeData);
                 }
+                setPlaneMaterialForType(planeData);
 
                 // Keep selection highlight
                 planeData.mesh.material.color.setHex(0x808080);
@@ -4283,14 +4594,8 @@
                 // Update top view line color if in top view
                 updateTopViewLineColor(planeData, 0x808080);
 
-                // Reset temperature for non-emitters
                 if (typeLower !== 'emitter') {
                     planeData.temperature = 0;
-                }
-
-                // Update normal arrow visualization for receiver planes
-                if (newType === "Receiver") {
-                    visualizeNormal(planeData);
                 }
             });
         }
@@ -4375,6 +4680,7 @@
             if (!skipStateCapture) {
                 captureState("Plane created");
             }
+            installReceiverDualFaceOnMaterial(plane.material, planeData);
             if (typeof rebuildTraElementsList === 'function') {
                 rebuildTraElementsList();
             }
@@ -4507,9 +4813,6 @@
 
             if (selectedPlanes.length > 0) {
                 updateGUI(selectedPlanes[selectedPlanes.length - 1]);
-                if (showNormalArrow && selectedPlanes[selectedPlanes.length - 1].type === "Receiver") {
-                    visualizeNormal(selectedPlanes[selectedPlanes.length - 1]);
-                }
             }
 
             captureState("After stand");
@@ -4580,7 +4883,6 @@
 
             gui.destroy();
             selectedPlanes = [];
-            removeNormalArrow(); // Remove arrow when planes are deleted
             captureState();
             if (typeof rebuildTraElementsList === 'function') {
                 rebuildTraElementsList();
@@ -4588,6 +4890,36 @@
         }
 
         document.getElementById("deleteplane").addEventListener("click", deleteplanefn);
+
+        const PLANE_TYPE_OPTIONS = ['Receiver', 'Emitter', 'Inert'];
+
+        /** Stacked chip buttons, same look as Simulation → Grid density. */
+        function buildPlaneTypePickerRow(currentValue, onPick) {
+            const row = document.createElement('div');
+            row.className = 'tra-density-row';
+            row.setAttribute('role', 'radiogroup');
+            const hasHighlight = currentValue != null && PLANE_TYPE_OPTIONS.indexOf(currentValue) >= 0;
+            PLANE_TYPE_OPTIONS.forEach(t => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'tra-density-btn';
+                b.setAttribute('data-plane-type', t);
+                b.setAttribute('aria-pressed', hasHighlight && t === currentValue ? 'true' : 'false');
+                b.textContent = t;
+                if (hasHighlight && t === currentValue) b.classList.add('active');
+                b.addEventListener('click', function () {
+                    if (b.classList.contains('active')) return;
+                    row.querySelectorAll('.tra-density-btn').forEach(x => {
+                        const isOn = x === b;
+                        x.classList.toggle('active', isOn);
+                        x.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+                    });
+                    onPick(t);
+                });
+                row.appendChild(b);
+            });
+            return row;
+        }
 
         // Parameters sidebar (replaces dat.GUI) — numeric fields only, no range sliders.
         function updateGUI(planeData) {
@@ -4612,6 +4944,7 @@
                 }
 
                 const gIntro = openMultiGroup('MULTI-SELECTION');
+                gIntro.classList.add('pp-group-multi');
                 const hint = document.createElement('p');
                 hint.className = 'pp-hint';
                 hint.textContent = `${selectedPlanes.length} planes selected. Edits apply to all selected.`;
@@ -4637,17 +4970,13 @@
                 const tf = document.createElement('div');
                 tf.className = 'pp-field';
                 tf.innerHTML = '<label>Type (all)</label>';
-                const typeSel = document.createElement('select');
-                ['Receiver', 'Emitter', 'Inert'].forEach(t => {
-                    const o = document.createElement('option');
-                    o.value = t;
-                    o.textContent = t;
-                    typeSel.appendChild(o);
-                });
-                typeSel.value = 'Receiver';
-                tf.appendChild(typeSel);
+                const types = selectedPlanes.map(p => p.type || 'Receiver');
+                const allSame = types.length > 0 && types.every(t => t === types[0]);
+                const typeInitialMulti = allSame ? types[0] : null;
+                tf.appendChild(buildPlaneTypePickerRow(typeInitialMulti, (t) => {
+                    changeMultiplePlanesType(t);
+                }));
                 gTh.appendChild(tf);
-                typeSel.addEventListener('change', () => changeMultiplePlanesType(typeSel.value));
 
                 const qf = document.createElement('div');
                 qf.className = 'pp-field';
@@ -4787,17 +5116,20 @@
             const typeWrap = document.createElement('div');
             typeWrap.className = 'pp-field';
             typeWrap.innerHTML = '<label>Type</label>';
-            const typeSel = document.createElement('select');
-            ['Receiver', 'Emitter', 'Inert'].forEach(t => {
-                const o = document.createElement('option');
-                o.value = t;
-                o.textContent = t;
-                typeSel.appendChild(o);
-            });
-            typeSel.value = planeData.type || 'Receiver';
-            typeWrap.appendChild(typeSel);
+            typeWrap.appendChild(buildPlaneTypePickerRow(planeData.type || 'Receiver', (t) => {
+                planeData.type = t;
+                if (planeData.type !== "Receiver") {
+                    clearContourFromPlane(planeData);
+                }
+                setPlaneMaterialForType(planeData);
+                updateTemperatureControl();
+                updateColorByType();
+                captureState();
+                if (typeof rebuildTraElementsList === 'function') {
+                    rebuildTraElementsList();
+                }
+            }));
             gThermal.appendChild(typeWrap);
-            els.type = typeSel;
 
             const tempWrap = document.createElement('div');
             tempWrap.className = 'pp-field';
@@ -4837,7 +5169,7 @@
                     console.warn('Normal direction changed; recalculate if needed');
                 }
                 if (planeData.type === "Receiver") {
-                    visualizeNormal(planeData);
+                    updateReceiverFaceFlipUniform(planeData);
                 }
                 captureState();
             });
@@ -4865,7 +5197,7 @@
 
                 updateTemperatureControl();
                 if (planeData.type === "Receiver") {
-                    visualizeNormal(planeData);
+                    updateReceiverFaceFlipUniform(planeData);
                 }
                 captureState();
             }
@@ -4894,31 +5226,9 @@
                 updateTopViewLineColor(planeData, hex);
             }
 
-            typeSel.addEventListener('change', () => {
-                planeData.type = typeSel.value;
-                updateTemperatureControl();
-                updateColorByType();
-                if (planeData.type !== "Receiver") {
-                    clearContourFromPlane(planeData);
-                }
-                if (planeData.type === "Receiver") {
-                    visualizeNormal(planeData);
-                } else {
-                    removeNormalArrow();
-                }
-                captureState();
-                if (typeof rebuildTraElementsList === 'function') {
-                    rebuildTraElementsList();
-                }
-            });
-
             updateTemperatureControl();
             updateColorByType();
-            if (planeData.type === "Receiver") {
-                visualizeNormal(planeData);
-            } else {
-                removeNormalArrow();
-            }
+            setPlaneMaterialForType(planeData);
 
             updateAppBottomMetrics();
         }
@@ -5220,7 +5530,6 @@
                 selectedPlanes = [];
                 transformControlss.detach();
                 gui.destroy();
-                removeNormalArrow(); // Remove arrow when nothing is selected
 
                 // Reset sphere double-click tracking when clicking empty space
                 lastClickedSphere = null;
@@ -5235,7 +5544,6 @@
                     transformControlss.detach();
                 }
                 gui.destroy();
-                removeNormalArrow(); // Remove arrow when no planes selected
             } else if (selectedPlaneGroup) {
                 // Control the group if we have one
                 transformControlss.attach(selectedPlaneGroup);
@@ -5435,13 +5743,19 @@
 
         function rebuildTraElementsList() {
             const list = document.getElementById('tra-elements-list');
+            const hintEl = document.getElementById('tra-elements-hint');
             if (!list) return;
+            if (hintEl) {
+                if (planes.length === 0) {
+                    const t = hintEl.getAttribute('data-hint-empty');
+                    hintEl.textContent = t != null && t !== '' ? t : 'No planes in the scene yet.';
+                } else {
+                    const t = hintEl.getAttribute('data-hint-list');
+                    hintEl.textContent = t != null && t !== '' ? t : 'Select a plane in the list or the 3D view. Hold Shift to multi-select.';
+                }
+            }
             list.innerHTML = '';
             if (planes.length === 0) {
-                const p = document.createElement('p');
-                p.className = 'pp-hint tra-elements-empty';
-                p.textContent = 'No planes in the scene yet.';
-                list.appendChild(p);
                 return;
             }
             planes.forEach(planeData => {
@@ -5852,17 +6166,8 @@
                 case 'y': // Perspective view
                     setView(cameras.perspective);
                     break;
-                case 'n': // Toggle normal arrow visualization
-                    showNormalArrow = !showNormalArrow;
-
-                    if (showNormalArrow) {
-                        // Re-visualize if a receiver plane is selected
-                        if (selectedPlanes.length > 0 && selectedPlanes[selectedPlanes.length - 1].type === "Receiver") {
-                            visualizeNormal(selectedPlanes[selectedPlanes.length - 1]);
-                        }
-                    } else {
-                        removeNormalArrow();
-                    }
+                case 'n': // Flip signed normal (same as Normal +)
+                    toggleSelectedPlanesNormalDirection();
                     break;
                 case 's': // Stand plane on ground
                     if (selectedPlanes.length > 0) {
@@ -6057,7 +6362,7 @@
             const addPlaneBtn = document.getElementById('addPlaneMode');
             addPlaneBtn.disabled = true;
             addPlaneBtn.textContent = 'Adding walls';
-            addPlaneBtn.style.background = '#dc3545';
+            addPlaneBtn.classList.add('active');
 
         }
 
@@ -6096,18 +6401,8 @@
             continuousPlane.mesh.rotation.y = angle;
             continuousPlane.angle = angle * (180 / Math.PI);
 
-            // Generate unique name similar to normal planes
-            const planeNumber = planes.length;
-            let baseName = `Plane ${planeNumber}`;
-            let counter = 0;
-
-            // Check for duplicate names and increment until we find a unique one
-            while (planes.some(p => p.name === baseName)) {
-                counter++;
-                baseName = `Plane ${planeNumber + counter}`;
-            }
-
-            continuousPlane.name = baseName;
+            // Name comes from createPlane() (Plane 1, 2, …). A previous duplicate check here
+            // always conflicted with the new plane and produced wrong names (Plane 2, 22, 233, …).
 
             // Note: createPlane() already adds the plane to the planes array, so no need to push again
 
@@ -6153,7 +6448,9 @@
             const addPlaneBtn = document.getElementById('addPlaneMode');
             addPlaneBtn.disabled = false;
             addPlaneBtn.textContent = 'Add Walls';
-            addPlaneBtn.style.background = '#00a19b';
+            addPlaneBtn.classList.remove('active');
+            addPlaneBtn.style.removeProperty('background');
+            addPlaneBtn.style.removeProperty('color');
 
         }
 
@@ -6315,59 +6612,31 @@
         document.getElementById('exportBtn').addEventListener('click', exportScene);
 
         function exportScene() {
-            // Export all levels from sessionScenes, plus current scene if not already saved
-            const allScenes = getSavedScenes();
-            const currentSceneData = getCurrentSceneData();
-
-            // Check if current scene is already saved
-            const currentSceneName = document.getElementById('sceneDropdown').value;
-            const isCurrentSceneSaved = currentSceneName && allScenes[currentSceneName];
-
-            // Check if we have any saved levels
-            const hasSavedLevels = Object.keys(allScenes).length > 0;
-
-            if (!hasSavedLevels && !isCurrentSceneSaved) {
-                // No levels saved, export as single level (old format for compatibility)
-                const blob = new Blob([JSON.stringify(currentSceneData, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'Scene_export.json';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                return;
+            if (typeof persistActiveSceneSnapshot === 'function') {
+                persistActiveSceneSnapshot();
             }
+            const allScenes = getSavedScenes();
+            const currentSceneName = traActiveSceneName;
+            traSyncProjectNameFromInput();
 
-            // Create export data with all levels
             const exportData = {
-                version: '2.0', // New version to indicate multi-level support
+                version: '2.0',
                 exportType: 'multiLevel',
+                projectName: traProjectName,
+                sceneOrder: [...traSceneOrder],
                 levels: {},
-                currentLevel: currentSceneName || 'default'
+                currentLevel: currentSceneName
             };
-
-            // Add all saved levels
-            Object.keys(allScenes).forEach(levelName => {
+            Object.keys(allScenes).forEach((levelName) => {
                 exportData.levels[levelName] = allScenes[levelName];
             });
 
-            // Add current scene if it's not already saved
-            if (!isCurrentSceneSaved) {
-                exportData.levels['current'] = {
-                    data: currentSceneData,
-                    timestamp: new Date().toISOString()
-                };
-            }
-
             const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'Scene_export.json';
+            const safe = (traProjectName || 'project').replace(/[^\w\-]+/g, '_').slice(0, 40) || 'project';
+            a.download = safe + '_scenes.json';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -6389,19 +6658,19 @@
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function (e) {
+            reader.onload = async function (e) {
                 try {
                     const importData = JSON.parse(e.target.result);
-
-                    // Check if this is a multi-level export
                     if (importData.exportType === 'multiLevel' && importData.levels) {
-                        loadMultiLevelData(importData);
+                        await loadMultiLevelData(importData);
                     } else {
-                        // Handle old single-level format
-                        loadSceneData(importData);
+                        await loadSceneData(importData);
+                        if (typeof traAfterSingleFileImport === 'function') {
+                            traAfterSingleFileImport();
+                        }
                     }
                 } catch (error) {
-                    console.error('Scene parse failed');
+                    console.error('Scene parse failed', error);
                     alert('Error loading scene file');
                 }
                 event.target.value = '';
@@ -6475,29 +6744,328 @@
             }
         }
 
-        async function loadMultiLevelData(importData) {
-            // Clear existing sessionScenes
-            sessionScenes = {};
+        // ==================== SCENE MANAGER (project + multi-scene) ====================
+        let sessionScenes = {};
+        let traProjectName = 'Untitled project';
+        let traActiveSceneName = 'Scene 1';
+        let traSceneOrder = ['Scene 1'];
 
-            // Load all levels into sessionScenes
+        function getTraProjectNameInput() {
+            return document.getElementById('tra-project-name');
+        }
+
+        function traSyncProjectNameFromInput() {
+            const el = getTraProjectNameInput();
+            if (!el) return;
+            const v = (el.value || '').trim();
+            traProjectName = v || 'Untitled project';
+            if (!v) el.value = traProjectName;
+        }
+
+        function traApplyProjectNameToInput() {
+            const el = getTraProjectNameInput();
+            if (el) el.value = traProjectName;
+        }
+
+        function getCurrentSceneData() {
+            return {
+                version: '1.0',
+                imagePlane: {
+                    visible: imagePlane.visible,
+                    position: imagePlane.position.toArray(),
+                    rotation: imagePlane.rotation.toArray(),
+                    scale: imagePlane.scale.toArray(),
+                    geometry: {
+                        width: imagePlane.geometry.parameters.width,
+                        height: imagePlane.geometry.parameters.height
+                    },
+                    texture: imagePlane.material.map ? imagePlane.material.map.image.currentSrc : null
+                },
+                planes: planes.map(plane => ({
+                    name: plane.name,
+                    position: plane.mesh.position.toArray(),
+                    rotation: plane.mesh.rotation.toArray(),
+                    scale: [1, 1, 1],
+                    width: plane.width,
+                    height: plane.height,
+                    color: plane.color,
+                    temperature: plane.temperature,
+                    type: plane.type,
+                    positive: plane.positive !== undefined ? plane.positive : true,
+                    defaultWidth: plane.defaultWidth,
+                    defaultHeight: plane.defaultHeight,
+                    x: plane.x,
+                    y: plane.y,
+                    z: plane.z,
+                    angle: plane.angle,
+                    incline: plane.incline,
+                    contourData: plane.type === "Receiver" && plane.contourData ? plane.contourData : null,
+                    colorScaleMin: plane.colorScaleMin,
+                    colorScaleMax: plane.colorScaleMax
+                })),
+                scalingFactor: scalingdist ? {
+                    measuredDistance: scalingDistance,
+                    inputValue: document.getElementById('scaleDistanceInput')?.value || ''
+                } : null
+            };
+        }
+
+        function getSavedScenes() {
+            return sessionScenes;
+        }
+
+        function saveScenesToStorage(scenes) {
+            sessionScenes = scenes;
+        }
+
+        function persistActiveSceneSnapshot() {
+            if (!traActiveSceneName) return;
+            const sceneData = getCurrentSceneData();
+            sessionScenes[traActiveSceneName] = {
+                data: sceneData,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function traNextSceneName() {
+            let maxN = 0;
+            traSceneOrder.forEach(name => {
+                const m = /^Scene (\d+)$/.exec(name);
+                if (m) maxN = Math.max(maxN, parseInt(m[1], 10));
+            });
+            return `Scene ${maxN + 1}`;
+        }
+
+        let traSceneNavClickTimer = null;
+
+        function traRenameScene(oldName, newName) {
+            newName = (newName || '').trim();
+            if (!newName) {
+                alert('Scene name cannot be empty.');
+                return false;
+            }
+            if (newName === oldName) return true;
+            if (traSceneOrder.some(n => n === newName)) {
+                alert('A scene with that name already exists.');
+                return false;
+            }
+            if (!sessionScenes[oldName]) return false;
+            sessionScenes[newName] = sessionScenes[oldName];
+            delete sessionScenes[oldName];
+            traSceneOrder = traSceneOrder.map(n => (n === oldName ? newName : n));
+            if (traActiveSceneName === oldName) {
+                traActiveSceneName = newName;
+            }
+            saveScenesToStorage(sessionScenes);
+            return true;
+        }
+
+        function traOpenSceneRenameEditor(wrap, oldName) {
+            const btn = wrap.querySelector('.tra-scene-pill');
+            const span = btn && btn.querySelector('.tra-scene-pill-label');
+            if (!btn || !span) return;
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.className = 'tra-scene-pill-rename-input';
+            inp.value = oldName;
+            inp.maxLength = 48;
+            inp.setAttribute('aria-label', 'Rename scene');
+            span.replaceWith(inp);
+            inp.focus();
+            inp.select();
+            let finished = false;
+            const done = (commit) => {
+                if (finished) return;
+                finished = true;
+                if (commit) {
+                    traRenameScene(oldName, inp.value);
+                }
+                renderTraSceneBar();
+            };
+            inp.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    done(true);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    done(false);
+                }
+            });
+            inp.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (!finished) done(true);
+                }, 0);
+            });
+        }
+
+        function renderTraSceneBar() {
+            const strip = document.getElementById('tra-scene-strip');
+            if (!strip) return;
+            const addBtn = document.getElementById('tra-scene-add');
+            if (addBtn) addBtn.remove();
+            strip.querySelectorAll('.tra-scene-pill-wrap').forEach((n) => n.remove());
+
+            traSceneOrder.forEach((name) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'tra-scene-pill-wrap' + (name === traActiveSceneName ? ' is-active' : '');
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'tra-scene-pill';
+                btn.setAttribute('role', 'tab');
+                btn.setAttribute('tabindex', name === traActiveSceneName ? '0' : '-1');
+                btn.setAttribute('aria-selected', name === traActiveSceneName ? 'true' : 'false');
+                btn.title = 'Click to open scene · Double-click to rename';
+                const span = document.createElement('span');
+                span.className = 'tra-scene-pill-label';
+                span.textContent = name;
+                btn.appendChild(span);
+                btn.addEventListener('click', (e) => {
+                    if (e.target.closest('.tra-scene-pill-remove')) return;
+                    clearTimeout(traSceneNavClickTimer);
+                    traSceneNavClickTimer = setTimeout(() => {
+                        traSceneNavClickTimer = null;
+                        traActivateScene(name);
+                    }, 280);
+                });
+                btn.addEventListener('dblclick', (e) => {
+                    if (e.target.closest('.tra-scene-pill-remove')) return;
+                    e.preventDefault();
+                    clearTimeout(traSceneNavClickTimer);
+                    traSceneNavClickTimer = null;
+                    traOpenSceneRenameEditor(wrap, name);
+                });
+                wrap.appendChild(btn);
+                if (traSceneOrder.length > 1) {
+                    const rm = document.createElement('button');
+                    rm.type = 'button';
+                    rm.className = 'tra-scene-pill-remove';
+                    rm.setAttribute('aria-label', 'Remove ' + name);
+                    rm.title = 'Remove scene';
+                    rm.innerHTML = '\u00d7';
+                    rm.addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        ev.preventDefault();
+                        clearTimeout(traSceneNavClickTimer);
+                        traDeleteScene(name);
+                    });
+                    wrap.appendChild(rm);
+                }
+                strip.appendChild(wrap);
+            });
+            if (addBtn) {
+                strip.appendChild(addBtn);
+            }
+        }
+
+        async function traActivateScene(name) {
+            if (name === traActiveSceneName) return;
+            if (!traSceneOrder.includes(name) || !sessionScenes[name]) return;
+            persistActiveSceneSnapshot();
+            saveScenesToStorage(sessionScenes);
+            try {
+                await loadSceneData(sessionScenes[name]);
+                traActiveSceneName = name;
+                renderTraSceneBar();
+            } catch (e) {
+                console.error(e);
+                alert('Could not load scene');
+            }
+        }
+
+        async function traAddScene() {
+            persistActiveSceneSnapshot();
+            saveScenesToStorage(sessionScenes);
+            const newName = traNextSceneName();
+            traSceneOrder.push(newName);
+            traActiveSceneName = newName;
+            clearScene();
+            sessionScenes[newName] = {
+                data: getCurrentSceneData(),
+                timestamp: new Date().toISOString()
+            };
+            saveScenesToStorage(sessionScenes);
+            if (typeof resetHistoryToCurrentState === 'function') {
+                resetHistoryToCurrentState();
+            }
+            renderTraSceneBar();
+            if (typeof rebuildTraElementsList === 'function') {
+                rebuildTraElementsList();
+            }
+            if (transformControlss && transformControlss.object) {
+                transformControlss.detach();
+            }
+        }
+
+        async function traDeleteScene(name) {
+            if (traSceneOrder.length <= 1) return;
+            if (!traSceneOrder.includes(name)) return;
+            persistActiveSceneSnapshot();
+            saveScenesToStorage(sessionScenes);
+            delete sessionScenes[name];
+            traSceneOrder = traSceneOrder.filter(n => n !== name);
+            saveScenesToStorage(sessionScenes);
+            if (name === traActiveSceneName) {
+                const next = traSceneOrder[0];
+                traActiveSceneName = next;
+                try {
+                    if (sessionScenes[next]) {
+                        await loadSceneData(sessionScenes[next]);
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+            renderTraSceneBar();
+        }
+
+        function traInitScenesState() {
+            sessionScenes = {};
+            traSceneOrder = ['Scene 1'];
+            traActiveSceneName = 'Scene 1';
+            persistActiveSceneSnapshot();
+            saveScenesToStorage(sessionScenes);
+            renderTraSceneBar();
+        }
+
+        function traAfterSingleFileImport() {
+            const snap = {
+                data: getCurrentSceneData(),
+                timestamp: new Date().toISOString()
+            };
+            traSceneOrder = ['Scene 1'];
+            traActiveSceneName = 'Scene 1';
+            sessionScenes = { 'Scene 1': snap };
+            saveScenesToStorage(sessionScenes);
+            renderTraSceneBar();
+        }
+
+        async function loadMultiLevelData(importData) {
+            sessionScenes = {};
             Object.keys(importData.levels).forEach(levelName => {
                 sessionScenes[levelName] = importData.levels[levelName];
             });
-
-            // Update the dropdown to show all imported levels
-            updateSceneDropdown();
-
-            // Load the current level (or first level if currentLevel not specified)
-            const currentLevel = importData.currentLevel || Object.keys(importData.levels)[0];
+            const keys = Object.keys(importData.levels);
+            if (importData.sceneOrder && importData.sceneOrder.length) {
+                traSceneOrder = importData.sceneOrder.filter(k => importData.levels[k]);
+            } else {
+                traSceneOrder = keys.length ? keys : ['Scene 1'];
+            }
+            if (importData.projectName != null && String(importData.projectName).trim() !== '') {
+                traProjectName = String(importData.projectName).trim();
+            } else {
+                traProjectName = 'Untitled project';
+            }
+            traApplyProjectNameToInput();
+            const currentLevel = (importData.currentLevel && importData.levels[importData.currentLevel])
+                ? importData.currentLevel
+                : (traSceneOrder[0] || keys[0]);
             if (currentLevel && importData.levels[currentLevel]) {
                 await loadSceneData(importData.levels[currentLevel]);
-
-                // Set the dropdown to the current level
-                document.getElementById('sceneDropdown').value = currentLevel;
-                updateSaveButtonState();
+                traActiveSceneName = currentLevel;
+                persistActiveSceneSnapshot();
+                saveScenesToStorage(sessionScenes);
             }
-
-            alert(`Imported ${Object.keys(importData.levels).length} levels successfully!`);
+            renderTraSceneBar();
         }
 
         async function loadSceneData(sceneData) {
@@ -6632,7 +7200,7 @@
                     if (newPlane.type === "Receiver" && newPlane.contourData) {
                         applyContourTexture(newPlane);
                     }
-
+                    setPlaneMaterialForType(newPlane);
                 });
             }
 
@@ -6705,282 +7273,19 @@
             });
         }
 
-        // ==================== SCENE MANAGER ====================
-        // Scene Manager functionality - Session-based only (not persistent)
-        let sessionScenes = {}; // Temporary storage that clears on page reload
-
-        function getCurrentSceneData() {
-            return {
-                version: '1.0',
-                imagePlane: {
-                    visible: imagePlane.visible,
-                    position: imagePlane.position.toArray(),
-                    rotation: imagePlane.rotation.toArray(),
-                    scale: imagePlane.scale.toArray(),
-                    geometry: {
-                        width: imagePlane.geometry.parameters.width,
-                        height: imagePlane.geometry.parameters.height
-                    },
-                    texture: imagePlane.material.map ? imagePlane.material.map.image.currentSrc : null
-                },
-                planes: planes.map(plane => ({
-                    name: plane.name,
-                    position: plane.mesh.position.toArray(),
-                    rotation: plane.mesh.rotation.toArray(),
-                    scale: [1, 1, 1],
-                    width: plane.width,
-                    height: plane.height,
-                    color: plane.color,
-                    temperature: plane.temperature,
-                    type: plane.type,
-                    defaultWidth: plane.defaultWidth,
-                    defaultHeight: plane.defaultHeight,
-                    x: plane.x,
-                    y: plane.y,
-                    z: plane.z,
-                    angle: plane.angle,
-                    incline: plane.incline,
-                    // Include contour data for receiver planes
-                    contourData: plane.type === "Receiver" && plane.contourData ? plane.contourData : null,
-                    // Per-plane custom color scale override
-                    colorScaleMin: plane.colorScaleMin,
-                    colorScaleMax: plane.colorScaleMax
-                })),
-                scalingFactor: scalingdist ? {
-                    measuredDistance: scalingDistance,
-                    inputValue: document.getElementById('scaleDistanceInput')?.value || ''
-                } : null
-            };
-        }
-
-        function getSavedScenes() {
-            return sessionScenes;
-        }
-
-        function saveScenesToStorage(scenes) {
-            sessionScenes = scenes;
-        }
-
-        function updateSceneDropdown() {
-            const dropdown = document.getElementById('sceneDropdown');
-            const scenes = getSavedScenes();
-
-            // Clear existing options except the first one
-            dropdown.innerHTML = '<option value="">Select a level...</option>';
-
-            // Add saved scenes to dropdown
-            Object.keys(scenes).sort().forEach(sceneName => {
-                const option = document.createElement('option');
-                option.value = sceneName;
-                option.textContent = sceneName;
-                dropdown.appendChild(option);
-            });
-            updateSaveButtonState();
-        }
-
-        function updateSaveButtonState() {
-            const btn = document.getElementById('saveSceneBtn');
-            const dropdown = document.getElementById('sceneDropdown');
-            const sceneName = dropdown.value;
-            const scenes = getSavedScenes();
-            const isEditingSavedLevel = sceneName && scenes[sceneName];
-            btn.textContent = isEditingSavedLevel ? 'Update Level' : 'Save Level';
-        }
-
-        // clearScene function is defined earlier (before loadSceneData)
-
-        // Save current scene button
-        document.getElementById('saveSceneBtn').addEventListener('click', () => {
-            const dropdown = document.getElementById('sceneDropdown');
-            const sceneName = dropdown.value;
-            const scenes = getSavedScenes();
-            if (sceneName && scenes[sceneName]) {
-                updateCurrentLevel();
-            } else {
-                showLevelNameModal();
+        (function initTraTopbarScenes() {
+            const addBtn = document.getElementById('tra-scene-add');
+            if (addBtn) {
+                addBtn.addEventListener('click', () => traAddScene());
             }
-        });
-
-        document.getElementById('sceneDropdown').addEventListener('change', updateSaveButtonState);
-
-        function updateCurrentLevel() {
-            const dropdown = document.getElementById('sceneDropdown');
-            const sceneName = dropdown.value;
-            if (!sceneName) return;
-
-            const wasInTopView = (activeCamera === cameras.top);
-            if (wasInTopView) {
-                removeAllTopViewElements();
+            const pni = getTraProjectNameInput();
+            if (pni) {
+                pni.addEventListener('blur', traSyncProjectNameFromInput);
+                pni.addEventListener('change', traSyncProjectNameFromInput);
             }
-
-            const scenes = getSavedScenes();
-            const sceneData = getCurrentSceneData();
-            scenes[sceneName] = {
-                data: sceneData,
-                timestamp: new Date().toISOString()
-            };
-            saveScenesToStorage(scenes);
-            updateSceneDropdown();
-            document.getElementById('sceneDropdown').value = sceneName;
-
-            if (wasInTopView) {
-                planes.forEach(plane => {
-                    createTopViewLine(plane);
-                });
-            }
-            alert(`Level "${sceneName}" updated successfully!`);
-        }
-
-        // Level name modal functions
-        function showLevelNameModal() {
-            const modal = document.getElementById('levelNameModal');
-            const input = document.getElementById('levelNameInput');
-            modal.style.display = 'block';
-            input.value = '';
-            input.focus();
-        }
-
-        function hideLevelNameModal() {
-            const modal = document.getElementById('levelNameModal');
-            modal.style.display = 'none';
-        }
-
-        function confirmLevelName() {
-            const sceneName = document.getElementById('levelNameInput').value.trim();
-
-            if (!sceneName) {
-                alert('Please enter a name for the scene');
-                return;
-            }
-
-            // Check if we're in top view
-            const wasInTopView = (activeCamera === cameras.top);
-
-            // Remove all top view elements (spheres and lines) before saving
-            // This ensures they don't get saved as part of the scene
-            if (wasInTopView) {
-                removeAllTopViewElements();
-            }
-
-            const scenes = getSavedScenes();
-            const sceneData = getCurrentSceneData();
-
-            // Check if scene name already exists
-            if (scenes[sceneName]) {
-                if (!confirm(`Scene "${sceneName}" already exists. Do you want to overwrite it?`)) {
-                    // Recreate top view elements if we were in top view
-                    if (wasInTopView) {
-                        planes.forEach(plane => {
-                            createTopViewLine(plane);
-                        });
-                    }
-                    return;
-                }
-            }
-
-            // Save the scene
-            scenes[sceneName] = {
-                data: sceneData,
-                timestamp: new Date().toISOString()
-            };
-
-            saveScenesToStorage(scenes);
-            updateSceneDropdown();
-
-            // Select the saved scene in dropdown
-            document.getElementById('sceneDropdown').value = sceneName;
-
-            // Recreate top view elements if we're in top view
-            if (wasInTopView) {
-                planes.forEach(plane => {
-                    createTopViewLine(plane);
-                });
-            }
-
-            hideLevelNameModal();
-            alert(`Scene "${sceneName}" saved successfully!`);
-        }
-
-        // Event listeners for level name modal
-        document.getElementById('confirmLevelName').addEventListener('click', confirmLevelName);
-
-        document.getElementById('cancelLevelName').addEventListener('click', hideLevelNameModal);
-
-        document.getElementById('levelNameInput').addEventListener('keypress', function (event) {
-            if (event.key === 'Enter') {
-                confirmLevelName();
-            } else if (event.key === 'Escape') {
-                hideLevelNameModal();
-            }
-        });
-
-        // Load scene button
-        document.getElementById('loadSceneBtn').addEventListener('click', async () => {
-            const sceneName = document.getElementById('sceneDropdown').value;
-
-            if (!sceneName) {
-                alert('Please select a scene to load');
-                return;
-            }
-
-            const scenes = getSavedScenes();
-            const savedScene = scenes[sceneName];
-
-            if (!savedScene) {
-                alert('Scene not found');
-                return;
-            }
-
-            // Load the scene
-            try {
-                await loadSceneData(savedScene);
-                document.getElementById('sceneDropdown').value = sceneName;
-                updateSaveButtonState();
-                alert(`Scene "${sceneName}" loaded successfully!`);
-            } catch (error) {
-                console.error('Scene load failed');
-                alert('Error loading scene');
-            }
-        });
-
-        // Delete scene button
-        document.getElementById('deleteSceneBtn').addEventListener('click', () => {
-            const sceneName = document.getElementById('sceneDropdown').value;
-
-            if (!sceneName) {
-                alert('Please select a scene to delete');
-                return;
-            }
-
-            if (!confirm(`Are you sure you want to delete scene "${sceneName}"?`)) {
-                return;
-            }
-
-            const scenes = getSavedScenes();
-            delete scenes[sceneName];
-            saveScenesToStorage(scenes);
-            document.getElementById('sceneDropdown').value = '';
-            updateSceneDropdown();
-
-            alert(`Scene "${sceneName}" deleted successfully!`);
-        });
-
-        // New blank canvas button
-        document.getElementById('newSceneBtn').addEventListener('click', () => {
-            if (planes.length > 0 || imagePlane.visible) {
-                if (!confirm('This will clear the current scene. Do you want to continue?')) {
-                    return;
-                }
-            }
-
-            clearScene();
-            document.getElementById('sceneDropdown').value = '';
-            updateSaveButtonState();
-        });
-
-        // Initialize scene dropdown on page load
-        updateSceneDropdown();
-        // ==================== END SCENE MANAGER ====================
+            traApplyProjectNameToInput();
+            traInitScenesState();
+        })();
 
         let dataarrayforcontour = null;
         // Receiver grid size (N x N), default 2 (Low)
@@ -8786,9 +9091,10 @@
                     plane.contourData = null;
                 }
 
-                // Restore per-plane custom color scale override
                 if (planeState.colorScaleMin != null) plane.colorScaleMin = planeState.colorScaleMin;
                 if (planeState.colorScaleMax != null) plane.colorScaleMax = planeState.colorScaleMax;
+
+                setPlaneMaterialForType(plane);
 
                 if (planeState.selected) {
                     selectedPlanes.push(plane);
