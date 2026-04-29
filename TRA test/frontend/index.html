@@ -1938,48 +1938,66 @@
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            background: var(--tra-flyout-bg);
+            padding: 18px 16px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--tra-border);
+            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
             text-align: center;
+            min-width: 280px;
         }
 
         .scale-input-modal h3 {
-            margin: 0 0 20px 0;
-            font-family: 'Poppins', sans-serif;
-            color: #333;
+            margin: 0 0 12px 0;
+            font-family: inherit;
+            font-size: 14px;
+            letter-spacing: 0.02em;
+            color: var(--tra-text);
         }
 
         .scale-input-modal input {
-            padding: 10px 15px;
-            font-size: 18px;
-            font-family: 'Poppins', sans-serif;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            width: 200px;
-            margin: 10px;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: inherit;
+            border: 1px solid var(--tra-border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--tra-text);
+            border-radius: 10px;
+            width: 100%;
+            max-width: 260px;
+            margin: 10px auto 6px;
             outline: none;
+            box-sizing: border-box;
         }
 
         .scale-input-modal input:focus {
-            border-color: #00a19b;
+            border-color: rgba(218, 36, 36, 0.55);
+            box-shadow: 0 0 0 3px rgba(218, 36, 36, 0.18);
         }
 
         .scale-input-modal button {
-            padding: 10px 20px;
-            font-size: 16px;
-            font-family: 'Poppins', sans-serif;
-            background: #00a19b;
-            color: white;
-            border: none;
-            border-radius: 8px;
+            padding: 9px 14px;
+            font-size: 13px;
+            font-family: inherit;
+            background: rgba(218, 36, 36, 0.18);
+            color: var(--tra-text);
+            border: 1px solid rgba(218, 36, 36, 0.35);
+            border-radius: 10px;
             cursor: pointer;
-            margin: 10px;
+            margin: 8px 0 2px;
+            width: 100%;
+            max-width: 260px;
+            transition: background 0.12s ease, border-color 0.12s ease, filter 0.12s ease, transform 0.08s ease;
         }
 
         .scale-input-modal button:hover {
-            background: #007e7a;
+            background: rgba(218, 36, 36, 0.28);
+            border-color: rgba(218, 36, 36, 0.55);
+            filter: brightness(1.06);
+        }
+
+        .scale-input-modal button:active {
+            transform: scale(0.98);
         }
 
         .modal-container {
@@ -3224,6 +3242,29 @@
             }
         });
 
+        // Toolkit section shortcuts: 1–5 switch the left toolkit sections.
+        window.addEventListener('keydown', (event) => {
+            if (isTypingInInput()) return;
+            if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+            const k = event.key;
+            if (!k || k.length !== 1) return;
+
+            const map = {
+                '1': 'tra-panel-build',
+                '2': 'tra-panel-edit',
+                '3': 'tra-panel-view',
+                '4': 'tra-panel-simulation',
+                '5': 'tra-panel-data',
+            };
+            const panelId = map[k];
+            if (!panelId) return;
+
+            const btn = document.querySelector(`#functionbox .tra-toolkit-nav .tra-tool-item[onclick*="${panelId}"]`);
+            openToolkitPanel(panelId, btn);
+            event.preventDefault();
+        });
+
         // Add event listeners for buttons
         document.getElementById('undoBtn')?.addEventListener('click', undo);
         document.getElementById('redoBtn')?.addEventListener('click', redo);
@@ -3579,6 +3620,10 @@
             // Exit plane mode if switching away from top view while in plane mode
             if (camera !== cameras.top && planeMode) {
                 exitPlaneMode();
+            }
+            // Exit Set Scale mode if switching away from top view.
+            if (camera !== cameras.top && typeof cancelScaleMode === 'function') {
+                cancelScaleMode();
             }
 
             if (camera === cameras.top) {
@@ -4120,10 +4165,20 @@
             measurePoints = [];
             isMeasuring = false;
             renderer.domElement.removeEventListener('click', handleMeasurementClick);
+            renderer.domElement.removeEventListener('click', handleScalingClick);
         }
 
         function handleScalingClick(event) {
             scalingdist = handleMeasurementClick(event);
+        }
+
+        function cancelScaleMode() {
+            if (!isMeasuring) return;
+            cleanupMeasurement();
+            hideScaleInputModal();
+            const input = document.getElementById('scaleDistanceInput');
+            if (input) input.value = '';
+            scalingcheck = false;
         }
 
         function showScaleInputModal() {
@@ -4182,6 +4237,30 @@
         document.getElementById("scaleDistanceInput").addEventListener("keypress", function (event) {
             if (event.key === "Enter") {
                 confirmScaleInput();
+            }
+        });
+
+        // Exit Set Scale mode if the user interacts with other UI controls (buttons) or presses Escape.
+        // This prevents the first two canvas clicks from being "sticky" across unrelated actions.
+        document.addEventListener('click', function (e) {
+            if (!isMeasuring) return;
+            const t = e.target;
+            if (!(t instanceof Element)) return;
+
+            // Allow clicks on the scaling button itself (starts mode) and inside the scale modal.
+            if (t.closest('#scalingbutton')) return;
+            if (t.closest('#scaleInputModal')) return;
+
+            // If they click any other button/control, cancel.
+            if (t.closest('button')) {
+                cancelScaleMode();
+            }
+        }, true);
+
+        document.addEventListener('keydown', function (e) {
+            if (!isMeasuring) return;
+            if (e.key === 'Escape') {
+                cancelScaleMode();
             }
         });
 
@@ -4490,6 +4569,38 @@
             material.needsUpdate = true;
         }
 
+        function planeHasContourTexture(plane) {
+            const mat = plane && plane.mesh ? plane.mesh.material : null;
+            return !!(mat && mat.map && mat.map.isContourTexture);
+        }
+
+        /**
+         * Selection visuals:
+         * - Normal planes: tint material color to grey.
+         * - Receiver contour planes: keep texture colors intact (white base) and use emissive to indicate selection.
+         */
+        function setPlaneSelectedVisual(plane, selected) {
+            if (!plane || !plane.mesh || !plane.mesh.material) return;
+            const mat = plane.mesh.material;
+
+            if (planeHasContourTexture(plane)) {
+                if (mat.color) mat.color.set(0xffffff);
+                if (mat.emissive) {
+                    mat.emissive.setHex(selected ? 0x202020 : 0x000000);
+                    mat.emissiveIntensity = 1;
+                }
+                return;
+            }
+
+            if (mat.emissive) {
+                mat.emissive.setHex(0x000000);
+                mat.emissiveIntensity = 1;
+            }
+            if (mat.color) {
+                mat.color.setHex(selected ? 0x808080 : plane.color);
+            }
+        }
+
         /** Replace or patch mesh material for Receiver (dual-face shader) vs Emitter/Inert (double-sided, no shader). */
         function setPlaneMaterialForType(plane) {
             if (!plane || !plane.mesh) return;
@@ -4501,6 +4612,9 @@
                 if (mesh.material && mesh.material.userData && mesh.material.userData.receiverDualInstalled) {
                     if (mapRef) mesh.material.map = mapRef;
                     updateReceiverFaceFlipUniform(plane);
+                    if (planeHasContourTexture(plane)) {
+                        setPlaneSelectedVisual(plane, selectedPlanes.includes(plane));
+                    }
                     return;
                 }
                 const old = mesh.material;
@@ -4519,6 +4633,9 @@
                 else if (mapRef) m.map = mapRef;
                 mesh.material = m;
                 installReceiverDualFaceOnMaterial(m, plane);
+                if (planeHasContourTexture(plane)) {
+                    setPlaneSelectedVisual(plane, selectedPlanes.includes(plane));
+                }
             } else {
                 if (mesh.material) {
                     const m0 = mesh.material;
@@ -4589,7 +4706,7 @@
                 setPlaneMaterialForType(planeData);
 
                 // Keep selection highlight
-                planeData.mesh.material.color.setHex(0x808080);
+                setPlaneSelectedVisual(planeData, true);
 
                 // Update top view line color if in top view
                 updateTopViewLineColor(planeData, 0x808080);
@@ -4729,7 +4846,7 @@
                     0                                  // z rotation
                 );
                 planeData.mesh.scale.set(1, 1, 1);
-                planeData.mesh.material.color.setHex(planeData.color);
+                setPlaneSelectedVisual(planeData, true);
             });
 
             // Update the GUI
@@ -5222,7 +5339,7 @@
                 if (typeLower === 'emitter') hex = 0xff0000;
                 else if (typeLower === 'inert') hex = 0x0000ff;
                 planeData.color = hex;
-                planeData.mesh.material.color.setHex(selectedPlanes.includes(planeData) ? 0x808080 : hex);
+                setPlaneSelectedVisual(planeData, selectedPlanes.includes(planeData));
                 updateTopViewLineColor(planeData, hex);
             }
 
@@ -5378,7 +5495,7 @@
                         if (index === -1) {
                             // Add to selection
                             selectedPlanes.push(planeData);
-                            planeData.mesh.material.color.setHex(0x808080);
+                            setPlaneSelectedVisual(planeData, true);
                             updateTopViewLineColor(planeData, 0x808080);
 
                             // If we have multiple planes selected, create/update group
@@ -5388,7 +5505,7 @@
                         } else {
                             // Remove from selection
                             selectedPlanes.splice(index, 1);
-                            planeData.mesh.material.color.setHex(planeData.color);
+                            setPlaneSelectedVisual(planeData, false);
                             updateTopViewLineColor(planeData, planeData.color);
 
                             // If the plane is in a group, restore its parent and position
@@ -5417,19 +5534,19 @@
                         if (selectedPlanes.length === 1 && selectedPlanes[0] === planeData) {
                             // If clicking on the only selected plane, deselect it
                             selectedPlanes = [];
-                            planeData.mesh.material.color.setHex(planeData.color);
+                            setPlaneSelectedVisual(planeData, false);
                             updateTopViewLineColor(planeData, planeData.color);
                             ungroupPlanes();
                         } else {
                             // Otherwise, select this plane as the only selection
                             ungroupPlanes();
                             planes.forEach(p => {
-                                p.mesh.material.color.setHex(p.color);
+                                setPlaneSelectedVisual(p, false);
                                 updateTopViewLineColor(p, p.color);
                             });
                             planes.forEach(p => p.mesh.visible = true);
                             selectedPlanes = [planeData];
-                            planeData.mesh.material.color.setHex(0x808080);
+                            setPlaneSelectedVisual(planeData, true);
                             updateTopViewLineColor(planeData, 0x808080);
                         }
                     }
@@ -5458,7 +5575,7 @@
                         if (index === -1) {
                             // Add to selection
                             selectedPlanes.push(planeData);
-                            planeData.mesh.material.color.setHex(0x808080);
+                            setPlaneSelectedVisual(planeData, true);
                             updateTopViewLineColor(planeData, 0x808080);
 
                             // If we have multiple planes selected, create/update group
@@ -5468,7 +5585,7 @@
                         } else {
                             // Remove from selection
                             selectedPlanes.splice(index, 1);
-                            planeData.mesh.material.color.setHex(planeData.color);
+                            setPlaneSelectedVisual(planeData, false);
                             updateTopViewLineColor(planeData, planeData.color);
 
                             // If the plane is in a group, restore its parent and position
@@ -5497,19 +5614,19 @@
                         if (selectedPlanes.length === 1 && selectedPlanes[0] === planeData) {
                             // If clicking on the only selected plane, deselect it
                             selectedPlanes = [];
-                            planeData.mesh.material.color.setHex(planeData.color);
+                            setPlaneSelectedVisual(planeData, false);
                             updateTopViewLineColor(planeData, planeData.color);
                             ungroupPlanes();
                         } else {
                             // Otherwise, select this plane as the only selection
                             ungroupPlanes();
                             planes.forEach(p => {
-                                p.mesh.material.color.setHex(p.color);
+                                setPlaneSelectedVisual(p, false);
                                 updateTopViewLineColor(p, p.color);
                             });
                             planes.forEach(p => p.mesh.visible = true);
                             selectedPlanes = [planeData];
-                            planeData.mesh.material.color.setHex(0x808080);
+                            setPlaneSelectedVisual(planeData, true);
                             updateTopViewLineColor(planeData, 0x808080);
                         }
                     }
@@ -5524,7 +5641,7 @@
             if (!isShiftPressed) {
                 ungroupPlanes();
                 planes.forEach(p => {
-                    p.mesh.material.color.setHex(p.color);
+                    setPlaneSelectedVisual(p, false);
                     updateTopViewLineColor(p, p.color);
                 });
                 selectedPlanes = [];
@@ -5695,14 +5812,14 @@
                 const index = selectedPlanes.indexOf(planeData);
                 if (index === -1) {
                     selectedPlanes.push(planeData);
-                    planeData.mesh.material.color.setHex(0x808080);
+                    setPlaneSelectedVisual(planeData, true);
                     updateTopViewLineColor(planeData, 0x808080);
                     if (selectedPlanes.length > 1) {
                         createOrUpdateGroup();
                     }
                 } else {
                     selectedPlanes.splice(index, 1);
-                    planeData.mesh.material.color.setHex(planeData.color);
+                    setPlaneSelectedVisual(planeData, false);
                     updateTopViewLineColor(planeData, planeData.color);
                     if (selectedPlaneGroup && planeData.mesh.parent === selectedPlaneGroup) {
                         const original = originalPositions.get(planeData);
@@ -5723,18 +5840,18 @@
             } else {
                 if (selectedPlanes.length === 1 && selectedPlanes[0] === planeData) {
                     selectedPlanes = [];
-                    planeData.mesh.material.color.setHex(planeData.color);
+                    setPlaneSelectedVisual(planeData, false);
                     updateTopViewLineColor(planeData, planeData.color);
                     ungroupPlanes();
                 } else {
                     ungroupPlanes();
                     planes.forEach(p => {
-                        p.mesh.material.color.setHex(p.color);
+                        setPlaneSelectedVisual(p, false);
                         updateTopViewLineColor(p, p.color);
                     });
                     planes.forEach(p => p.mesh.visible = true);
                     selectedPlanes = [planeData];
-                    planeData.mesh.material.color.setHex(0x808080);
+                    setPlaneSelectedVisual(planeData, true);
                     updateTopViewLineColor(planeData, 0x808080);
                 }
             }
@@ -5766,7 +5883,7 @@
                 row.type = 'button';
                 row.className = 'tra-element-row';
                 row.setAttribute('role', 'listitem');
-                if (planeData.id) row.setAttribute('data-plane-id', planeData.id);
+                if (planeData.id != null) row.setAttribute('data-plane-id', String(planeData.id));
                 if (selectedPlanes.indexOf(planeData) >= 0) {
                     row.classList.add('is-selected');
                 }
@@ -5795,7 +5912,7 @@
             if (!list || !list.querySelector('.tra-element-row')) return;
             list.querySelectorAll('.tra-element-row').forEach(row => {
                 const id = row.getAttribute('data-plane-id');
-                const p = id ? planes.find(x => x.id === id) : null;
+                const p = id ? planes.find(x => x.id != null && String(x.id) === id) : null;
                 if (!p) return;
                 row.classList.toggle('is-selected', selectedPlanes.indexOf(p) >= 0);
             });
@@ -8212,7 +8329,7 @@
             captureState("Before paste");
 
             // Clear current selection
-            planes.forEach(p => p.mesh.material.color.setHex(p.color));
+            planes.forEach(p => setPlaneSelectedVisual(p, false));
             selectedPlanes = [];
             if (selectedPlaneGroup) {
                 ungroupPlanes();
@@ -8248,7 +8365,7 @@
 
                 // Select the new plane
                 newPlanes.push(newPlane);
-                newPlane.mesh.material.color.setHex(0x808080);
+                setPlaneSelectedVisual(newPlane, true);
             });
 
             selectedPlanes = [...newPlanes];
@@ -8302,8 +8419,8 @@
             }
             plane.contourData = null;
             plane.mesh.material.needsUpdate = true;
-            const colorHex = selectedPlanes.includes(plane) ? 0x808080 : plane.color;
-            plane.mesh.material.color.setHex(colorHex);
+            // Restore normal selection visuals now that the contour is gone.
+            setPlaneSelectedVisual(plane, selectedPlanes.includes(plane));
         }
 
         function clearAllCalculationData() {
@@ -8402,7 +8519,8 @@
                 // Apply texture to plane
                 plane.mesh.material.map = texture;
                 plane.mesh.material.needsUpdate = true;
-                plane.mesh.material.color.set(0xffffff); // Set to white so texture shows correctly
+                // Keep contour legible: don't let base plane color/selection tint darken the map.
+                setPlaneSelectedVisual(plane, selectedPlanes.includes(plane));
 
             };
             img.onerror = function (err) {
@@ -9098,9 +9216,9 @@
 
                 if (planeState.selected) {
                     selectedPlanes.push(plane);
-                    plane.mesh.material.color.setHex(0x808080);
+                    setPlaneSelectedVisual(plane, true);
                 } else {
-                    plane.mesh.material.color.setHex(plane.color);
+                    setPlaneSelectedVisual(plane, false);
                 }
 
                 newPlanes.push(plane);
