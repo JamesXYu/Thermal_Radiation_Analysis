@@ -2659,220 +2659,223 @@
         </header>
         <div id="app-main-row">
             <div id="tra-left-dock" class="tra-left-dock">
-            <div id="functionbox">
-                <a href="manual.html" target="_blank" id="manualLinkTop" class="tra-manual-link">
-                    <svg class="tra-manual-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.6" aria-hidden="true">
-                        <path d="M6 4h11a2 2 0 0 1 2 2v13a1 1 0 0 1-1.64.77L14 17.24V6H6V4z" />
-                        <path d="M6 4H4a1 1 0 0 0-1 1v14a2 2 0 0 0 2 2h7" />
-                    </svg>
-                    <span>Manual</span>
-                </a>
-
-                <div class="tra-toolkit-nav" role="toolbar" aria-label="Toolkit">
-                    <button type="button" class="tra-tool-item" data-tool-title="Build"
-                        onclick="openToolkitPanel('tra-panel-build', this)" title="Build — import and geometry">
-                        <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.6">
-                                <path d="M4 20h16v-9l-4-4H8l-4 4v9z" />
-                                <path d="M9 3v5h10V5a2 2 0 0 0-2-2H9z" />
-                            </svg></span>
-                        <span class="tra-tool-label">Build</span>
-                    </button>
-                    <button type="button" class="tra-tool-item" data-tool-title="Edit"
-                        onclick="openToolkitPanel('tra-panel-edit', this)"
-                        title="Edit — transform, scale, and distance">
-                        <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.6">
-                                <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
-                                <circle cx="12" cy="12" r="2.5" />
-                            </svg></span>
-                        <span class="tra-tool-label">Edit</span>
-                    </button>
-                    <button type="button" class="tra-tool-item" data-tool-title="View"
-                        onclick="openToolkitPanel('tra-panel-view', this)" title="View — camera and grid">
-                        <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.6">
-                                <path d="M4 8l8-4 8 4v8l-8 4-8-4V8z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg></span>
-                        <span class="tra-tool-label">View</span>
-                    </button>
-                    <button type="button" class="tra-tool-item" data-tool-title="Simulation"
-                        onclick="openToolkitPanel('tra-panel-simulation', this)"
-                        title="Simulation — mesh, result scale, and detail">
-                        <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path d="M4 4h16v16H4z" />
-                                <path d="M4 12h16M12 4v16" />
-                            </svg></span>
-                        <span class="tra-tool-label">Sim</span>
-                    </button>
-                    <button type="button" class="tra-tool-item" data-tool-title="Data"
-                        onclick="openToolkitPanel('tra-panel-data', this)" title="Data — scene and system">
-                        <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.6">
-                                <ellipse cx="12" cy="7" rx="4" ry="2" />
-                                <path d="M8 7v6c0 1.1 1.8 2 4 2s4-.9 4-2V7" />
-                                <path d="M8 13v4c0 1.1 1.8 2 4 2s4-.9 4-2v-4" />
-                            </svg></span>
-                        <span class="tra-tool-label">Data</span>
-                    </button>
-                </div>
-
-                <div class="tra-tool-validation">
-                    <a id="validationbtn" class="tra-validation-link" href="../validation/validation.html"
-                        target="_blank">
+                <div id="functionbox">
+                    <a href="manual.html" target="_blank" id="manualLinkTop" class="tra-manual-link">
                         <svg class="tra-manual-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="1.6" aria-hidden="true">
-                            <path d="M9 12l2 2 4-4" />
-                            <circle cx="12" cy="12" r="9" />
+                            <path d="M6 4h11a2 2 0 0 1 2 2v13a1 1 0 0 1-1.64.77L14 17.24V6H6V4z" />
+                            <path d="M6 4H4a1 1 0 0 0-1 1v14a2 2 0 0 0 2 2h7" />
                         </svg>
-                        <span>Valid</span>
+                        <span>Manual</span>
                     </a>
-                </div>
 
-                <div id="tra-panels-store" aria-hidden="true">
-                    <!-- Build: Import, Geometry, Levels -->
-                    <div id="tra-panel-build" class="tra-panel-body">
-                        <div class="tra-k-root">
-                            <h3 class="tra-k-root-title">Build</h3>
-                            <section class="tra-k-block" aria-labelledby="k-build-import">
-                                <h4 id="k-build-import" class="tra-k-subtitle">Import</h4>
-                                <input type="file" id="imageInput" accept="image/*" hidden>
-                                <label for="imageInput" class="custom-file-upload">Upload Image</label>
-                            </section>
-                            <section class="tra-k-block" aria-labelledby="k-build-geom">
-                                <h4 id="k-build-geom" class="tra-k-subtitle">Geometry</h4>
-                                <div class="plane-buttons-container">
-                                    <button id="addplane" type="button" class="plane-btn">Add Plane</button>
-                                    <button id="deleteplane" type="button" class="plane-btn">Delete Plane</button>
-                                    <button id="resetPlane" type="button" class="plane-btn">Reset Plane</button>
-                                    <button id="standPlane" type="button" class="plane-btn">Stand Plane</button>
-                                    <button id="copyPlanesBtn" type="button" class="plane-btn">Copy</button>
-                                    <button id="pastePlanesBtn" type="button" class="plane-btn">Paste</button>
-                                </div>
-                                <button id="addPlaneMode" type="button" class="plane-btn tra-panel-fullbtn">Add Walls
-                                    Mode</button>
-                            </section>
-                        </div>
+                    <div class="tra-toolkit-nav" role="toolbar" aria-label="Toolkit">
+                        <button type="button" class="tra-tool-item" data-tool-title="Build"
+                            onclick="openToolkitPanel('tra-panel-build', this)" title="Build — import and geometry">
+                            <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.6">
+                                    <path d="M4 20h16v-9l-4-4H8l-4 4v9z" />
+                                    <path d="M9 3v5h10V5a2 2 0 0 0-2-2H9z" />
+                                </svg></span>
+                            <span class="tra-tool-label">Build</span>
+                        </button>
+                        <button type="button" class="tra-tool-item" data-tool-title="Edit"
+                            onclick="openToolkitPanel('tra-panel-edit', this)"
+                            title="Edit — transform, scale, and distance">
+                            <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.6">
+                                    <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+                                    <circle cx="12" cy="12" r="2.5" />
+                                </svg></span>
+                            <span class="tra-tool-label">Edit</span>
+                        </button>
+                        <button type="button" class="tra-tool-item" data-tool-title="View"
+                            onclick="openToolkitPanel('tra-panel-view', this)" title="View — camera and grid">
+                            <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.6">
+                                    <path d="M4 8l8-4 8 4v8l-8 4-8-4V8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg></span>
+                            <span class="tra-tool-label">View</span>
+                        </button>
+                        <button type="button" class="tra-tool-item" data-tool-title="Simulation"
+                            onclick="openToolkitPanel('tra-panel-simulation', this)"
+                            title="Simulation — mesh, result scale, and detail">
+                            <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.5">
+                                    <path d="M4 4h16v16H4z" />
+                                    <path d="M4 12h16M12 4v16" />
+                                </svg></span>
+                            <span class="tra-tool-label">Sim</span>
+                        </button>
+                        <button type="button" class="tra-tool-item" data-tool-title="Data"
+                            onclick="openToolkitPanel('tra-panel-data', this)" title="Data — scene and system">
+                            <span class="tra-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.6">
+                                    <ellipse cx="12" cy="7" rx="4" ry="2" />
+                                    <path d="M8 7v6c0 1.1 1.8 2 4 2s4-.9 4-2V7" />
+                                    <path d="M8 13v4c0 1.1 1.8 2 4 2s4-.9 4-2v-4" />
+                                </svg></span>
+                            <span class="tra-tool-label">Data</span>
+                        </button>
                     </div>
 
-                    <!-- Edit: Transform, Scale -->
-                    <div id="tra-panel-edit" class="tra-panel-body">
-                        <div class="tra-k-root">
-                            <h3 class="tra-k-root-title">Edit</h3>
-                            <section class="tra-k-block" aria-labelledby="k-edit-transform">
-                                <h4 id="k-edit-transform" class="tra-k-subtitle">Transform</h4>
-                                <div class="transform-buttons-container">
-                                    <button id="transformQ" type="button" class="transform-btn">Local</button>
-                                    <button id="transformW" type="button" class="transform-btn">Translate</button>
-                                    <button id="transformE" type="button" class="transform-btn">Scale</button>
-                                    <button id="transformR" type="button" class="transform-btn">Rotate</button>
-                                </div>
-                            </section>
-                            <section class="tra-k-block" aria-labelledby="k-edit-scale">
-                                <h4 id="k-edit-scale" class="tra-k-subtitle">Scale</h4>
-                                <button id="scalingbutton" type="button">Set Scale</button>
-                            </section>
-                            <section class="tra-k-block" aria-labelledby="k-edit-distance">
-                                <h4 id="k-edit-distance" class="tra-k-subtitle">Distance</h4>
-                                <div id="distanceRow">
-                                    <input type="text" id="distanceInput" readonly value="-">
-                                </div>
-                            </section>
-                        </div>
+                    <div class="tra-tool-validation">
+                        <a id="validationbtn" class="tra-validation-link" href="./validation/validation.html"
+                            target="_blank">
+                            <svg class="tra-manual-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.6" aria-hidden="true">
+                                <path d="M9 12l2 2 4-4" />
+                                <circle cx="12" cy="12" r="9" />
+                            </svg>
+                            <span>Valid</span>
+                        </a>
                     </div>
 
-                    <!-- View: Camera, Grid -->
-                    <div id="tra-panel-view" class="tra-panel-body">
-                        <div class="tra-k-root">
-                            <h3 class="tra-k-root-title">View</h3>
-                            <section class="tra-k-block" aria-labelledby="k-view-camera">
-                                <h4 id="k-view-camera" class="tra-k-subtitle">Camera</h4>
-                                <div class="view-buttons-container">
-                                    <button id="top" type="button">Top</button>
-                                    <button id="front" type="button">Front</button>
-                                    <button id="side" type="button">Side</button>
-                                    <button id="perspective" type="button" class="active">Perspective</button>
-                                </div>
-                            </section>
-                            <section class="tra-k-block" aria-labelledby="k-view-grid">
-                                <h4 id="k-view-grid" class="tra-k-subtitle">Grid</h4>
-                                <div class="grid-buttons-container">
-                                    <button id="toggleGrid" type="button">Hide Grid</button>
-                                    <button id="gridSnapBtn" type="button" class="active">Grid Snap</button>
-                                </div>
-                            </section>
+                    <div id="tra-panels-store" aria-hidden="true">
+                        <!-- Build: Import, Geometry, Levels -->
+                        <div id="tra-panel-build" class="tra-panel-body">
+                            <div class="tra-k-root">
+                                <h3 class="tra-k-root-title">Build</h3>
+                                <section class="tra-k-block" aria-labelledby="k-build-import">
+                                    <h4 id="k-build-import" class="tra-k-subtitle">Import</h4>
+                                    <input type="file" id="imageInput" accept="image/*" hidden>
+                                    <label for="imageInput" class="custom-file-upload">Upload Image</label>
+                                </section>
+                                <section class="tra-k-block" aria-labelledby="k-build-geom">
+                                    <h4 id="k-build-geom" class="tra-k-subtitle">Geometry</h4>
+                                    <div class="plane-buttons-container">
+                                        <button id="addplane" type="button" class="plane-btn">Add Plane</button>
+                                        <button id="deleteplane" type="button" class="plane-btn">Delete Plane</button>
+                                        <button id="resetPlane" type="button" class="plane-btn">Reset Plane</button>
+                                        <button id="standPlane" type="button" class="plane-btn">Stand Plane</button>
+                                        <button id="copyPlanesBtn" type="button" class="plane-btn">Copy</button>
+                                        <button id="pastePlanesBtn" type="button" class="plane-btn">Paste</button>
+                                    </div>
+                                    <button id="addPlaneMode" type="button" class="plane-btn tra-panel-fullbtn">Add
+                                        Walls
+                                        Mode</button>
+                                </section>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Simulation: Mesh, Results scale -->
-                    <div id="tra-panel-simulation" class="tra-panel-body">
-                        <div class="tra-k-root">
-                            <h3 class="tra-k-root-title">Simulation</h3>
-                            <section class="tra-k-block" aria-labelledby="k-sim-mesh">
-                                <h4 id="k-sim-mesh" class="tra-k-subtitle">Mesh</h4>
-                                <label class="tra-field-label" id="grid-density-lbl">Grid density</label>
-                                <div class="tra-density-row" role="radiogroup" aria-labelledby="grid-density-lbl">
-                                    <button type="button" class="tra-density-btn active" data-grid-density="2"
-                                        aria-pressed="true" title="Low resolution">Low</button>
-                                    <button type="button" class="tra-density-btn" data-grid-density="3"
-                                        aria-pressed="false" title="Medium resolution">Med</button>
-                                    <button type="button" class="tra-density-btn" data-grid-density="5"
-                                        aria-pressed="false" title="High resolution">High</button>
-                                    <button type="button" class="tra-density-btn" data-grid-density="10"
-                                        aria-pressed="false" title="Detailed resolution">Detail</button>
-                                </div>
-                                <input type="hidden" id="gridSizeInput" value="2" autocomplete="off" aria-hidden="true">
-                            </section>
-                            <section class="tra-k-block" aria-labelledby="k-sim-results">
-                                <h4 id="k-sim-results" class="tra-k-subtitle">Results scale</h4>
-                                <div class="tra-color-scale-layout">
-                                    <button id="autoColorScaleBtn" type="button">Auto Scale</button>
-                                    <div class="tra-color-scale-bracket" aria-label="Manual min and max">
-                                        <div class="tra-color-scale-row">
-                                            <input type="number" id="colorScaleMin" placeholder="Min" step="0.1"
-                                                value="0" aria-label="Minimum value">
-                                            <span class="tra-muted-inline">to</span>
-                                            <input type="number" id="colorScaleMax" placeholder="Max" step="0.1"
-                                                value="20" aria-label="Maximum value">
+                        <!-- Edit: Transform, Scale -->
+                        <div id="tra-panel-edit" class="tra-panel-body">
+                            <div class="tra-k-root">
+                                <h3 class="tra-k-root-title">Edit</h3>
+                                <section class="tra-k-block" aria-labelledby="k-edit-transform">
+                                    <h4 id="k-edit-transform" class="tra-k-subtitle">Transform</h4>
+                                    <div class="transform-buttons-container">
+                                        <button id="transformQ" type="button" class="transform-btn">Local</button>
+                                        <button id="transformW" type="button" class="transform-btn">Translate</button>
+                                        <button id="transformE" type="button" class="transform-btn">Scale</button>
+                                        <button id="transformR" type="button" class="transform-btn">Rotate</button>
+                                    </div>
+                                </section>
+                                <section class="tra-k-block" aria-labelledby="k-edit-scale">
+                                    <h4 id="k-edit-scale" class="tra-k-subtitle">Scale</h4>
+                                    <button id="scalingbutton" type="button">Set Scale</button>
+                                </section>
+                                <section class="tra-k-block" aria-labelledby="k-edit-distance">
+                                    <h4 id="k-edit-distance" class="tra-k-subtitle">Distance</h4>
+                                    <div id="distanceRow">
+                                        <input type="text" id="distanceInput" readonly value="-">
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+
+                        <!-- View: Camera, Grid -->
+                        <div id="tra-panel-view" class="tra-panel-body">
+                            <div class="tra-k-root">
+                                <h3 class="tra-k-root-title">View</h3>
+                                <section class="tra-k-block" aria-labelledby="k-view-camera">
+                                    <h4 id="k-view-camera" class="tra-k-subtitle">Camera</h4>
+                                    <div class="view-buttons-container">
+                                        <button id="top" type="button">Top</button>
+                                        <button id="front" type="button">Front</button>
+                                        <button id="side" type="button">Side</button>
+                                        <button id="perspective" type="button" class="active">Perspective</button>
+                                    </div>
+                                </section>
+                                <section class="tra-k-block" aria-labelledby="k-view-grid">
+                                    <h4 id="k-view-grid" class="tra-k-subtitle">Grid</h4>
+                                    <div class="grid-buttons-container">
+                                        <button id="toggleGrid" type="button">Hide Grid</button>
+                                        <button id="gridSnapBtn" type="button" class="active">Grid Snap</button>
+                                        <button id="toggleEmitters" type="button">Hide Emitters</button>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+
+                        <!-- Simulation: Mesh, Results scale -->
+                        <div id="tra-panel-simulation" class="tra-panel-body">
+                            <div class="tra-k-root">
+                                <h3 class="tra-k-root-title">Simulation</h3>
+                                <section class="tra-k-block" aria-labelledby="k-sim-mesh">
+                                    <h4 id="k-sim-mesh" class="tra-k-subtitle">Mesh</h4>
+                                    <label class="tra-field-label" id="grid-density-lbl">Grid density</label>
+                                    <div class="tra-density-row" role="radiogroup" aria-labelledby="grid-density-lbl">
+                                        <button type="button" class="tra-density-btn active" data-grid-density="2"
+                                            aria-pressed="true" title="Low resolution">Low</button>
+                                        <button type="button" class="tra-density-btn" data-grid-density="3"
+                                            aria-pressed="false" title="Medium resolution">Med</button>
+                                        <button type="button" class="tra-density-btn" data-grid-density="5"
+                                            aria-pressed="false" title="High resolution">High</button>
+                                        <button type="button" class="tra-density-btn" data-grid-density="10"
+                                            aria-pressed="false" title="Detailed resolution">Detail</button>
+                                    </div>
+                                    <input type="hidden" id="gridSizeInput" value="2" autocomplete="off"
+                                        aria-hidden="true">
+                                </section>
+                                <section class="tra-k-block" aria-labelledby="k-sim-results">
+                                    <h4 id="k-sim-results" class="tra-k-subtitle">Results scale</h4>
+                                    <div class="tra-color-scale-layout">
+                                        <button id="autoColorScaleBtn" type="button">Auto Scale</button>
+                                        <div class="tra-color-scale-bracket" aria-label="Manual min and max">
+                                            <div class="tra-color-scale-row">
+                                                <input type="number" id="colorScaleMin" placeholder="Min" step="0.1"
+                                                    value="0" aria-label="Minimum value">
+                                                <span class="tra-muted-inline">to</span>
+                                                <input type="number" id="colorScaleMax" placeholder="Max" step="0.1"
+                                                    value="20" aria-label="Maximum value">
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </section>
-                            <section class="tra-k-block" aria-labelledby="k-sim-result">
-                                <h4 id="k-sim-result" class="tra-k-subtitle">Result</h4>
-                                <button id="detail" type="button" class="tra-panel-fullbtn">Show Detail</button>
-                            </section>
+                                </section>
+                                <section class="tra-k-block" aria-labelledby="k-sim-result">
+                                    <h4 id="k-sim-result" class="tra-k-subtitle">Result</h4>
+                                    <button id="detail" type="button" class="tra-panel-fullbtn">Show Detail</button>
+                                </section>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Data: Scene management -->
-                    <div id="tra-panel-data" class="tra-panel-body">
-                        <div class="tra-k-root">
-                            <h3 class="tra-k-root-title">Data</h3>
-                            <section class="tra-k-block" aria-labelledby="k-data-scene">
-                                <h4 id="k-data-scene" class="tra-k-subtitle">Scene management</h4>
-                                <input type="file" id="importFile" accept=".json" hidden>
-                                <div class="tra-btn-grid">
-                                    <button id="exportBtn" type="button">Export Scene</button>
-                                    <button type="button" id="importbtn">Import Scene</button>
-                                </div>
-                            </section>
+                        <!-- Data: Scene management -->
+                        <div id="tra-panel-data" class="tra-panel-body">
+                            <div class="tra-k-root">
+                                <h3 class="tra-k-root-title">Data</h3>
+                                <section class="tra-k-block" aria-labelledby="k-data-scene">
+                                    <h4 id="k-data-scene" class="tra-k-subtitle">Scene management</h4>
+                                    <input type="file" id="importFile" accept=".json" hidden>
+                                    <div class="tra-btn-grid">
+                                        <button id="exportBtn" type="button">Export Scene</button>
+                                        <button type="button" id="importbtn">Import Scene</button>
+                                    </div>
+                                </section>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <aside id="tra-tool-flyout" class="tra-tool-flyout tra-tool-sidebar" hidden
-                role="region" aria-labelledby="tra-tool-flyout-title">
-                <div class="tra-tool-flyout-grip">
-                    <span id="tra-tool-flyout-title" class="tra-tool-flyout-title">Tool</span>
-                    <button type="button" class="tra-tool-flyout-close" onclick="closeToolkitFlyout()"
-                        title="Close">&times;</button>
-                </div>
-                <div id="tra-tool-flyout-body" class="tra-tool-flyout-body"></div>
-            </aside>
+                <aside id="tra-tool-flyout" class="tra-tool-flyout tra-tool-sidebar" hidden role="region"
+                    aria-labelledby="tra-tool-flyout-title">
+                    <div class="tra-tool-flyout-grip">
+                        <span id="tra-tool-flyout-title" class="tra-tool-flyout-title">Tool</span>
+                        <button type="button" class="tra-tool-flyout-close" onclick="closeToolkitFlyout()"
+                            title="Close">&times;</button>
+                    </div>
+                    <div id="tra-tool-flyout-body" class="tra-tool-flyout-body"></div>
+                </aside>
             </div>
             <div id="app-center">
                 <div id="renderbody"></div>
@@ -2880,24 +2883,29 @@
             <aside id="params-sidebar" class="params-sidebar" aria-label="Parameters and elements">
                 <div class="params-sidebar-tabs" role="tablist" aria-label="Right sidebar sections">
                     <button type="button" id="params-tab-params" class="params-sidebar-tab" role="tab"
-                        aria-selected="true" aria-controls="params-section-parameters" data-sidebar-section="parameters">Parameters</button>
+                        aria-selected="true" aria-controls="params-section-parameters"
+                        data-sidebar-section="parameters">Parameters</button>
                     <button type="button" id="params-tab-elements" class="params-sidebar-tab" role="tab"
-                        aria-selected="false" aria-controls="params-section-elements" data-sidebar-section="elements" tabindex="-1">Elements</button>
+                        aria-selected="false" aria-controls="params-section-elements" data-sidebar-section="elements"
+                        tabindex="-1">Elements</button>
                 </div>
                 <div class="params-panel-wrap">
                     <div id="params-section-parameters" class="params-sidebar-section" role="tabpanel"
                         aria-labelledby="params-tab-params">
-                    <div id="plane-params-panel" class="plane-params-panel">
-                        <p class="pp-hint" id="plane-params-empty" data-default-hint="Select a plane to edit its parameters.">Select a plane to edit its parameters.</p>
-                        <div id="plane-params-content"></div>
-                    </div>
+                        <div id="plane-params-panel" class="plane-params-panel">
+                            <p class="pp-hint" id="plane-params-empty"
+                                data-default-hint="Select a plane to edit its parameters.">Select a plane to edit its
+                                parameters.</p>
+                            <div id="plane-params-content"></div>
+                        </div>
                     </div>
                     <div id="params-section-elements" class="params-sidebar-section" role="tabpanel" hidden
                         aria-labelledby="params-tab-elements">
                         <div class="plane-params-panel tra-elements-panel">
                             <p class="pp-hint tra-elements-hint" id="tra-elements-hint"
                                 data-hint-empty="No planes in the scene yet."
-                                data-hint-list="Select a plane in the list or the 3D view. Hold Shift to multi-select.">No planes in the scene yet.</p>
+                                data-hint-list="Select a plane in the list or the 3D view. Hold Shift to multi-select.">
+                                No planes in the scene yet.</p>
                             <div id="tra-elements-list" class="tra-elements-list" role="list"></div>
                         </div>
                     </div>
@@ -3379,6 +3387,24 @@
 
         }
 
+        // Toggle emitter visibility: hide/show all Emitter planes, Receivers stay as-is
+        let emittersVisible = true;
+
+        document.getElementById('toggleEmitters').addEventListener('click', toggleEmitterVisibility);
+
+        function toggleEmitterVisibility() {
+            emittersVisible = !emittersVisible;
+
+            planes.forEach(plane => {
+                if (plane.type === 'Emitter') {
+                    plane.mesh.visible = emittersVisible;
+                }
+            });
+
+            const btn = document.getElementById('toggleEmitters');
+            if (btn) btn.textContent = emittersVisible ? 'Hide Emitters' : 'Show Emitters';
+        }
+
         // Grid snap button functionality
         document.getElementById('gridSnapBtn').addEventListener('click', toggleGridSnap);
 
@@ -3716,6 +3742,10 @@
             updateViewCameraButtons();
         }
         // setView(activeCamera);
+
+        emittersVisible = true;
+        const emBtn = document.getElementById('toggleEmitters');
+        if (emBtn) emBtn.textContent = 'Hide Emitters';
 
         // Helper function to remove all top view lines and spheres
         function removeAllTopViewElements() {
@@ -4212,6 +4242,7 @@
         }
 
         let scalingdist = null;
+        let scalingDistance = 0;
         document.getElementById("scalingbutton").addEventListener("click", function () {
             setView(cameras.top);
             isMeasuring = true;

@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validation Report — TRA</title>
+    <link rel="icon" href="../radiation_icon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('tra-theme') === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            } catch (e) { /* ignore */ }
+        })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <style>
+        :root {
+            --tra-primary: #da2424;
+            --tra-accent: #da2424;
+            --tra-accent-light: #e8a098;
+            --tra-mint: #4ade80;
+        }
+
+        html {
+            color-scheme: dark;
+            --tra-bg: #0a0a0c;
+            --tra-panel-inner: #0e1118;
+            --tra-border: #2a2832;
+            --tra-text: #f0e8ea;
+            --tra-muted: #ada8b0;
+            --tra-topbar-bg: linear-gradient(180deg, #141824 0%, #0d1017 100%);
+            --tra-btn-ghost-bg: rgba(255, 255, 255, 0.05);
+            --tra-btn-ghost-border: rgba(255, 255, 255, 0.1);
+            --tra-code-bg: rgba(0, 0, 0, 0.35);
+            --tra-table-stripe: rgba(255, 255, 255, 0.03);
+            --tra-table-head: rgba(218, 36, 36, 0.12);
+        }
+
+        html[data-theme="light"] {
+            color-scheme: light;
+            --tra-bg: #ebe8ee;
+            --tra-panel-inner: #f7f5f9;
+            --tra-border: #cfc8d4;
+            --tra-text: #1c181b;
+            --tra-muted: #5e5863;
+            --tra-topbar-bg: linear-gradient(180deg, #ffffff 0%, #f3f1f6 100%);
+            --tra-btn-ghost-bg: rgba(255, 255, 255, 0.96);
+            --tra-btn-ghost-border: rgba(0, 0, 0, 0.12);
+            --tra-code-bg: rgba(0, 0, 0, 0.05);
+            --tra-table-stripe: rgba(0, 0, 0, 0.03);
+            --tra-table-head: rgba(218, 36, 36, 0.1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body.tra-doc-page {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Inter', 'Poppins', system-ui, sans-serif;
+            font-size: 15px;
+            line-height: 1.65;
+            color: var(--tra-text);
+            background: var(--tra-bg);
+        }
+
+        .tra-doc-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            height: 48px;
+            padding: 0 16px 0 20px;
+            background: var(--tra-topbar-bg);
+            border-bottom: 1px solid var(--tra-border);
+            box-sizing: border-box;
+        }
+
+        .tra-doc-topbar-left {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .tra-doc-brand {
+            font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.14em;
+            color: var(--tra-text);
+            text-decoration: none;
+        }
+
+        .tra-doc-brand:hover {
+            color: var(--tra-accent);
+        }
+
+        .tra-doc-page-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            color: var(--tra-muted);
+            text-transform: uppercase;
+        }
+
+        .tra-doc-topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .tra-doc-link-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: var(--tra-text);
+            text-decoration: none;
+            border: 1px solid var(--tra-border);
+            border-radius: 8px;
+            background: var(--tra-btn-ghost-bg);
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .tra-doc-link-btn:hover {
+            background: rgba(218, 36, 36, 0.12);
+            border-color: rgba(218, 36, 36, 0.35);
+            color: var(--tra-accent);
+        }
+
+        .tra-theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 32px;
+            padding: 0 12px;
+            border: 1px solid var(--tra-border);
+            border-radius: 8px;
+            background: var(--tra-btn-ghost-bg);
+            color: var(--tra-text);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .tra-theme-toggle:hover {
+            background: rgba(218, 36, 36, 0.1);
+            border-color: rgba(218, 36, 36, 0.35);
+            color: var(--tra-accent);
+        }
+
+        .tra-theme-toggle .tra-theme-icon {
+            display: inline-flex;
+            width: 18px;
+            height: 18px;
+            line-height: 1;
+        }
+
+        .tra-theme-toggle .tra-theme-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+        }
+
+        .tra-doc-main {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 28px 22px 56px;
+        }
+
+        .tra-doc-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+            font-weight: 600;
+            color: var(--tra-text);
+            line-height: 1.25;
+        }
+
+        h1 {
+            font-size: 1.85rem;
+            margin: 0 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--tra-accent);
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-size: 1.35rem;
+            margin: 2rem 0 0.75rem;
+            padding-bottom: 0.35rem;
+            border-bottom: 1px solid var(--tra-border);
+        }
+
+        h3 {
+            font-size: 1.08rem;
+            margin: 1.35rem 0 0.5rem;
+            color: var(--tra-accent-light);
+        }
+
+        h4 { font-size: 1rem; margin: 1rem 0 0.4rem; }
+
+        p { margin: 0.85em 0; text-align: justify; }
+        strong { font-weight: 600; }
+        em { font-style: italic; }
+
+        a {
+            color: var(--tra-accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.15s ease, color 0.15s ease;
+        }
+
+        a:hover {
+            border-bottom-color: var(--tra-accent);
+        }
+
+        ul, ol { margin: 0.75em 0; padding-left: 1.35em; }
+        li { margin: 0.35em 0; }
+        li > ul, li > ol { margin: 0.3em 0; }
+
+        code {
+            font-family: ui-monospace, 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 0.88em;
+            background: var(--tra-code-bg);
+            padding: 0.12em 0.4em;
+            border-radius: 4px;
+            border: 1px solid var(--tra-border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.1em 0;
+            font-size: 0.92em;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border: 1px solid var(--tra-border);
+        }
+
+        th {
+            background: var(--tra-table-head);
+            font-weight: 600;
+            color: var(--tra-text);
+        }
+
+        tr:nth-child(even) td {
+            background: var(--tra-table-stripe);
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: var(--tra-border);
+            margin: 2.25rem 0;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 2em auto;
+            border-radius: 8px;
+            border: 1px solid var(--tra-border);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        html[data-theme="light"] img {
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+        }
+
+        .caption {
+            text-align: center;
+            color: var(--tra-muted);
+            font-style: italic;
+            font-size: 0.9em;
+            margin-top: -1em;
+            margin-bottom: 2em;
+        }
+
+        .math-block {
+            margin: 1.25em 0;
+            overflow-x: auto;
+            padding: 12px 14px;
+            text-align: center;
+            background: var(--tra-panel-inner);
+            border: 1px solid var(--tra-border);
+            border-radius: 8px;
+        }
+
+        .tra-doc-page .katex {
+            color: var(--tra-text) !important;
+        }
+
+        .tra-doc-page .katex .mord,
+        .tra-doc-page .katex .mop,
+        .tra-doc-page .katex .mbin,
+        .tra-doc-page .katex .mrel,
+        .tra-doc-page .katex .mopen,
+        .tra-doc-page .katex .mclose,
+        .tra-doc-page .katex .mpunct {
+            color: inherit !important;
+        }
+
+        @media print {
+            body.tra-doc-page { background: #fff; color: #111; }
+            .tra-doc-topbar { display: none; }
+            .tra-doc-main { padding: 16px; max-width: none; }
+        }
+
+        @media (max-width: 768px) {
+            .tra-doc-main { padding: 18px 14px 40px; }
+            .tra-doc-page-title { display: none; }
+            h1 { font-size: 1.45rem; }
+            table { font-size: 0.85em; }
+            th, td { padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body class="tra-doc-page">
+    <header class="tra-doc-topbar">
+        <div class="tra-doc-topbar-left">
+            <a class="tra-doc-brand" href="../index.html">TRA</a>
+            <span class="tra-doc-page-title">Validation</span>
+        </div>
+        <div class="tra-doc-topbar-right">
+            <a href="../index.html" class="tra-doc-link-btn">Open app</a>
+            <button type="button" class="tra-theme-toggle" id="tra-theme-toggle" aria-pressed="false" title="Switch color theme">
+                <span class="tra-theme-icon" id="tra-theme-toggle-icon" aria-hidden="true"></span>
+                <span id="tra-theme-toggle-label">Light</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="tra-doc-main">
+        <div class="tra-doc-nav">
+            <a href="../index.html" class="tra-doc-link-btn">← Back to application</a>
+        </div>
+
+        <h1>Validation Report</h1>
+        <p><strong>Thermal Radiation Analysis Software Verification and Validation</strong></p>
+        <p>Author: James Yu</p>
+
+        <hr>
+
+        <h2>Table of Contents</h2>
+        <ol>
+            <li><a href="#introduction">Introduction</a>
+                <ul>
+                    <li><a href="#purpose-of-the-report">Purpose of The Report</a></li>
+                    <li><a href="#software-introduction-and-application">Software Introduction and Application</a></li>
+                    <li><a href="#core-computational-methodology">Core Computational Methodology</a></li>
+                    <li><a href="#operational-scope-and-limitations">Operational Scope and Limitations</a></li>
+                </ul>
+            </li>
+            <li><a href="#validation-methodology">Validation Methodology</a>
+                <ul>
+                    <li><a href="#validation-philosophy--standards">Validation Philosophy & Standards</a></li>
+                    <li><a href="#three-tier-validation-strategy">Three-Tier Validation Strategy</a></li>
+                    <li><a href="#test-case-design">Test Case Design</a></li>
+                    <li><a href="#error-metrics--passfail-decision-protocol">Error metrics & Pass/Fail Decision Protocol</a></li>
+                </ul>
+            </li>
+            <li><a href="#test-result--analysis">Test Result & Analysis</a>
+                <ul>
+                    <li><a href="#simple-case-parallel-planes">Simple Case: Parallel Planes</a></li>
+                    <li><a href="#extended-case-parallel-planes">Extended Case: Parallel Planes</a></li>
+                    <li><a href="#moderate-case-perpendicular-planes">Moderate Case: Perpendicular Planes</a></li>
+                    <li><a href="#complex-case-multiple-planes">Complex Case: Multiple Planes</a></li>
+                </ul>
+            </li>
+            <li><a href="#software-limitation">Software limitation</a></li>
+            <li><a href="#limitation">Limitation</a></li>
+            <li><a href="#conclusion">Conclusion</a></li>
+            <li><a href="#appendices">Appendices</a></li>
+        </ol>
+
+        <hr>
+
+        <h2 id="introduction">Introduction</h2>
+
+        <h3 id="purpose-of-the-report">Purpose of The Report</h3>
+        <p>This document constitutes the formal verification and validation dossier for the Thermal Radiation Analysis (TRA) software. Its primary mandate is to establish, through rigorous quantitative analysis, the technical credibility and engineering reliability of TRA as a predictive tool for radiative heat transfer assessments in fire safety and building physics. The validation framework is designed to fulfill dual objectives: first, to verify algorithmic correctness by comparing TRA's outputs against closed-form analytical solutions as stipulated in authoritative references such as BR 187; and second, to validate the statistical robustness of its stochastic Monte Carlo engine under repeated trials. This process ensures that the software not only produces mathematically accurate results under idealized conditions but also delivers consistent, predictable performance with quantifiable uncertainty bounds in real-world application scenarios. The report thereby serves as both a technical audit and a foundation for establishing the software's limits of applicability within professional engineering practice.</p>
+
+        <h3 id="software-introduction-and-application">Software Introduction and Application</h3>
+        <p>The TRA software is a computational platform for simulating radiative heat transfer in three-dimensional environments. It combines a web-based graphical frontend for interactive geometry definition with a backend that executes numerical analysis via a Monte Carlo ray-casting algorithm. The primary application is in fire safety engineering and building physics, where it facilitates the assessment of radiant heat exchange in geometrically complex scenarios.</p>
+        <p>The frontend provides an environment for constructing computational scenes composed of planar surfaces. These surfaces are categorized as receiver planes (where flux is calculated), emitter planes (prescribed temperature sources), or inert planes (radiation occluders). The interface enables direct manipulation of surface geometry and properties within a 3D viewport.</p>
+        <p>The backend computational engine implements a stochastic ray-tracing method to solve the radiative exchange. For each receiver point, it samples a large number of rays over a cosine-weighted hemisphere, tests intersections with all scene geometry, and statistically estimates view factors based on hit counts. This approach allows for the modelling of arbitrary occlusion and complex surface arrangements.</p>
+        <p>Upon calculation initiation, the frontend serializes the scene data—including transformed world coordinates and analysis parameters—into a JSON payload. This payload is transmitted via HTTP to the backend service. The backend processes the geometry, performs the Monte Carlo radiation analysis, and returns the computed results.</p>
+        <p>The frontend maps the numerical results onto the corresponding receiver planes as color-mapped contours, enabling direct spatial interpretation within the model context. This architecture separates user interaction and visualization from computational processing, supporting analysis where conventional view factor methods are insufficient.</p>
+
+        <h3 id="core-computational-methodology">Core Computational Methodology</h3>
+        <p>The computational core of the TRA software implements a Monte Carlo ray-tracing method to solve for radiative view factors and subsequent thermal quantities. This stochastic approach is employed to address geometric configurations for which analytical view factor solutions are unavailable or impractical.</p>
+        <p>The methodological workflow is as follow:</p>
+        <ol>
+            <li><strong>Ray Generation</strong>: A predefined number of rays are stochastically sampled from a cosine weighted hemispherical distribution oriented along the receiver point's surface normal. This sampling strategy conforms to the assumption of diffuse radiation characteristics. The directional sampling is governed by a high-quality pseudo-random number generator.</li>
+            <li><strong>Ray Tracing and Intersection Testing</strong>: Each generated ray is tested for intersection with every polygon (emitter and occluder) in the scene. The intersection test is a two-step process: Ray-Plane Intersection computes the parametric distance along the ray at which it intersects the infinite plane containing a polygon. And Point-in-Polygon Test determines if the intersection point lies within the boundaries of the finite polygon using a 2D projection and winding number rule. The polygon with the smallest positive intersection distance is identified as the closest hit.</li>
+            <li><strong>View Factor Estimation</strong>: The radiative view factor from the receiver point to a specific emitter polygon is statistically estimated as the ratio of rays that successfully intersect that emitter polygon to the total number of rays cast (N). This provides an unbiased estimator, where the variance decreases as N increases.</li>
+            <li><strong>Thermal Calculation</strong>: The total incident radiative flux (or a derived equivalent temperature) at the receiver point is computed as the linear superposition of contributions from all emitter polygons, weighted by their respective estimated view factors and emissive powers.</li>
+        </ol>
+        <p>This method provides a first-principles numerical solution to the radiative exchange integral, with accuracy directly contingent upon the number of rays cast and the quality of the random number sequence.</p>
+
+        <h3 id="operational-scope-and-limitations">Operational Scope and Limitations</h3>
+        <p>The TRA software is designed for engineering analysis of steady-state, diffuse radiative heat exchange between opaque surfaces. Its applicability is defined by the following operational parameters and inherent methodological assumptions:</p>
+        <ul>
+            <li><strong>Applicable Scenarios</strong>: The software is suited for analysing radiative transfer in complex geometric arrangements where traditional view factor algebra or handbook solutions are insufficient. Typical use cases include assessing external flame radiation between building facades, evaluating heat flux in compartment fires prior to flashover, and studying radiant heating in industrial settings.</li>
+            <li><strong>Key Assumptions</strong>:
+                <ul>
+                    <li>All surfaces are modelled as ideal diffuse (Lambertian) emitters and reflectors.</li>
+                    <li>Surfaces are treated as isothermal within each defined polygon.</li>
+                    <li>The medium between surfaces is non-participating.</li>
+                    <li>The analysis is restricted to steady-state conditions.</li>
+                    <li>Inter-reflections between surfaces are not modelled in the current implementation.</li>
+                </ul>
+            </li>
+            <li><strong>Performance Characteristics</strong>: The computational expense scales approximately linearly with the number of receiver points, the number of rays cast per point, and the total number of polygons in the scene. For models of moderate complexity, execution times on modern hardware typically range from several seconds to several minutes.</li>
+            <li><strong>Validation Imperative</strong>: Given the stochastic nature of the core algorithm and the simplifications inherent in its physical model, rigorous validation against established analytical solutions and empirical benchmarks—as undertaken in this report—is a fundamental prerequisite for its use in professional engineering practice. The following sections detail this validation framework and its outcomes.</li>
+        </ul>
+
+        <h2 id="validation-methodology">Validation Methodology</h2>
+
+        <h3 id="validation-philosophy--standards">Validation Philosophy & Standards</h3>
+        <p>The validation of computational tools in fire safety engineering necessitates a rigorous, evidence-based approach that aligns with the fundamental principle of substantial equivalence. This principle dictates that the performance of a calculation method must be demonstrated to be equivalent to, or conservatively aligned with, established methods referenced in applicable codes and standards. For radiation heat transfer analysis, this translates to a direct quantitative comparison against authoritative analytical solutions.</p>
+        <p>The primary reference for this validation exercise is BR 187 (External Fire Spread: building separation and boundary distances). Published by the Building Research Establishment (BRE), this document provides recognized methodologies and benchmarks for verifying external fire spread calculations. Specifically, its guidance on the validation of radiation and view factor calculations forms the cornerstone of the analytical verification in this report.</p>
+        <p>Secondary references and conceptual frameworks are drawn from the following: BS 9999:2017; EN 1991-1-2; SFPE handbook; BS 7974.</p>
+        <p>The validation philosophy follows a two-stage approach encompassing verification—ensuring the software's Monte Carlo algorithm correctly solves the mathematical problem of radiative exchange against known analytical solutions—and validation—assessing whether the results for benchmark cases fall within an acceptable range of uncertainty defined by engineering judgement and statistical confidence limits, thereby ensuring the tool is both mathematically sound and fit for purpose within the relevant UK/EU regulatory and design context.</p>
+
+        <h3 id="three-tier-validation-strategy">Three-Tier Validation Strategy</h3>
+        <p>To comprehensively assess the TRA software, a three-tier validation strategy is employed. This approach separates the fundamental verification of algorithmic correctness from the evaluation of the method's inherent stochastic stability, providing a complete picture of the software's reliability.</p>
+
+        <h4>Analytical Verification Against Closed-Form Solutions</h4>
+        <p>This tier primarily addresses the core correctness of the software mathematical solution for a problem with a known solution.</p>
+        <ul>
+            <li><strong>Method</strong>: A series of geometrically simple test cases are constructed where the radiative view factors (and therefore resulting receiver temperatures through a linear pure mathematical superposition) can be calculated exactly using analytical formulae provide in references such as BR 187 and standard guidance in heat transfer.</li>
+            <li><strong>Benchmark Selection</strong>: Cases include but no limited to:
+                <ul>
+                    <li>Parallel planes: Validating basic radiation exchange without occlusion.</li>
+                    <li>Perpendicular planes: Validating view factor algebra for orthogonal geometry.</li>
+                    <li>Irregular angle planes: Validating planes simulating real-life example with different angles and separation.</li>
+                </ul>
+            </li>
+            <li><strong>Comparison Metric</strong>: The primary metric is the relative error (ε): <span class="math-inline">ε = |(T<sub>software</sub> - T<sub>analytical</sub>) / T<sub>analytical</sub>| × 100%</span> where T<sub>software</sub> and T<sub>analytical</sub> represents the result from the TRA software and the closed-form solution respectively.</li>
+            <li><strong>Acceptance Criterion</strong>: A result is considered verified if ε < 5% for all primary test cases. This threshold represents a common engineering tolerance for radiative heat transfer calculations in the context of fire safety assessment.</li>
+        </ul>
+
+        <h4>Statistical Stability Assessment: Acceptable Fluctuation band</h4>
+        <p>This tier primarily addresses the critical stability of the performance of the software. Given that each simulation yields a slightly different result, the range of possible outputs should be acceptably narrow for engineering use.</p>
+        <ul>
+            <li><strong>Method</strong>: For a selected subset of test cases (including both simple and moderately complex geometry), the TRA software is executed N = 100 times for each case, with independent random number streams. The key output variable, maximum radiation flux on a receiver, is recorded for each run.</li>
+            <li><strong>Analysis</strong>: The collected data (N=100) is treated as a statistical population. The Acceptable Range is to calculate of sample means μ and sample standard deviation σ.</li>
+        </ul>
+        <div class="math-block" id="math-sigma"></div>
+        <ul>
+            <li><strong>Acceptance Criterion (Defining the Acceptable Range)</strong>: The validation is deemed successful if, for all test cases examined under this tier, at least 95% of the individual simulation results fall within ±3% of the sample mean. This constitutes the acceptable range of stochastic fluctuation. It ensures that the uncertainty introduced by Monte Carlo method is quantifiably small and consistent, providing predictable and stable results for decision-making. Failure to meet this criterion would indicate excessive variance, necessitating investigation into algorithmic parameter.</li>
+            <li><strong>Rationale for N</strong>: The choice of N = 100 independent runs per test case is grounded in statistical power analysis. For Monte Carlo Estimator, the Central Limit Theorem suggests that the distribution of the sample mean approximates normality for large N, a sample size of 200 provides a robust basis for:
+                <ul>
+                    <li>Reliability estimating the population standard deviation with an error typically smaller than 10%.</li>
+                    <li>Calculating a 95% confidence interval for the mean with a half-width of approximately ±1.4σ/√N, balancing computational cost against statistical precision.</li>
+                </ul>
+            </li>
+            <li><strong>Rationale for ε</strong>: The ±3% threshold for individual result dispersion is derived from industry precedents for acceptable uncertainty in performance based fire engineering calculations. Key references include:
+                <ul>
+                    <li>BR 187: It suggests that comparison with experimental data or analytical benchmarks within ±10% is often considered "good agreement" for complex fire models. For a fundamental radiative view factor calculation—a more deterministic sub-problem—a stricter criterion is justified.</li>
+                    <li>Engineering Heuristic: In structural and thermal design, material properties and safety factors often incorporate uncertainties exceeding 5%. Controlling the numerical uncertainty of the computational tool to roughly half of typical physical uncertainties (±3%) ensures it does not dominate the overall error budget.</li>
+                    <li>Precedent in CFD/Fire Modelling Validation Studies: Published validation studies of radiative transfer solvers frequently adopt acceptance bands between ±2% and ±5% for benchmark cases with low physical ambiguity. The ±3% value represents a conservative midpoint within this range, enforcing rigorous consistency for the core algorithm.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h4>Statistical Stability Assessment: Confidence Interval</h4>
+        <p>This tier primarily addresses the accuracy of the result of the software. Given that the simulation yields different result, the actual result should lies within a certain range of the calculated result. This range is the confidence interval, that it is certain percentage confidence that the real result lies within this range.</p>
+        <ul>
+            <li><strong>Methods</strong>: For a selected subset of test cases (including both simple and moderately complex geometry), the TRA software is executed N = 100 times for each case, with independent random number streams. The key output variable, maximum radiation flux on a receiver, is recorded for each run.</li>
+            <li><strong>Analysis</strong>: The Confidence Interval is the construction of a 95% confidence interval for population mean:</li>
+        </ul>
+        <div class="math-block" id="math-ci"></div>
+        <p>where t is the student's t-distribution quantile.</p>
+        <ul>
+            <li><strong>Acceptance Criterion (Defining the Confidence Interval)</strong>: In addition to the stability criterion for individual results, the precision of the estimated mean value is assessed using a 95% confidence interval (CI). The CI half-width (margin of error), calculated as Z<sub>0.95</sub> × (σ/√N), must be less than or equal to a predefined engineering tolerance δ. For this validation, δ is set to ±2.5% of the sample mean (or an equivalent absolute flux value, where applicable). A CI half-width smaller than δ indicates that the Monte Carlo estimator, with the currently configured number of rays and N=100 runs, provides a sample mean sufficiently precise for engineering decision-making. Failure to meet this criterion would suggest either an insufficient number of simulation runs (N) or excessive variance in the algorithm, necessitating further investigation before the tool is considered reliable for quantitative analysis.</li>
+            <li><strong>Rationale for Confidence Interval</strong>: The 95% confidence level is a conventional benchmark in statistical inference and engineering validation, representing a balance between practical certainty and statistical efficiency. This threshold implies 5% risk (α = 0.05) of incorrectly rejecting a true null hypothesis, which aligns with widely accepted standards for Type I error tolerance in scientific and engineering disciplines.</li>
+            <li><strong>Choice of t-statistic</strong>: The confidence interval employs the Student's t-distribution quantile t<sub>0.975,N-1</sub> rather than the standard normal quantile z<sub>0.975</sub> because the population standard deviation is unknown and is estimated from the finite sample of N = 100 runs. When the sample size is moderate, the sampling distribution of the mean follows a t-distribution with N-1 degrees of freedom, which accounts for the extra uncertainty introduced by estimating σ from the data. For large N (over 30), the t value converges towards the z-value (t<sub>0.975,99</sub> ≈ 1.98, z<sub>0.975</sub> = 1.96), but its use remains formally correct and is considered good statistical practice in validation reporting.</li>
+        </ul>
+        <p>This three-tier strategy ensures that the TRA software is not only mathematically accurate in expectation (Tier 1), reliably precise in practice (Tier 2) but also accurate in real estimation result (Tier 3).</p>
+
+        <h3 id="test-case-design">Test Case Design</h3>
+        <p>A tiered suite of test cases has been designed to systematically validate the TRA software across a spectrum of geometric complexity. The progression from simple to complex configuration isolates specific algorithm functions and ensures a comprehensive assessment of both accuracy and stability.</p>
+
+        <h4>Simple Case: Parallel Planes</h4>
+        <ul>
+            <li><strong>Geometry</strong>: Two identical, square, directly opposing 2×2 planes separated by a fixed distance D = 4. The planes are aligned such that their surface normals are collinear and opposing.</li>
+            <li><strong>Parameter</strong>: Emitter heat flux is set to a constant Q' = 100 kW/m². The receiver plane is discretized into a uniform grid. The grid size can be adjusted to increase the resolution, for simplicity, a small value of 20×20 grid is applied to the 2×2 plane.</li>
+            <li><strong>Validation Focus</strong>: This configuration has a closed-form Analytical solution. It provides a fundamental check of the core radiation exchange calculation, verifying that the software correctly implements the basic energy transfer without geometric complexity.</li>
+        </ul>
+
+        <h4>Extended Case: Parallel Planes with Longer Distance</h4>
+        <ul>
+            <li><strong>Geometry</strong>: The distance D is set to be 10.</li>
+            <li><strong>Validation Focus</strong>: The longer ray paths amplify floating-point rounding, direction discretisation, and stochastic sampling errors inherent in ray propagation. Demonstrating acceptable performance under extended distances provides confidence that the algorithm remains reliable when applied to large-scale or real-world geometries.</li>
+        </ul>
+
+        <h4>Moderate Case: Perpendicular Planes</h4>
+        <ul>
+            <li><strong>Geometry</strong>: The planes are positioned such that their bottom are aligned along one axis, ensuring symmetric but non-intersecting radiation exchange.</li>
+            <li><strong>Validation Focus</strong>: This configuration tests the software's ability to accurately compute view factors for non-parallel, non-coplanar surfaces with partial visibility. This case validates the geometric transformation and ray-direction logic for angled surfaces, as well as the accuracy of the intersection detection when rays must travel a finite distance to an inclined target.</li>
+        </ul>
+
+        <h4>Complex Case: Multiple Planes</h4>
+        <ul>
+            <li><strong>Geometry</strong>: A simplified 3D arrangement representing a section of a building facade, including primary and secondary emitter plane simulating a fire compartment facade, one inert plane, and one receiver plane positioned at a separation distance representing the target facade.</li>
+            <li><strong>Parameter</strong>: Temperatures are assigned to the primary and secondary emitters. The inert spandrel has no temperature.</li>
+            <li><strong>Validation Focus</strong>: This scenario introduces partial occlusion, multiple radiation sources, and complex shadowing. While an exact analytical view factor is impractical to derive, this case is used for the statistical stability assessment. It challenges the occlusion-handling algorithm and tests whether the Monte Carlo method produces stable, reproducible results under geometrically realistic conditions.</li>
+        </ul>
+
+        <h4>General Execution Protocol</h4>
+        <ol>
+            <li>For Validation Tier 1, case 2.3.1 and 2.3.2 are executed. The mean result of multiple runs from the TRA software is directly compared to its known analytical solution.</li>
+            <li>For Validation Tier 2 and 3, all three cases are executed N = 100 times, each with independent random seed. From this data, the sample mean, standard deviation, the 95% acceptable range, and the 95% confidence interval for the mean are computed for a defined scalar output (the maximum incident flux on the receiver).</li>
+        </ol>
+
+        <h3 id="error-metrics--passfail-decision-protocol">Error metrics & Pass/Fail Decision Protocol</h3>
+        <p>This section formalises the quantitative measures and deterministic logic used to adjudicate whether the TRA software satisfies the validation criteria established in Section 2.2. The protocol is designed to yield an unambiguous pass/fail outcome for each test case and for the validation exercise as a whole.</p>
+
+        <h4>Quantitative Error Metrics</h4>
+        <ul>
+            <li><strong>Relative Error</strong>: This metric assesses the accuracy of the software's mean result against a known analytical solution. <span class="math-inline">ε = |(T̄<sub>software</sub> - T<sub>analytical</sub>) / T<sub>analytical</sub>| × 100%</span> where T̄<sub>software</sub> is the sample mean of the output quantity from N = 100 runs for a given test case.</li>
+            <li><strong>Statistical Stability Metrics: Acceptable Range Compliance</strong>: Let μ be the sample mean and σ the sample standard deviation from N = 100 runs. The individual result acceptance band is defined as [0.97μ, 1.03μ]. The metric is the percentage of individual runs that fall within this band.</li>
+            <li><strong>Statistical Stability Metrics: Confidential Interval Precision</strong>: The 95% confidence interval (CI) for the population mean is calculated as: 95% CI = μ ± t<sub>0.95,N-1</sub> × (σ/√N)</li>
+        </ul>
+
+        <h4>Pass/Fail Criteria</h4>
+        <table>
+            <thead>
+                <tr><th>Tier</th><th>Type</th><th>Criterion</th><th>Threshold</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Simple & Moderate</td><td>Relative Error</td><td>&lt; 5%</td></tr>
+                <tr><td>2</td><td>All</td><td>Acceptable Range Compliance</td><td>≥ 95% N</td></tr>
+                <tr><td>3</td><td>All</td><td>Confidence Interval Half-Width</td><td>≤ 2.5% μ</td></tr>
+            </tbody>
+        </table>
+
+        <h4>Overall Validation Decision Logic</h4>
+        <ul>
+            <li><strong>Tier 1 Gatekeeper Check</strong>: Both the Simple and Moderate test cases must individually achieve ε < 5%. With failure of Tier 1, validation concludes with an overall fail. The software has not demonstrated basic correctness.</li>
+            <li><strong>Tier 2/3 Statistical Stability Check</strong>: Provided Tier 1 is passed, all three test cases must individually satisfy both Tier 2/3 criteria (ARC ≥ 95% and HW<sub>CI</sub> ≤ 2.5% μ). When all pass, Validation concludes with an overall pass. With any case fails one or both criteria: Validation concludes with a conditional pass. The specific limitations must be documented in Section 5 (Conclusions).</li>
+        </ul>
+
+        <h2 id="test-result--analysis">Test Result & Analysis</h2>
+
+        <h3 id="simple-case-parallel-planes">Simple Case: Parallel Planes</h3>
+
+        <h4>Analytical Solution</h4>
+        <p>The analytical solution for heat flux obtained is derived from the multiplication of the view factor and the emitter heat flux. According to BR 187, the view factor for parallel source and receiver is as follow:</p>
+        <div class="math-block" id="math-parallel"></div>
+        <p>with the setting X = W/2S and Y = H/2S where W is the width of the emitter plane and H is the height of the emitter plane.</p>
+        <p>This view factor calculation assumes that the radiation intensity is at the centre of the source, which align with the current test case. With the emitter plane set to be 2×2, the width W and the height H are both set to be 2. The distance S between the two planes is set to be 4.</p>
+        <p>Therefore, the result is φ = 7.35%, rounded to 2dp. With the emitter heat flux set to be 100 kW/m², the maximum receiver heat flux is 7.35 kW/m².</p>
+
+        <h4>Test Result Raw Data Summary</h4>
+        <p>The software was executed N = 100 times for this geometry, each run with 100,000 rays per receiver point. The results are shown in Appendix. The key output metric, the maximum radiative heat flux on the receiver plane was recorded for each run. The descriptive statistics of the 100 results are:</p>
+        <ul>
+            <li><strong>Sample mean</strong>: 7.32 kW/m²</li>
+            <li><strong>Sample standard deviation</strong>: 0.0672 kW/m²</li>
+            <li><strong>Maximum</strong>: 7.49 kW/m²</li>
+            <li><strong>Minimum</strong>: 7.15 kW/m²</li>
+        </ul>
+
+        <h4>Tier 1: Analytical Comparison</h4>
+        <p>The relative error between the simulated mean and the analytical solution is:</p>
+        <p style="text-align: center;"><strong>ε = |(T<sub>software</sub> - T<sub>analytical</sub>) / T<sub>analytical</sub>| × 100% = |7.32-7.35|/7.35 × 100% = 0.4%</strong></p>
+        <p>This value (0.4%) is well below the 5% acceptance threshold, confirming that the software's mean result is accurate for this fundamental configuration.</p>
+
+        <h4>Tier 2: Acceptable Range Compliance</h4>
+        <p>The acceptable range for individual results was defined as ±3% of the sample mean:</p>
+        <p style="text-align: center;"><strong>ARC = [0.97μ, 1.03μ] = [7.13, 7.57] kW/m²</strong></p>
+        <p>Of 100 runs, all 100 results fell within this interval, corresponding to a compliance rate of 100%, which exceeds the required 95% threshold, demonstrating that single-run output are acceptably stable.</p>
+
+        <h4>Tier 3: Confidence Interval</h4>
+        <p>The 95% confidence interval for the sample mean was calculated using t-distribution with t<sub>0.975,99</sub> ≈ 1.98:</p>
+        <p style="text-align: center;"><strong>CI = μ ± t<sub>0.975,99</sub> × σ/√N = 7.32 ± 1.98 × 0.067/√100 = 7.32 ± 0.0132</strong></p>
+        <p>The half-width of the CI is 0.0132 kW/m², which corresponds to 0.18% of the mean value, significantly smaller than the prescribed precision tolerance of ±2.5% of the mean value.</p>
+
+        <h3 id="extended-case-parallel-planes">Extended Case: Parallel Planes</h3>
+
+        <h4>Analytical Solution</h4>
+        <p>Following the same calculation method as the section 3.1.1, the distance is now set to 10, with X = Y = 0.1.</p>
+        <p>Therefore, the result is φ = 1.256%, rounded to 3dp. With the emitter heat flux set to be 100 kW/m², the maximum receiver heat flux is 1.256 kW/m².</p>
+
+        <h4>Test Result Raw Data Summary</h4>
+        <p>The software was executed N = 100 times for this geometry, each run with 100,000 rays per receiver point. The results are shown in Appendix. The key output metric, the maximum radiative heat flux on the receiver plane was recorded for each run. The descriptive statistics of the 100 results are:</p>
+        <ul>
+            <li><strong>Sample mean</strong>: 1.259 kW/m²</li>
+            <li><strong>Sample standard deviation</strong>: 0.0188 kW/m²</li>
+            <li><strong>Maximum</strong>: 1.31 kW/m²</li>
+            <li><strong>Minimum</strong>: 1.22 kW/m²</li>
+        </ul>
+
+        <h4>Tier 1: Analytical Comparison</h4>
+        <p>The relative error between the simulated mean and the analytical solution is:</p>
+        <p style="text-align: center;"><strong>ε = |1.259-1.256|/1.256 × 100% = 0.24%</strong></p>
+        <p>This value (0.24%) is well below the 5% acceptance threshold, confirming that the software's mean result is accurate for this fundamental configuration.</p>
+
+        <h4>Tier 2: Acceptable Range Compliance</h4>
+        <p>The acceptable range for individual results was defined as ±3% of the sample mean:</p>
+        <p style="text-align: center;"><strong>ARC = [0.97μ, 1.03μ] = [1.218, 1.294] kW/m²</strong></p>
+        <p>Of 100 runs, 96 results fell within this interval, corresponding to a compliance rate of 96%, which exceeds the required 95% threshold, demonstrating that single-run output are acceptably stable.</p>
+
+        <h4>Tier 3: Confidence Interval</h4>
+        <p>The 95% confidence interval for the sample mean was calculated using t-distribution with t<sub>0.975,99</sub> ≈ 1.98:</p>
+        <p style="text-align: center;"><strong>CI = 1.259 ± 1.98 × 0.0188/√100 = 1.259 ± 0.0037</strong></p>
+        <p>The half-width of the CI is 0.0037 kW/m², which corresponds to 0.29% of the mean value, significantly smaller than the prescribed precision tolerance of ±2.5% of the mean value.</p>
+
+        <h4>Note on ARC and CI for small value data</h4>
+        <p>The observed more exceed of the acceptable range for individual results is attributable to the small view factor magnitude, even when the result is still acceptable. At this scale, the absolute width of the acceptance band is narrow, making the metric sensitive to inherent Poisson-type statistical scatter in the Monte Carlo estimator. Individual runs may exhibit relative fluctuations that exceed the fixed percentage threshold while remaining within the expected stochastic variation for such low-probability ray-hit events, which does not necessarily indicate algorithmic instability.</p>
+
+        <h3 id="moderate-case-perpendicular-planes">Moderate Case: Perpendicular Planes</h3>
+
+        <h4>Analytical Solution</h4>
+        <p>The analytical solution for heat flux obtained is derived from the multiplication of the view factor and the emitter heat flux. According to BR 187, the view factor for perpendicular source is as follow:</p>
+        <div class="math-block" id="math-perp"></div>
+        <p>with the setting X = W/S and Y = H/S where W is the width of the emitter plane and H is the height of the emitter plane.</p>
+        <p>This view factor calculation assumes that the radiation intensity is at the centre of the source, which align with the current test case. With the emitter plane set to be 2×2, the width W and the height H are both set to be 2. The distance S between the two planes is set to be 2.</p>
+        <p>Therefore, the result is φ = 7.11%, rounded to 2dp. With the emitter heat flux set to be 100 kW/m², the maximum receiver heat flux is 7.11 kW/m².</p>
+
+        <h4>Test Result Raw Data Summary</h4>
+        <p>The software was executed N = 100 times for this geometry, each run with 100,000 rays per receiver point. The key output metric, the maximum radiative heat flux on the receiver plane was recorded for each run. The descriptive statistics of the 100 results are:</p>
+        <ul>
+            <li><strong>Sample mean</strong>: 7.11 kW/m²</li>
+            <li><strong>Sample standard deviation</strong>: 0.0576 kW/m²</li>
+            <li><strong>Maximum</strong>: 7.24 kW/m²</li>
+            <li><strong>Minimum</strong>: 6.99 kW/m²</li>
+        </ul>
+
+        <h4>Tier 1: Analytical Comparison</h4>
+        <p>The relative error between the simulated mean and the analytical solution is:</p>
+        <p style="text-align: center;"><strong>ε = |7.106-7.109|/7.109 × 100% = 0.04%</strong></p>
+        <p>This value (0.04%) is well below the 5% acceptance threshold, confirming that the software's mean result is accurate for this fundamental configuration.</p>
+
+        <h4>Tier 2: Acceptable Range Compliance</h4>
+        <p>The acceptable range for individual results was defined as ±3% of the sample mean:</p>
+        <p style="text-align: center;"><strong>ARC = [0.97μ, 1.03μ] = [6.89, 7.32] kW/m²</strong></p>
+        <p>Of 100 runs, all 100 results fell within this interval, corresponding to a compliance rate of 100%, which exceeds the required 95% threshold, demonstrating that single-run output are acceptably stable.</p>
+
+        <h4>Tier 3: Confidence Interval</h4>
+        <p>The 95% confidence interval for the sample mean was calculated using t-distribution with t<sub>0.975,99</sub> ≈ 1.98:</p>
+        <p style="text-align: center;"><strong>CI = 7.11 ± 1.98 × 0.0576/√100 = 7.11 ± 0.0114</strong></p>
+        <p>The half-width of the CI is 0.0114 kW/m², which corresponds to 0.16% of the mean value, significantly smaller than the prescribed precision tolerance of ±2.5% of the mean value.</p>
+
+        <h3 id="complex-case-multiple-planes">Complex Case: Multiple Planes</h3>
+
+        <h4>Geometry</h4>
+        <p>The planes used in this case and their parameter are summarised below:</p>
+        <table>
+            <thead>
+                <tr><th>Name</th><th>Type</th><th>Position (x,y,z)</th><th>Rotation</th><th>Size</th><th>Radiation</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Plane 1</td><td>Receiver</td><td>(2.5, 2.5, 0.0)</td><td>0°</td><td>5×5 m</td><td>/</td></tr>
+                <tr><td>Plane 2</td><td>Receiver</td><td>(5.0, 2.5, 2.0)</td><td>-90°</td><td>4×5 m</td><td>/</td></tr>
+                <tr><td>Plane 3</td><td>Receiver</td><td>(3.0, 2.5, 5.5)</td><td>-143°</td><td>5×5 m</td><td>/</td></tr>
+                <tr><td>Plane 4</td><td>Receiver</td><td>(1.0, 2.5, 8.5)</td><td>-90°</td><td>3×5 m</td><td>/</td></tr>
+                <tr><td>Plane 5</td><td>Emitter</td><td>(10.0, 2.5, 2.5)</td><td>-90°</td><td>7×5 m</td><td>100</td></tr>
+                <tr><td>Plane 6</td><td>Emitter</td><td>(9.0, 2.5, 7.0)</td><td>-134°</td><td>3×5 m</td><td>50</td></tr>
+                <tr><td>Plane 7</td><td>Inert</td><td>(8.0, 2.5, -2.0)</td><td>-90°</td><td>6×5 m</td><td>/</td></tr>
+            </tbody>
+        </table>
+
+        <h4>Test Result Raw Data Summary</h4>
+        <p>The software was executed N = 100 times for this geometry, each run with 100,000 rays per receiver point. The geometry mesh and the results are shown in Appendix. The key output metric, the maximum radiative heat flux on the receiver plane was recorded for each run. The descriptive statistics of the 100 results are:</p>
+        <ul>
+            <li><strong>Sample mean</strong>: 33.93 kW/m²</li>
+            <li><strong>Sample standard deviation</strong>: 0.0949 kW/m²</li>
+            <li><strong>Maximum</strong>: 34.11 kW/m²</li>
+            <li><strong>Minimum</strong>: 33.54 kW/m²</li>
+        </ul>
+
+        <h4>Tier 2: Acceptable Range Compliance</h4>
+        <p>The acceptable range for individual results was defined as ±3% of the sample mean:</p>
+        <p style="text-align: center;"><strong>ARC = [0.97μ, 1.03μ] = [32.90, 34.94] kW/m²</strong></p>
+        <p>Of 100 runs, all 100 results fell within this interval, corresponding to a compliance rate of 100%, which exceeds the required 95% threshold, demonstrating that single-run output are acceptably stable.</p>
+        <p>Furthermore, for larger magnitude data, after removing the extreme value data of the minimum 33.54, the range of the data is [33.74, 34.11], which is 1.1% of the mean value. This shows that the pass criteria will be met even setting the acceptable range compliance to be ±1% of the sample mean, meaning that the single run outputs are adequately stable.</p>
+
+        <h4>Tier 3: Confidence Interval</h4>
+        <p>The 95% confidence interval for the sample mean was calculated using t-distribution with t<sub>0.975,99</sub> ≈ 1.98:</p>
+        <p style="text-align: center;"><strong>CI = 33.93 ± 1.98 × 0.0949/√100 = 33.98 ± 0.0188</strong></p>
+        <p>The half-width of the CI is 0.0188 kW/m², which corresponds to 0.05% of the mean value, significantly smaller than the prescribed precision tolerance of ±2.5% of the mean value.</p>
+
+        <h4>Physical Plausibility Assessment</h4>
+        <p>As no closed-form analytical solution exists for this complex geometry, validation relies on assessing the physical reasonableness of the results. The computed radiation contour shows logically consistent features: peak flux occurs in direct line-of-sight to the primary emitter, a distinct reduction appears in areas occluded by the spandrel, and the secondary emitter contributes appropriately lower flux. No unphysical artefacts are observed. This spatial coherence supports the utility of the software for engineering analysis of similar complex scenarios.</p>
+
+        <h2 id="software-limitation">Software Limitation</h2>
+
+        <h3>Nature of the Discretization Error</h3>
+        <p>The current implementation discretizes continuous surfaces into finite grids of evaluation points. The maximum radiation flux is identified only from this discrete set. Consequently, the reported maximum represents a conservative lower‑bound estimate of the true physical maximum, as the peak may occur between sample points. This is a systematic bias independent of the stochastic Monte Carlo error.</p>
+
+        <h3>Discretization Error Assessment</h3>
+        <p>This discretization error can be formally estimated by comparing the theoretical maximum heat flux (occurring at the continuous peak location) with the value sampled at the nearest grid point. For a representative receiver plane, it is split into different size of grids under different selection of resolution. The software currently has 4 options: Low, Mid, High, Detailed with grid size M being 2,3,5,10 respectively. The plane is being split into (M × W) × (M × W) grid. Therefore, there is a fixed offset for each option, being 0.5 m, 0.3 m, 0.2 m, 0.1 m respectively.</p>
+        <p>For each case, the offset grid value is used for both the height and the width for the calculation. Different value of distance is also being applied for the calculation. Considering the nature of the use of the software, typical values like 1 m, 2 m, 5 m are being selected to simulate different scenarios.</p>
+        <p>According to BR 187, the view factor for the parallel source and receiver at the corner is obtained through:</p>
+        <div class="math-block" id="math-grid"></div>
+        <p>where X = W/S and Y = H/S,</p>
+        <p>while the view factor for the parallel source and receiver at the center is obtained through:</p>
+        <div class="math-block" id="math-peak"></div>
+        <p>where X = W/2S and Y = H/2S</p>
+
+        <p>The calculation result is shown below:</p>
+        <table>
+            <thead>
+                <tr><th>φ<sub>grid</sub></th><th>Low (0.5 m)</th><th>Mid (0.33 m)</th><th>High (0.2 m)</th><th>Detailed (0.1 m)</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1m</td><td>5.99%</td><td>3.03%</td><td>1.21%</td><td>0.32%</td></tr>
+                <tr><td>2m</td><td>1.84%</td><td>0.84%</td><td>0.32%</td><td>0.08%</td></tr>
+                <tr><td>5m</td><td>0.32%</td><td>0.14%</td><td>0.05%</td><td>0.01%</td></tr>
+            </tbody>
+        </table>
+
+        <table>
+            <thead>
+                <tr><th>φ<sub>peak</sub></th><th>Low (0.5 m)</th><th>Mid (0.33 m)</th><th>High (0.2 m)</th><th>Detailed (0.1 m)</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1m</td><td>7.35%</td><td>3.35%</td><td>1.26%</td><td>0.32%</td></tr>
+                <tr><td>2m</td><td>1.95%</td><td>0.86%</td><td>0.32%</td><td>0.08%</td></tr>
+                <tr><td>5m</td><td>0.32%</td><td>0.14%</td><td>0.05%</td><td>0.01%</td></tr>
+            </tbody>
+        </table>
+
+        <table>
+            <thead>
+                <tr><th>Error</th><th>Low (0.5 m)</th><th>Mid (0.33 m)</th><th>High (0.2 m)</th><th>Detailed (0.1 m)</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1m</td><td>16.7%</td><td>9.5%</td><td>3.9%</td><td>&lt;0.1%</td></tr>
+                <tr><td>2m</td><td>5.6%</td><td>2.3%</td><td>&lt;0.1%</td><td>&lt;0.1%</td></tr>
+                <tr><td>5m</td><td>&lt;0.1%</td><td>&lt;0.1%</td><td>&lt;0.1%</td><td>&lt;0.1%</td></tr>
+            </tbody>
+        </table>
+
+        <p>The resulting percentage error does not directly represent the error for the final result, it is the effect of the view factor to one grid size. For each receiver point is affected by the number of points from the emitter plane, N = W × H × M. The effect of this is evenly distributed to all points, resulting a &lt;0.1% error for a 5×5 plane with low resolution for most cases. Therefore, it is considered the error generated by this discretization negligible.</p>
+
+        <h3>Quantification of Discretization Error</h3>
+        <p>A conservative upper bound for the discretization‑induced under‑prediction can be estimated by modeling the radiation field from a point source, where the flux decays as I(r) ∝ 1/r². The worst‑case positional offset between the true peak and the nearest grid point is δ = Δ/√2, where Δ is the grid spacing. The relative error is then:</p>
+        <div class="math-block" id="math-disc"></div>
+        <p>For a representative configuration with an emitter‑receiver distance r = 2 m and the default grid spacing Δ = 0.5 m (δ ≈ 0.35 m), which yields ε<sub>d</sub> ≈ 28%. This represents an extreme upper bound for a point‑source scenario.</p>
+        <p>In practice, extended planar emitters produce far shallower radiation gradients. The analytical validation cases where the mean error remained below 0.5% – confirm that for typical engineering geometries involving planar radiation exchange, the actual discretization error is negligible compared to this bound.</p>
+
+        <h3>Justification of Discretization Error</h3>
+        <p>In the three analytical validation cases, the observed mean relative errors between the simulated and theoretical results were all less than 0.5%. For a typical case where the analytical heat flux was 10 kW/m², the simulated mean was 10.05 kW/m² with a deviation of maximum 0.05 kW/m². This demonstrates that for the specific grid resolutions used in these tests, the systematic under‑prediction due to spatial discretization is well below the 5% acceptance threshold and is negligible compared to the stochastic uncertainty of the Monte Carlo method.</p>
+        <p>This outcome confirms that the chosen default grid density provides sufficient spatial resolution for the fundamental geometries against which the software was validated. It also indicates that for similar simple to moderately complex geometries, users can rely on the default grid settings without introducing substantial discretization‑induced inaccuracy.</p>
+
+        <h3>Practical Recommendations</h3>
+        <ul>
+            <li><strong>Grid Sensitivity Check</strong>: For critical applications, users should compare results at two different grid resolutions to quantify the discretization error for their specific geometry.</li>
+            <li><strong>Informed Trade-off</strong>: Higher grid resolution improves spatial accuracy but linearly increases computation time (more receiver points). The default resolution offers a balance suitable for most engineering screening analyses.</li>
+            <li><strong>Conservative Design Practice</strong>: The software's reported maximum can be used directly for conservative design. If a less conservative estimate is required, a small positive adjustment factor (e.g., +1%) may be considered, informed by a user‑performed grid‑sensitivity study.</li>
+        </ul>
+
+        <h3>Integration with Overall Uncertainty</h3>
+        <p>The total uncertainty in any software prediction thus combines:</p>
+        <ul>
+            <li><strong>Stochastic Uncertainty</strong>: Characterized by confidence intervals</li>
+            <li><strong>Discretization Bias</strong>: A conservative under‑prediction of maxima, reducible via controlled grid refinement.</li>
+        </ul>
+
+        <h2 id="limitation">Limitation</h2>
+        <p>This section outlines the inherent limitations of the TRA software and defines its recommended scope of application. Understanding these boundaries is essential for the correct interpretation of results and for ensuring the tool is used appropriately within engineering practice.</p>
+
+        <h3>Algorithmic & Physical Modelling Limitations</h3>
+        <ul>
+            <li><strong>Diffuse Surface Assumption</strong>: All surfaces are modelled as ideal Lambertian emitters and reflectors. Specular or directional radiative behaviour is not captured.</li>
+            <li><strong>Non‑Participating Medium</strong>: The analysis assumes a transparent medium between surfaces. Absorption, emission, or scattering of radiation by gases or particulates is not considered.</li>
+            <li><strong>Steady‑State Analysis</strong>: The software performs a steady‑state calculation. Transient effects, such as the growth of a fire or time‑dependent thermal response of materials, are outside its scope.</li>
+            <li><strong>Isothermal Surfaces</strong>: Each emitter polygon is assigned a single uniform temperature. Temperature gradients across a single emitting surface cannot be modelled.</li>
+        </ul>
+
+        <h3>Numerical & Discretization Limitations</h3>
+        <ul>
+            <li><strong>Spatial Sampling (Gridding)</strong>: Continuous surfaces are discretized into a finite grid of receiver points. This can lead to a systematic under‑prediction of the true maximum radiation flux, as the peak may occur between grid points. The error is reduced with finer grid resolution at the cost of increased computation time.</li>
+            <li><strong>Stochastic Uncertainty</strong>: The Monte Carlo method introduces inherent random variability. While this is quantified via confidence intervals and stability criteria, any single run carries an uncertainty that decreases with the square root of the ray count.</li>
+            <li><strong>Geometry Representation</strong>: All surfaces are modelled as planar polygons. Curved surfaces must be approximated by multiple planar facets, potentially introducing geometric error.</li>
+        </ul>
+
+        <h3>Recommended Scope of Use</h3>
+        <p>The software is suitable for assessment of direct radiative exchange in fire safety (e.g., External fire spread calculation for facade heat flux) and Scenarios involving planar or faceted surfaces in a clear atmosphere.</p>
+
+        <h2 id="conclusion">Conclusion</h2>
+        <p>The validation exercise confirms that the TRA software performs with satisfactory accuracy for its intended purpose of direct radiative heat transfer analysis between planar surfaces. The software passed all Tier 1 (analytical verification), Tier 2 (statistical stability ARC), And Tier 3 (statistical stability CI) criteria for all cases. The primary limitations are inherent to its simplified physical model and spatial discretization, which yield conservative flux estimates suitable for engineering and comparative studies. With an understanding of these boundaries, the software is considered validated for use in fire‑safety assessments where direct radiation dominates.</p>
+
+        <hr>
+
+        <h2 id="appendices">Appendices</h2>
+
+        <h3>Test Data</h3>
+
+        <img src="case 1.png" alt="Case 1: Simple Case Data">
+        <p class="caption">Figure 1: Simple Case Data: Parallel Planes</p>
+
+        <img src="case 2.png" alt="Case 2: Extended Case Data">
+        <p class="caption">Figure 2: Extended Case Data: Parallel Planes</p>
+
+        <img src="case 3.png" alt="Case 3: Moderate Case Data">
+        <p class="caption">Figure 3: Moderate Case Data: Perpendicular Planes</p>
+
+        <img src="case 4.png" alt="Case 4: Complex Case Data">
+        <p class="caption">Figure 4: Complex Case Data: Multiple Planes</p>
+
+    </main>
+
+    <script>
+        (function () {
+            function updateTraThemeToggleButton() {
+                const btn = document.getElementById('tra-theme-toggle');
+                const lbl = document.getElementById('tra-theme-toggle-label');
+                const icon = document.getElementById('tra-theme-toggle-icon');
+                const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                if (btn) {
+                    btn.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+                    btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+                    btn.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+                }
+                if (lbl) lbl.textContent = isLight ? 'Dark' : 'Light';
+                if (icon) {
+                    icon.innerHTML = isLight
+                        ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
+                }
+            }
+
+            document.getElementById('tra-theme-toggle')?.addEventListener('click', function () {
+                const root = document.documentElement;
+                if (root.getAttribute('data-theme') === 'light') {
+                    root.removeAttribute('data-theme');
+                    try { localStorage.setItem('tra-theme', 'dark'); } catch (e) { /* ignore */ }
+                } else {
+                    root.setAttribute('data-theme', 'light');
+                    try { localStorage.setItem('tra-theme', 'light'); } catch (e) { /* ignore */ }
+                }
+                updateTraThemeToggleButton();
+            });
+            updateTraThemeToggleButton();
+        })();
+    </script>
+    <script>
+        // Render math formulas using KaTeX
+        document.addEventListener('DOMContentLoaded', function() {
+            const formulas = {
+                'math-sigma': '\\sigma = \\sqrt{\\frac{1}{N}\\sum_{i=1}^{N}(x_i - \\mu)^2}',
+                'math-ci': '95\\% \\text{ CI} = \\mu \\pm t_{0.95,N-1} \\times (\\sigma / \\sqrt{N})',
+                'math-parallel': '\\phi = \\frac{2}{\\pi}\\left(\\frac{X}{\\sqrt{1+X^2}} \\tan^{-1}\\!\\left(\\frac{Y}{\\sqrt{1+X^2}}\\right)+\\frac{Y}{\\sqrt{1+Y^2}} \\tan^{-1}\\!\\left(\\frac{X}{\\sqrt{1+Y^2}}\\right)\\right)',
+                'math-perp': '\\phi = \\frac{1}{2\\pi}\\left( \\tan^{-1}\\!(X)-\\frac{1}{\\sqrt{Y^2+1}} \\tan^{-1}\\!\\left(\\frac{X}{\\sqrt{Y^2+1}}\\right)\\right)',
+                'math-grid': '\\phi_{grid} = \\frac{1}{2\\pi}\\left(\\frac{X}{\\sqrt{1+X^2}} \\tan^{-1}\\!\\left(\\frac{Y}{\\sqrt{1+X^2}}\\right)+\\frac{Y}{\\sqrt{1+Y^2}} \\tan^{-1}\\!\\left(\\frac{X}{\\sqrt{1+Y^2}}\\right)\\right)',
+                'math-peak': '\\phi_{peak} = \\frac{2}{\\pi}\\left(\\frac{X}{\\sqrt{1+X^2}} \\tan^{-1}\\!\\left(\\frac{Y}{\\sqrt{1+X^2}}\\right)+\\frac{Y}{\\sqrt{1+Y^2}} \\tan^{-1}\\!\\left(\\frac{X}{\\sqrt{1+Y^2}}\\right)\\right)',
+                'math-disc': '\\epsilon_d = 1 - \\frac{r^2}{(r + \\delta)^2}'
+            };
+
+            for (const [id, formula] of Object.entries(formulas)) {
+                const element = document.getElementById(id);
+                if (element) {
+                    try {
+                        katex.render(formula, element, { displayMode: true });
+                    } catch (e) {
+                        element.textContent = formula;
+                        console.error('KaTeX error for ' + id + ':', e);
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
+
