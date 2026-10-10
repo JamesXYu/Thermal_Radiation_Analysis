@@ -58,7 +58,7 @@ if not exist "bin" mkdir bin
 REM Try g++ first (MinGW)
 where g++ >nul 2>&1
 if %errorlevel%==0 (
-    g++ -std=c++17 -O2 -o %BACKEND_BINARY% backend\server.cpp -I backend -lpthread
+    g++ -std=c++17 -O2 -o %BACKEND_BINARY% backend\server.cpp -I backend -lws2_32 -lpthread
     if errorlevel 1 (
         echo [91mERROR: Failed to compile server with g++[0m
         echo.
@@ -129,6 +129,50 @@ if %errorlevel%==0 (
 )
 
 REM ============================================
+REM Resolve a real Python (skip Microsoft Store stubs)
+REM ============================================
+:find_python
+set PYTHON_CMD=
+
+where py >nul 2>&1
+if %errorlevel%==0 (
+    for %%v in (-3.12 -3) do (
+        set PYTHON_CMD=
+        for /f "delims=" %%i in ('py %%v -c "import sys; print(sys.executable)" 2^>nul') do set PYTHON_CMD=%%i
+        if defined PYTHON_CMD (
+            "!PYTHON_CMD!" -c "import sys" >nul 2>&1
+            if !errorlevel!==0 exit /b 0
+        )
+    )
+    set PYTHON_CMD=
+)
+
+for /f "delims=" %%i in ('where python 2^>nul') do (
+    echo %%i | findstr /I /C:"WindowsApps" >nul
+    if errorlevel 1 (
+        "%%i" -c "import sys" >nul 2>&1
+        if !errorlevel!==0 (
+            set PYTHON_CMD=%%i
+            exit /b 0
+        )
+    )
+)
+
+for /f "delims=" %%i in ('where python3 2^>nul') do (
+    echo %%i | findstr /I /C:"WindowsApps" >nul
+    if errorlevel 1 (
+        "%%i" -c "import sys" >nul 2>&1
+        if !errorlevel!==0 (
+            set PYTHON_CMD=%%i
+            exit /b 0
+        )
+    )
+)
+
+echo [91mERROR: Python not found. Install Python 3 or disable App execution aliases for python/python3.[0m
+exit /b 1
+
+REM ============================================
 REM Start Frontend
 REM ============================================
 :start_frontend
@@ -140,19 +184,10 @@ if %errorlevel%==0 (
 
 echo Starting frontend server...
 
-REM Check if python3 exists, otherwise try python
-where python3 >nul 2>&1
-if %errorlevel%==0 (
-    start /B "" python3 -m http.server %FRONTEND_PORT% --bind 0.0.0.0 --directory frontend
-) else (
-    where python >nul 2>&1
-    if %errorlevel%==0 (
-        start /B "" python -m http.server %FRONTEND_PORT% --bind 0.0.0.0 --directory frontend
-    ) else (
-        echo [91mERROR: Python not found. Please install Python 3[0m
-        exit /b 1
-    )
-)
+call :find_python
+if errorlevel 1 exit /b 1
+
+start /B "" "!PYTHON_CMD!" -m http.server %FRONTEND_PORT% --bind 0.0.0.0 --directory frontend
 
 timeout /t 2 /nobreak >nul
 
@@ -226,17 +261,15 @@ echo echo [Backend] Crashed at %%date%% %%time%%, restarting in 5 seconds... ^>^
 echo timeout /t 5 /nobreak ^>nul >> _backend_persist.bat
 echo goto loop >> _backend_persist.bat
 
+call :find_python
+if errorlevel 1 exit /b 1
+
 REM Create persistent frontend wrapper
 echo @echo off > _frontend_persist.bat
 echo :loop >> _frontend_persist.bat
 echo cd /d "%~dp0" >> _frontend_persist.bat
 echo echo [Frontend] Starting at %%date%% %%time%% ^>^> logs\frontend.log >> _frontend_persist.bat
-where python3 >nul 2>&1
-if %errorlevel%==0 (
-    echo python3 -m http.server %FRONTEND_PORT% --bind 0.0.0.0 --directory frontend ^>^> logs\frontend.log 2^>^&1 >> _frontend_persist.bat
-) else (
-    echo python -m http.server %FRONTEND_PORT% --bind 0.0.0.0 --directory frontend ^>^> logs\frontend.log 2^>^&1 >> _frontend_persist.bat
-)
+echo "!PYTHON_CMD!" -m http.server %FRONTEND_PORT% --bind 0.0.0.0 --directory frontend ^>^> logs\frontend.log 2^>^&1 >> _frontend_persist.bat
 echo echo [Frontend] Crashed at %%date%% %%time%%, restarting in 5 seconds... ^>^> logs\frontend.log >> _frontend_persist.bat
 echo timeout /t 5 /nobreak ^>nul >> _frontend_persist.bat
 echo goto loop >> _frontend_persist.bat
